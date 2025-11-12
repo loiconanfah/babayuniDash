@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hashi - Jeu de Puzzle</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 3rem;
+            border-radius: 1rem;
+            max-width: 600px;
+        }
+        h1 {
+            font-size: 3rem;
+            margin: 0 0 1rem 0;
+        }
+        .status {
+            background: rgba(72, 187, 120, 0.3);
+            border: 2px solid #48bb78;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 2rem 0;
+        }
+        .error {
+            background: rgba(245, 101, 101, 0.3);
+            border: 2px solid #f56565;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 2rem 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            margin: 0.5rem;
+            transition: transform 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌉 Hashi</h1>
+        <h2>Backend ASP.NET Core</h2>
+        
+        <div class="status">
+            <h3>✅ Backend Fonctionnel</h3>
+            <p>Le serveur ASP.NET Core fonctionne correctement !</p>
+        </div>
+
+        <div class="error">
+            <h3>⚠️ Client Vue.js Non Lancé</h3>
+            <p>Le client Vue.js doit être démarré manuellement.</p>
+        </div>
+
+        <h3>📝 Pour lancer le client Vue.js :</h3>
+        <p>Ouvrez un terminal PowerShell et exécutez :</p>
+        <p style="text-align: left; background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 0.5rem;">
+            <code>cd prisonbreak\prisonbreak.client</code><br>
+            <code>npm run dev</code>
+        </p>
+        <p>Puis allez sur : <strong>http://localhost:5173</strong></p>
+
+        <h3>🔗 Liens Utiles</h3>
+        <a href="/swagger" class="btn">📚 Documentation API (Swagger)</a>
+        <a href="/api/puzzles" class="btn">🧩 API Puzzles</a>
+    </div>
+
+    <script>
+        // Vérifier si le client Vite tourne sur le port 5173
+        fetch('http://localhost:5173')
+            .then(() => {
+                window.location.href = 'http://localhost:5173';
+            })
+            .catch(() => {
+                console.log('Client Vue.js non démarré sur le port 5173');
+            });
+    </script>
+</body>
+</html>
+

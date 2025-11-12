@@ -1,0 +1,228 @@
+using Microsoft.AspNetCore.Mvc;
+using prisonbreak.Server.DTOs;
+using prisonbreak.Server.Models;
+using prisonbreak.Server.Services;
+
+namespace prisonbreak.Server.Controllers;
+
+/// <summary>
+/// Contrôleur API pour la gestion des parties de jeu
+/// Gère le cycle de vie d'une partie : création, mise à jour, validation, fin
+/// </summary>
+[ApiController]
+[Route("api/[controller]")]
+public class GamesController : ControllerBase
+{
+    private readonly IGameService _gameService;
+    private readonly IValidationService _validationService;
+    private readonly IPuzzleService _puzzleService;
+    private readonly ILogger<GamesController> _logger;
+
+    public GamesController(
+        IGameService gameService, 
+        IValidationService validationService,
+        IPuzzleService puzzleService,
+        ILogger<GamesController> logger)
+    {
+        _gameService = gameService;
+        _validationService = validationService;
+        _puzzleService = puzzleService;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// POST api/games
+    /// Crée une nouvelle partie pour un puzzle
+    /// </summary>
+    /// <param name="request">Requête contenant l'ID du puzzle</param>
+    /// <returns>La partie créée</returns>
+    [HttpPost]
+    public async Task<ActionResult<GameDto>> CreateGame([FromBody] CreateGameRequest request)
+    {
+        try
+        {
+            var game = await _gameService.CreateGameAsync(request.PuzzleId, request.PlayerId);
+            var gameDto = _gameService.ConvertToDto(game);
+            
+            _logger.LogInformation("Nouvelle partie créée : {GameId} pour le puzzle {PuzzleId}", game.Id, game.PuzzleId);
+            
+            return CreatedAtAction(nameof(GetGameById), new { id = game.Id }, gameDto);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la création de la partie");
+            return StatusCode(500, "Erreur interne du serveur");
+        }
+    }
+
+    /// <summary>
+    /// GET api/games/{id}
+    /// Récupère une partie par son ID
+    /// </summary>
+    /// <param name="id">ID de la partie</param>
+    /// <returns>La partie demandée</returns>
+    [HttpGet("{id}")]
+    public async Task<ActionResult<GameDto>> GetGameById(int id)
+    {
+        try
+        {
+            var game = await _gameService.GetGameByIdAsync(id);
+            
+            if (game == null)
+            {
+                return NotFound($"La partie avec l'ID {id} n'existe pas");
+            }
+
+            var gameDto = _gameService.ConvertToDto(game);
+            return Ok(gameDto);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération de la partie {GameId}", id);
+            return StatusCode(500, "Erreur interne du serveur");
+        }
+    }
+
+    /// <summary>
+    /// PUT api/games/{id}/bridges
+    /// Met à jour les ponts placés par le joueur
+    /// </summary>
+    /// <param name="id">ID de la partie</param>
+    /// <param name="bridges">Liste des ponts placés</param>
+    /// <returns>La partie mise à jour</returns>
+    [HttpPut("{id}/bridges")]
+    public async Task<ActionResult<GameDto>> UpdateBridges(int id, [FromBody] List<BridgeDto> bridges)
+    {
+        try
+        {
+            var game = await _gameService.UpdateGameBridgesAsync(id, bridges);
+            var gameDto = _gameService.ConvertToDto(game);
+            
+            return Ok(gameDto);
+        }
+        catch (ArgumentException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la mise à jour des ponts pour la partie {GameId}", id);
+            return StatusCode(500, "Erreur interne du serveur");
+        }
+    }
+
+    /// <summary>
+    /// POST api/games/{id}/validate
+    /// Valide la solution actuelle du joueur
+    /// </summary>
+    /// <param name="id">ID de la partie</param>
+    /// <returns>Résultat de la validation</returns>
+    [HttpPost("{id}/validate")]
+    public async Task<ActionResult<ValidationResultDto>> ValidateSolution(int id)
+    {
+        try
+        {
+            var game = await _gameService.GetGameByIdAsync(id);
+            
+            if (game == null)
+            {
+                return NotFound($"La partie avec l'ID {id} n'existe pas");
+            }
+
+            if (game.Puzzle == null)
+            {
+                return BadRequest("Le puzzle associé à cette partie est introuvable");
+            }
+
+            // Désérialiser les ponts du joueur
+            var playerBridges = System.Text.Json.JsonSerializer.Deserialize<List<BridgeDto>>(game.PlayerBridgesJson) ?? new();
+
+            // Valider la solution
+            var validationResult = _validationService.ValidateSolution(game.Puzzle, playerBridges);
+
+            // Si la solution est valide, terminer la partie
+            if (validationResult.IsValid)
+            {
+                int score = CalculateScore(game.ElapsedSeconds, game.HintsUsed);
+                await _gameService.CompleteGameAsync(id, GameStatus.Completed, score);
+                
+                _logger.LogInformation("Partie {GameId} terminée avec succès. Score: {Score}", id, score);
+            }
+
+            return Ok(validationResult);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la validation de la partie {GameId}", id);
+            return StatusCode(500, "Erreur interne du serveur");
+        }
+    }
+
+    /// <summary>
+    /// POST api/games/{id}/abandon
+    /// Abandonne une partie en cours
+    /// </summary>
+    /// <param name="id">ID de la partie</param>
+    /// <returns>La partie abandonnée</returns>
+    [HttpPost("{id}/abandon")]
+    public async Task<ActionResult<GameDto>> AbandonGame(int id)
+    {
+        try
+        {
+            var game = await _gameService.CompleteGameAsync(id, GameStatus.Abandoned, 0);
+            var gameDto = _gameService.ConvertToDto(game);
+            
+            _logger.LogInformation("Partie {GameId} abandonnée", id);
+            
+            return Ok(gameDto);
+        }
+        catch (ArgumentException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de l'abandon de la partie {GameId}", id);
+            return StatusCode(500, "Erreur interne du serveur");
+        }
+    }
+
+    /// <summary>
+    /// Calcule le score basé sur le temps et les indices utilisés
+    /// Formule: Score de base (1000) - (temps en secondes) - (indices * 100)
+    /// </summary>
+    private int CalculateScore(int elapsedSeconds, int hintsUsed)
+    {
+        int baseScore = 1000;
+        int timePenalty = Math.Min(elapsedSeconds, 500); // Max 500 points de pénalité pour le temps
+        int hintPenalty = hintsUsed * 100;
+
+        int score = Math.Max(0, baseScore - timePenalty - hintPenalty);
+        return score;
+    }
+}
+
+/// <summary>
+/// Requête pour créer une nouvelle partie
+/// </summary>
+public class CreateGameRequest
+{
+    /// <summary>
+    /// ID du puzzle à jouer
+    /// </summary>
+    public int PuzzleId { get; set; }
+
+    /// <summary>
+    /// ID du joueur (optionnel)
+    /// </summary>
+    public string? PlayerId { get; set; }
+}
+
