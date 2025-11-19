@@ -14,8 +14,11 @@ import type {
 } from '@/types'
 
 // URL de base de l'API
-// En développement, le backend tourne sur le port 5001 (ou celui configuré dans launchSettings.json)
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://localhost:5001/api'
+// En développement avec Visual Studio SPA Proxy : utilise l'URL relative /api
+// En développement manuel : utilise https://localhost:5001/api
+// La variable d'environnement VITE_API_URL peut être définie dans .env
+const API_BASE_URL = import.meta.env.VITE_API_URL || 
+  (import.meta.env.DEV ? '/api' : 'https://localhost:5001/api')
 
 /**
  * Classe de gestion des erreurs API

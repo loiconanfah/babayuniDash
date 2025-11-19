@@ -34,6 +34,16 @@ public class HashiDbContext : DbContext
     public DbSet<Game> Games { get; set; }
 
     /// <summary>
+    /// Table des utilisateurs
+    /// </summary>
+    public DbSet<User> Users { get; set; }
+
+    /// <summary>
+    /// Table des sessions
+    /// </summary>
+    public DbSet<Session> Sessions { get; set; }
+
+    /// <summary>
     /// Configuration du modèle de données
     /// Définit les relations entre les entités et les contraintes
     /// </summary>
@@ -105,19 +115,69 @@ public class HashiDbContext : DbContext
             entity.HasIndex(b => new { b.FromIslandId, b.ToIslandId });
         });
 
+        // Configuration du User
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasKey(u => u.Id);
+            entity.Property(u => u.Name).IsRequired().HasMaxLength(100);
+            entity.Property(u => u.Email).IsRequired().HasMaxLength(255);
+            entity.Property(u => u.CreatedAt).IsRequired();
+            entity.Property(u => u.IsActive).IsRequired().HasDefaultValue(true);
+
+            // Index unique sur l'email pour garantir l'unicité
+            entity.HasIndex(u => u.Email).IsUnique();
+
+            // Index pour améliorer les recherches
+            entity.HasIndex(u => u.IsActive);
+            entity.HasIndex(u => u.Email);
+
+            // Relation User -> Sessions (un utilisateur a plusieurs sessions)
+            entity.HasMany(u => u.Sessions)
+                .WithOne(s => s.User)
+                .HasForeignKey(s => s.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configuration du Session
+        modelBuilder.Entity<Session>(entity =>
+        {
+            entity.HasKey(s => s.Id);
+            entity.Property(s => s.SessionToken).IsRequired().HasMaxLength(255);
+            entity.Property(s => s.CreatedAt).IsRequired();
+            entity.Property(s => s.ExpiresAt).IsRequired();
+            entity.Property(s => s.LastActivityAt).IsRequired();
+            entity.Property(s => s.IsActive).IsRequired().HasDefaultValue(true);
+            entity.Property(s => s.IpAddress).HasMaxLength(45); // IPv6 max length
+            entity.Property(s => s.UserAgent).HasMaxLength(500);
+
+            // Index unique sur le token pour garantir l'unicité
+            entity.HasIndex(s => s.SessionToken).IsUnique();
+
+            // Index pour améliorer les recherches
+            entity.HasIndex(s => s.UserId);
+            entity.HasIndex(s => new { s.IsActive, s.ExpiresAt });
+            entity.HasIndex(s => s.CreatedAt);
+
+            // Relation Session -> Games (une session a plusieurs parties)
+            entity.HasMany(s => s.Games)
+                .WithOne(g => g.Session)
+                .HasForeignKey(g => g.SessionId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         // Configuration du Game
         modelBuilder.Entity<Game>(entity =>
         {
             entity.HasKey(g => g.Id);
-            entity.Property(g => g.PlayerId).HasMaxLength(100);
+            entity.Property(g => g.SessionId).IsRequired();
             entity.Property(g => g.StartedAt).IsRequired();
             entity.Property(g => g.Status).IsRequired();
             entity.Property(g => g.PlayerBridgesJson).IsRequired().HasDefaultValue("[]");
             entity.Property(g => g.Score).HasDefaultValue(0);
             entity.Property(g => g.HintsUsed).HasDefaultValue(0);
 
-            // Index pour rechercher les parties d'un joueur
-            entity.HasIndex(g => g.PlayerId);
+            // Index pour rechercher les parties d'une session
+            entity.HasIndex(g => g.SessionId);
             
             // Index pour rechercher les parties par statut
             entity.HasIndex(g => g.Status);

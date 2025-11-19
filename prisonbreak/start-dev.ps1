@@ -22,12 +22,12 @@ try {
 # Vérifier si les dépendances npm sont installées
 Write-Host ""
 Write-Host "🔍 Vérification des dépendances npm..." -ForegroundColor Yellow
-$nodeModulesPath = ".\prisonbreak.client\node_modules"
+$nodeModulesPath = "..\frontend\node_modules"
 if (-not (Test-Path $nodeModulesPath)) {
     Write-Host "📦 Installation des dépendances npm..." -ForegroundColor Yellow
-    Set-Location ".\prisonbreak.client"
+    Set-Location "..\frontend"
     npm install
-    Set-Location ".."
+    Set-Location "..\prisonbreak"
     Write-Host "✅ Dépendances installées" -ForegroundColor Green
 } else {
     Write-Host "✅ Dépendances déjà installées" -ForegroundColor Green
@@ -58,7 +58,7 @@ Write-Host "🎨 Démarrage du client Vue.js (Vite)..." -ForegroundColor Cyan
 $clientJob = Start-Process powershell -ArgumentList @(
     "-NoExit",
     "-Command",
-    "cd '$PWD\prisonbreak.client'; npm run dev"
+    "cd '$PWD\..\frontend'; npm run dev"
 ) -PassThru
 
 Write-Host "✅ Client démarré (PID: $($clientJob.Id))" -ForegroundColor Green

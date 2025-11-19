@@ -13,9 +13,9 @@ public interface IGameService
     /// Crée une nouvelle partie pour un puzzle donné
     /// </summary>
     /// <param name="puzzleId">ID du puzzle à jouer</param>
-    /// <param name="playerId">ID du joueur (optionnel)</param>
+    /// <param name="sessionId">ID de la session de jeu (requis)</param>
     /// <returns>La partie créée</returns>
-    Task<Game> CreateGameAsync(int puzzleId, string? playerId = null);
+    Task<Game> CreateGameAsync(int puzzleId, int sessionId);
 
     /// <summary>
     /// Récupère une partie par son ID

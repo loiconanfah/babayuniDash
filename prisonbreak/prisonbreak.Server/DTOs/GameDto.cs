@@ -22,6 +22,12 @@ public class GameDto
     public PuzzleDto? Puzzle { get; set; }
 
     /// <summary>
+    /// Identifiant de la session de jeu
+    /// Chaque partie appartient à une session utilisateur
+    /// </summary>
+    public int SessionId { get; set; }
+
+    /// <summary>
     /// Date de début
     /// </summary>
     public DateTime StartedAt { get; set; }

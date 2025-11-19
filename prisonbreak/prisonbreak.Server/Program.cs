@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using prisonbreak.Server.Data;
+using prisonbreak.Server.Repositories;
 using prisonbreak.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,8 +16,20 @@ builder.Services.AddDbContext<HashiDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") 
         ?? "Data Source=hashi.db"));
 
-// Enregistrement des services métier
+// ====================================================
+// ENREGISTREMENT DES REPOSITORIES
+// Pattern Repository : sépare l'accès aux données de la logique métier
+// ====================================================
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ISessionRepository, SessionRepository>();
+
+// ====================================================
+// ENREGISTREMENT DES SERVICES MÉTIER
 // Ces services implémentent la logique du jeu Hashi
+// Utilisent les repositories pour l'accès aux données
+// ====================================================
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<IPuzzleService, PuzzleService>();
 builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddScoped<IValidationService, ValidationService>();
@@ -38,12 +51,17 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // Configuration CORS pour permettre au frontend Vue.js de communiquer avec l'API
-// En développement, on autorise le port par défaut de Vite (5173)
+// En développement, on autorise le port par défaut de Vite (5173) et le proxy SPA
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowVueFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "https://localhost:5173", "https://localhost:5001")
+        policy.WithOrigins(
+                "http://localhost:5173", 
+                "https://localhost:5173", 
+                "http://localhost:5000",
+                "https://localhost:5001"
+              )
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -95,15 +113,20 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-// Activer CORS pour le frontend
-app.UseCors("AllowVueFrontend");
-
-// Redirection HTTPS pour la sécurité
+// Redirection HTTPS pour la sécurité (avant CORS)
 app.UseHttpsRedirection();
 
-// Servir les fichiers statiques du frontend (après build)
-app.UseDefaultFiles();
-app.UseStaticFiles();
+// Activer CORS pour le frontend (après UseRouting si utilisé, avant UseEndpoints)
+app.UseCors("AllowVueFrontend");
+
+// En développement avec SPA Proxy, ne pas servir les fichiers statiques
+// Le proxy redirige vers Vite qui sert les fichiers
+// En production, servir les fichiers statiques compilés
+if (!app.Environment.IsDevelopment())
+{
+    app.UseDefaultFiles();
+    app.UseStaticFiles();
+}
 
 // Utiliser les contrôleurs API
 app.MapControllers();
@@ -113,7 +136,11 @@ app.MapControllers();
 // Visual Studio lance automatiquement "npm run dev" au démarrage
 
 // Fallback vers index.html pour le routing côté client (SPA)
-// Ceci permet à Vue Router de gérer les routes
-app.MapFallbackToFile("/index.html");
+// IMPORTANT: Ne s'applique qu'en production ou si le SPA Proxy n'est pas actif
+// En développement avec SPA Proxy, le proxy gère déjà la redirection vers Vite
+if (!app.Environment.IsDevelopment())
+{
+    app.MapFallbackToFile("/index.html");
+}
 
 app.Run();

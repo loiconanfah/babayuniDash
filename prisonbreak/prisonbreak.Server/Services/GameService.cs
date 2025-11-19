@@ -24,19 +24,37 @@ public class GameService : IGameService
     /// <summary>
     /// Crée une nouvelle partie pour un puzzle
     /// </summary>
-    public async Task<Game> CreateGameAsync(int puzzleId, string? playerId = null)
+    /// <param name="puzzleId">ID du puzzle à jouer</param>
+    /// <param name="sessionId">ID de la session de jeu</param>
+    /// <returns>La partie créée</returns>
+    /// <exception cref="ArgumentException">Si le puzzle ou la session n'existe pas</exception>
+    public async Task<Game> CreateGameAsync(int puzzleId, int sessionId)
     {
         // Vérifier que le puzzle existe
         var puzzle = await _puzzleService.GetPuzzleByIdAsync(puzzleId);
         if (puzzle == null)
         {
-            throw new ArgumentException($"Le puzzle avec l'ID {puzzleId} n'existe pas");
+            throw new ArgumentException($"Le puzzle avec l'ID {puzzleId} n'existe pas", nameof(puzzleId));
+        }
+
+        // Vérifier que la session existe et est valide
+        var session = await _context.Sessions
+            .FirstOrDefaultAsync(s => s.Id == sessionId);
+        
+        if (session == null)
+        {
+            throw new ArgumentException($"La session avec l'ID {sessionId} n'existe pas", nameof(sessionId));
+        }
+
+        if (!session.IsValid())
+        {
+            throw new InvalidOperationException($"La session avec l'ID {sessionId} n'est pas valide (expirée ou inactive)");
         }
 
         var game = new Game
         {
             PuzzleId = puzzleId,
-            PlayerId = playerId,
+            SessionId = sessionId,
             StartedAt = DateTime.UtcNow,
             Status = GameStatus.InProgress,
             PlayerBridgesJson = "[]",
@@ -54,11 +72,15 @@ public class GameService : IGameService
     /// <summary>
     /// Récupère une partie par son ID
     /// </summary>
+    /// <param name="gameId">ID de la partie</param>
+    /// <returns>La partie trouvée, ou null si non trouvée</returns>
     public async Task<Game?> GetGameByIdAsync(int gameId)
     {
         return await _context.Games
             .Include(g => g.Puzzle)
                 .ThenInclude(p => p!.Islands)
+            .Include(g => g.Session)
+                .ThenInclude(s => s!.User)
             .FirstOrDefaultAsync(g => g.Id == gameId);
     }
 
@@ -130,6 +152,7 @@ public class GameService : IGameService
             Id = game.Id,
             PuzzleId = game.PuzzleId,
             Puzzle = game.Puzzle != null ? _puzzleService.ConvertToDto(game.Puzzle) : null,
+            SessionId = game.SessionId,
             StartedAt = game.StartedAt,
             CompletedAt = game.CompletedAt,
             ElapsedSeconds = game.ElapsedSeconds,

@@ -22,10 +22,17 @@ public class Game
     public Puzzle? Puzzle { get; set; }
 
     /// <summary>
-    /// Identifiant du joueur (optionnel pour le moment)
-    /// À utiliser quand un système d'authentification sera implémenté
+    /// Identifiant de la session de jeu
+    /// Clé étrangère vers la table Sessions
+    /// Chaque partie appartient à une session utilisateur
     /// </summary>
-    public string? PlayerId { get; set; }
+    public int SessionId { get; set; }
+
+    /// <summary>
+    /// Navigation vers la session propriétaire
+    /// Relation plusieurs-à-un : plusieurs parties peuvent appartenir à une session
+    /// </summary>
+    public Session? Session { get; set; }
 
     /// <summary>
     /// Date et heure de début de la partie

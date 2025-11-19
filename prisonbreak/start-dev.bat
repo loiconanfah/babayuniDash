@@ -18,7 +18,7 @@ timeout /t 5 /nobreak > nul
 
 REM Lancer le client dans un nouveau terminal
 echo 🎨 Demarrage du client Vue.js...
-start "Hashi Client" cmd /k "cd prisonbreak.client && npm run dev"
+start "Hashi Client" cmd /k "cd ..\frontend && npm run dev"
 
 REM Attendre 5 secondes
 timeout /t 5 /nobreak > nul

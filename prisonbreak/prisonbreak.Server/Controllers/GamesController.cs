@@ -34,21 +34,26 @@ public class GamesController : ControllerBase
     /// POST api/games
     /// Crée une nouvelle partie pour un puzzle
     /// </summary>
-    /// <param name="request">Requête contenant l'ID du puzzle</param>
+    /// <param name="request">Requête contenant l'ID du puzzle et de la session</param>
     /// <returns>La partie créée</returns>
     [HttpPost]
     public async Task<ActionResult<GameDto>> CreateGame([FromBody] CreateGameRequest request)
     {
         try
         {
-            var game = await _gameService.CreateGameAsync(request.PuzzleId, request.PlayerId);
+            var game = await _gameService.CreateGameAsync(request.PuzzleId, request.SessionId);
             var gameDto = _gameService.ConvertToDto(game);
             
-            _logger.LogInformation("Nouvelle partie créée : {GameId} pour le puzzle {PuzzleId}", game.Id, game.PuzzleId);
+            _logger.LogInformation("Nouvelle partie créée : {GameId} pour le puzzle {PuzzleId} et la session {SessionId}", 
+                game.Id, game.PuzzleId, game.SessionId);
             
             return CreatedAtAction(nameof(GetGameById), new { id = game.Id }, gameDto);
         }
         catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (InvalidOperationException ex)
         {
             return BadRequest(ex.Message);
         }
@@ -217,12 +222,14 @@ public class CreateGameRequest
 {
     /// <summary>
     /// ID du puzzle à jouer
+    /// Requis
     /// </summary>
     public int PuzzleId { get; set; }
 
     /// <summary>
-    /// ID du joueur (optionnel)
+    /// ID de la session de jeu
+    /// Requis - Chaque partie appartient à une session utilisateur
     /// </summary>
-    public string? PlayerId { get; set; }
+    public int SessionId { get; set; }
 }
 

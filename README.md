@@ -29,6 +29,17 @@ Ce projet est une implémentation complète du jeu avec :
 - Un **frontend Vue.js 3** avec TypeScript pour l'interface utilisateur
 - Une **API REST** pour la communication entre les deux
 - Une **base de données SQLite** pour la persistance
+- Un **système d'utilisateurs et de sessions** pour la gestion des comptes
+
+### 🏗️ Architecture Professionnelle
+
+Le backend suit une architecture en couches professionnelle :
+- **Pattern Repository** pour l'accès aux données
+- **Services métier** avec interfaces
+- **DTOs** pour le transfert de données
+- **Documentation XML complète** sur tous les éléments publics
+- **Gestion des utilisateurs** avec nom et email
+- **Système de sessions** (une session active par compte)
 
 ---
 

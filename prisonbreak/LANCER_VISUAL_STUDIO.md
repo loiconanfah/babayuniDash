@@ -11,9 +11,9 @@ Guide rapide pour lancer le projet Hashi dans Visual Studio.
 Ouvrez PowerShell dans le dossier `prisonbreak` :
 
 ```powershell
-cd prisonbreak.client
+cd ..\frontend
 npm install
-cd ..
+cd ..\prisonbreak
 ```
 
 ### 2. Ouvrir dans Visual Studio
@@ -138,7 +138,7 @@ Cela arrête automatiquement :
 
 **Solution :** Installez les dépendances
 ```powershell
-cd prisonbreak\prisonbreak.client
+cd frontend
 npm install
 ```
 
@@ -182,7 +182,7 @@ taskkill /PID <PID> /F
 
 **Si nécessaire, lancez manuellement :**
 ```powershell
-cd prisonbreak\prisonbreak.client
+cd ..\frontend
 npm run dev
 ```
 
@@ -193,25 +193,18 @@ npm run dev
 Dans l'**Explorateur de solutions**, vous verrez :
 
 ```
-Solution 'prisonbreak' (2 projets)
+Solution 'prisonbreak' (1 projet)
 │
-├─ prisonbreak.Server (ASP.NET Core)
-│  ├─ Controllers/
-│  ├─ Data/
-│  ├─ DTOs/
-│  ├─ Models/
-│  ├─ Services/
-│  ├─ Properties/
-│  └─ Program.cs
-│
-└─ prisonbreak.client (Vue.js)
-   ├─ src/
-   │  ├─ components/
-   │  ├─ services/
-   │  ├─ types/
-   │  └─ App.vue
-   ├─ package.json
-   └─ vite.config.js
+└─ prisonbreak.Server (ASP.NET Core)
+   ├─ Controllers/
+   ├─ Data/
+   ├─ DTOs/
+   ├─ Models/
+   ├─ Services/
+   ├─ Properties/
+   └─ Program.cs
+
+Note: Le client Vue.js est maintenant dans le dossier frontend/ à la racine
 ```
 
 ---
@@ -244,7 +237,7 @@ Solution 'prisonbreak' (2 projets)
 
 ### Modifier le Frontend
 
-1. Modifiez un fichier `.vue`, `.js` dans `prisonbreak.client/src/`
+1. Modifiez un fichier `.vue`, `.ts` dans `frontend/src/`
 2. Vite **recharge automatiquement** (Hot Module Replacement)
 3. La page se met à jour instantanément ! ⚡
 
@@ -256,11 +249,9 @@ Solution 'prisonbreak' (2 projets)
 |---------|-------------|
 | `prisonbreak.sln` | Solution Visual Studio (fichier à ouvrir) |
 | `prisonbreak.Server.csproj` | Projet backend |
-| `prisonbreak.client.esproj` | Projet client (JavaScript) |
-| `launchSettings.json` | Configuration des profils de démarrage |
-| `vite.config.js` | Configuration du serveur de développement Vue.js |
+| `../frontend/vite.config.ts` | Configuration du serveur de développement Vue.js |
 | `Program.cs` | Point d'entrée du backend |
-| `App.vue` | Composant racine Vue.js |
+| `../frontend/src/App.vue` | Composant racine Vue.js |
 
 ---
 
@@ -315,7 +306,7 @@ Avant de développer :
 - [ ] Node.js et npm installés
 - [ ] Visual Studio 2022 installé
 - [ ] Workload "ASP.NET et développement web" installé
-- [ ] `npm install` exécuté dans `prisonbreak.client`
+- [ ] `npm install` exécuté dans `frontend`
 - [ ] Certificat HTTPS approuvé (`dotnet dev-certs https --trust`)
 - [ ] `prisonbreak.sln` ouvert dans Visual Studio
 - [ ] Profil "https" sélectionné
