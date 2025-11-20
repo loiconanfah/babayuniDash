@@ -1,79 +1,58 @@
-namespace prisonbreak.Server.Models;
+using System.ComponentModel.DataAnnotations;
 
-/// <summary>
-/// Représente un utilisateur du jeu Hashi
-/// Chaque utilisateur possède un nom et une adresse email unique
-/// Un utilisateur peut avoir plusieurs sessions de jeu
-/// </summary>
-public class User
+namespace prisonbreak.Server.Models
 {
     /// <summary>
-    /// Identifiant unique de l'utilisateur
-    /// Clé primaire auto-générée
+    /// Représente un joueur de Prison Break.
     /// </summary>
-    public int Id { get; set; }
-
-    /// <summary>
-    /// Nom complet ou pseudonyme de l'utilisateur
-    /// Requis, maximum 100 caractères
-    /// </summary>
-    public string Name { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Adresse email de l'utilisateur
-    /// Requis, unique, maximum 255 caractères
-    /// Utilisé pour l'identification et la communication
-    /// </summary>
-    public string Email { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Date et heure de création du compte utilisateur
-    /// Initialisé automatiquement à la création
-    /// </summary>
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    /// <summary>
-    /// Date et heure de la dernière connexion
-    /// Mis à jour à chaque authentification
-    /// </summary>
-    public DateTime? LastLoginAt { get; set; }
-
-    /// <summary>
-    /// Indique si le compte utilisateur est actif
-    /// Permet de désactiver un compte sans le supprimer
-    /// </summary>
-    public bool IsActive { get; set; } = true;
-
-    /// <summary>
-    /// Collection des sessions de jeu de l'utilisateur
-    /// Relation un-à-plusieurs : un utilisateur peut avoir plusieurs sessions
-    /// </summary>
-    public ICollection<Session> Sessions { get; set; } = new List<Session>();
-
-    /// <summary>
-    /// Vérifie si l'utilisateur a une session active
-    /// </summary>
-    /// <returns>True si l'utilisateur a au moins une session active, sinon False</returns>
-    public bool HasActiveSession()
+    public class User
     {
-        return Sessions.Any(s => s.IsActive);
-    }
+        /// <summary>
+        /// Identifiant unique du joueur (clé primaire).
+        /// </summary>
+        public int Id { get; set; }
 
-    /// <summary>
-    /// Récupère la session active de l'utilisateur
-    /// </summary>
-    /// <returns>La première session active trouvée, ou null si aucune session active</returns>
-    public Session? GetActiveSession()
-    {
-        return Sessions.FirstOrDefault(s => s.IsActive);
-    }
+        /// <summary>
+        /// Nom affiché dans l’interface (ex : "Kevin").
+        /// Obligatoire, max 50 caractères.
+        /// </summary>
+        [Required]
+        [MaxLength(50)]
+        public string Name { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Met à jour la date de dernière connexion
-    /// </summary>
-    public void UpdateLastLogin()
-    {
-        LastLoginAt = DateTime.UtcNow;
+        /// <summary>
+        /// Adresse courriel, utilisée pour identifier le joueur.
+        /// Obligatoire, max 255 caractères.
+        /// </summary>
+        [Required]
+        [MaxLength(255)]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Date de création du compte.
+        /// </summary>
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        /// <summary>
+        /// Dernière connexion du joueur.
+        /// </summary>
+        public DateTime? LastLoginAt { get; set; }
+
+        /// <summary>
+        /// Le compte est-il actif ?
+        /// </summary>
+        public bool IsActive { get; set; } = true;
+
+        /// <summary>
+        /// Met à jour la date de dernière connexion du joueur.
+        /// Cette méthode est utilisée par SessionService (user.UpdateLastLogin()).
+        /// </summary>
+        public void UpdateLastLogin()
+        {
+            LastLoginAt = DateTime.UtcNow;
+            // On peut aussi forcer le compte comme actif au passage.
+            IsActive = true;
+        }
     }
 }
-

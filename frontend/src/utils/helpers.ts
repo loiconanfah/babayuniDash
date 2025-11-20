@@ -72,7 +72,7 @@ export function generateUniqueId(): string {
  * @param wait - Temps d'attente en millisecondes
  * @returns Fonction debouncée
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
@@ -97,12 +97,12 @@ export function debounce<T extends (...args: any[]) => any>(
  * @param limit - Limite en millisecondes
  * @returns Fonction throttlée
  */
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: unknown[]) => unknown>(
   func: T,
   limit: number
 ): (...args: Parameters<T>) => void {
-  let inThrottle: boolean
-  
+  let inThrottle = false
+
   return function executedFunction(...args: Parameters<T>) {
     if (!inThrottle) {
       func(...args)
@@ -128,11 +128,11 @@ export function deepClone<T>(obj: T): T {
  * @param value - Valeur à vérifier
  * @returns True si la valeur est vide
  */
-export function isEmpty(value: any): boolean {
+export function isEmpty(value: unknown): boolean {
   if (value === null || value === undefined) return true
   if (typeof value === 'string') return value.trim().length === 0
   if (Array.isArray(value)) return value.length === 0
-  if (typeof value === 'object') return Object.keys(value).length === 0
+  if (typeof value === 'object') return Object.keys(value as Record<string, unknown>).length === 0
   return false
 }
 
@@ -175,4 +175,3 @@ export function getDifficultyColor(difficulty: number): string {
       return '#718096' // Gris
   }
 }
-

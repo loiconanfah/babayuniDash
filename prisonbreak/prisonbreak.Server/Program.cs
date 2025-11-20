@@ -13,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 // SQLite est utilisé pour sa simplicité et portabilité
 // Pour la production, envisagez PostgreSQL ou SQL Server
 builder.Services.AddDbContext<HashiDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") 
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")
         ?? "Data Source=hashi.db"));
 
 // ====================================================
@@ -42,9 +42,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new() 
-    { 
-        Title = "Hashi API", 
+    c.SwaggerDoc("v1", new()
+    {
+        Title = "Hashi API",
         Version = "v1",
         Description = "API pour le jeu de puzzle Hashi (Hashiwokakero)"
     });
@@ -57,8 +57,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowVueFrontend", policy =>
     {
         policy.WithOrigins(
-                "http://localhost:5173", 
-                "https://localhost:5173", 
+                "http://localhost:5173",
+                "https://localhost:5173",
                 "http://localhost:5000",
                 "https://localhost:5001"
               )
@@ -87,7 +87,7 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<HashiDbContext>();
         context.Database.EnsureCreated();
-        
+
         // TODO: Ajouter des données de test ici si nécessaire
         // Par exemple : créer quelques puzzles de base
     }
@@ -137,7 +137,6 @@ app.MapControllers();
 
 // Fallback vers index.html pour le routing côté client (SPA)
 // IMPORTANT: Ne s'applique qu'en production ou si le SPA Proxy n'est pas actif
-// En développement avec SPA Proxy, le proxy gère déjà la redirection vers Vite
 if (!app.Environment.IsDevelopment())
 {
     app.MapFallbackToFile("/index.html");

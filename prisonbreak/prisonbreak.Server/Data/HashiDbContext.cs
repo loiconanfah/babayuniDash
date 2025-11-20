@@ -1,187 +1,337 @@
 using Microsoft.EntityFrameworkCore;
 using prisonbreak.Server.Models;
 
-namespace prisonbreak.Server.Data;
-
-/// <summary>
-/// Contexte de base de données pour le jeu Hashi
-/// Gère toutes les entités et leurs relations
-/// </summary>
-public class HashiDbContext : DbContext
+namespace prisonbreak.Server.Data
 {
-    public HashiDbContext(DbContextOptions<HashiDbContext> options) : base(options)
+    /// <summary>
+    /// Contexte Entity Framework Core pour le jeu Hashi / Prison Break.
+    /// - Regroupe toutes les entités persistées en base.
+    /// - Applique les contraintes décrites dans le PDF et l'ARCHITECTURE_BACKEND :
+    ///   * User.Email unique et requis
+    ///   * Session.SessionToken unique et requis
+    ///   * Game lié obligatoirement à une Session et à un Puzzle
+    ///   * Relations 1-N entre User → Sessions, Session → Games, Puzzle → Islands/Bridges.
+    /// </summary>
+    public class HashiDbContext : DbContext
     {
-    }
-
-    /// <summary>
-    /// Table des puzzles
-    /// </summary>
-    public DbSet<Puzzle> Puzzles { get; set; }
-
-    /// <summary>
-    /// Table des îles
-    /// </summary>
-    public DbSet<Island> Islands { get; set; }
-
-    /// <summary>
-    /// Table des ponts
-    /// </summary>
-    public DbSet<Bridge> Bridges { get; set; }
-
-    /// <summary>
-    /// Table des parties
-    /// </summary>
-    public DbSet<Game> Games { get; set; }
-
-    /// <summary>
-    /// Table des utilisateurs
-    /// </summary>
-    public DbSet<User> Users { get; set; }
-
-    /// <summary>
-    /// Table des sessions
-    /// </summary>
-    public DbSet<Session> Sessions { get; set; }
-
-    /// <summary>
-    /// Configuration du modèle de données
-    /// Définit les relations entre les entités et les contraintes
-    /// </summary>
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        base.OnModelCreating(modelBuilder);
-
-        // Configuration du Puzzle
-        modelBuilder.Entity<Puzzle>(entity =>
+        /// <summary>
+        /// Initialise une nouvelle instance du contexte HashiDbContext.
+        /// DbContextOptions est injecté par ASP.NET Core via Program.cs.
+        /// </summary>
+        public HashiDbContext(DbContextOptions<HashiDbContext> options)
+            : base(options)
         {
-            entity.HasKey(p => p.Id);
-            entity.Property(p => p.Name).HasMaxLength(200);
-            entity.Property(p => p.Width).IsRequired();
-            entity.Property(p => p.Height).IsRequired();
-            entity.Property(p => p.Difficulty).IsRequired();
-            entity.Property(p => p.CreatedAt).IsRequired();
+        }
 
-            // Relation Puzzle -> Islands (un puzzle a plusieurs îles)
-            entity.HasMany(p => p.Islands)
-                .WithOne(i => i.Puzzle)
-                .HasForeignKey(i => i.PuzzleId)
-                .OnDelete(DeleteBehavior.Cascade);
+        // ============================
+        // DbSet = tables principales
+        // ============================
 
-            // Relation Puzzle -> Bridges (un puzzle a plusieurs ponts dans sa solution)
-            entity.HasMany(p => p.SolutionBridges)
-                .WithOne(b => b.Puzzle)
-                .HasForeignKey(b => b.PuzzleId)
-                .OnDelete(DeleteBehavior.Cascade);
+        /// <summary>
+        /// Table des utilisateurs (joueurs).
+        /// Correspond à la gestion du joueur : Nom + Email + métadonnées.
+        /// </summary>
+        public DbSet<User> Users => Set<User>();
 
-            // Relation Puzzle -> Games (un puzzle peut avoir plusieurs parties)
-            entity.HasMany(p => p.Games)
-                .WithOne(g => g.Puzzle)
-                .HasForeignKey(g => g.PuzzleId)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
+        /// <summary>
+        /// Table des sessions de jeu (token, expiration, lien utilisateur).
+        /// </summary>
+        public DbSet<Session> Sessions => Set<Session>();
 
-        // Configuration de l'Island
-        modelBuilder.Entity<Island>(entity =>
+        /// <summary>
+        /// Table des parties (Game) jouées par les joueurs.
+        /// Utilisée plus tard pour les statistiques et le leaderboard.
+        /// </summary>
+        public DbSet<Game> Games => Set<Game>();
+
+        /// <summary>
+        /// Table des puzzles Hashi (grilles générées).
+        /// </summary>
+        public DbSet<Puzzle> Puzzles => Set<Puzzle>();
+
+        /// <summary>
+        /// Table des îles d’un puzzle (Island).
+        /// </summary>
+        public DbSet<Island> Islands => Set<Island>();
+
+        /// <summary>
+        /// Table des ponts de solution d’un puzzle (Bridge).
+        /// </summary>
+        public DbSet<Bridge> Bridges => Set<Bridge>();
+
+        /// <summary>
+        /// Configuration fine du modèle : contraintes, index, relations.
+        /// Tout ce qui touche à la structure SQL est centralisé ici.
+        /// </summary>
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            entity.HasKey(i => i.Id);
-            entity.Property(i => i.X).IsRequired();
-            entity.Property(i => i.Y).IsRequired();
-            entity.Property(i => i.RequiredBridges).IsRequired();
+            base.OnModelCreating(modelBuilder);
 
-            // Index pour améliorer les performances de recherche par position
-            entity.HasIndex(i => new { i.PuzzleId, i.X, i.Y });
-        });
+            ConfigureUser(modelBuilder);
+            ConfigureSession(modelBuilder);
+            ConfigureGame(modelBuilder);
+            ConfigurePuzzle(modelBuilder);
+            ConfigureIsland(modelBuilder);
+            ConfigureBridge(modelBuilder);
+        }
 
-        // Configuration du Bridge
-        modelBuilder.Entity<Bridge>(entity =>
+        // ============================
+        // Configuration User
+        // ============================
+
+        /// <summary>
+        /// Configure la table Users :
+        /// - Email unique et requis (comme dans le PDF : joueur identifié par pseudo/email)
+        /// - Nom avec taille limitée (pseudo max ~50 caractères)
+        /// - Valeurs par défaut CreatedAt et IsActive.
+        /// </summary>
+        private static void ConfigureUser(ModelBuilder modelBuilder)
         {
-            entity.HasKey(b => b.Id);
-            entity.Property(b => b.IsDouble).IsRequired();
-            entity.Property(b => b.Direction).IsRequired();
+            var entity = modelBuilder.Entity<User>();
 
-            // Relation Bridge -> FromIsland (pont depuis une île)
-            entity.HasOne(b => b.FromIsland)
-                .WithMany(i => i.BridgesFrom)
-                .HasForeignKey(b => b.FromIslandId)
-                .OnDelete(DeleteBehavior.Restrict); // Empêche la suppression en cascade
+            entity.ToTable("Users");
 
-            // Relation Bridge -> ToIsland (pont vers une île)
-            entity.HasOne(b => b.ToIsland)
-                .WithMany(i => i.BridgesTo)
-                .HasForeignKey(b => b.ToIslandId)
-                .OnDelete(DeleteBehavior.Restrict); // Empêche la suppression en cascade
-
-            // Index pour améliorer les performances
-            entity.HasIndex(b => new { b.FromIslandId, b.ToIslandId });
-        });
-
-        // Configuration du User
-        modelBuilder.Entity<User>(entity =>
-        {
+            // Clé primaire
             entity.HasKey(u => u.Id);
-            entity.Property(u => u.Name).IsRequired().HasMaxLength(100);
-            entity.Property(u => u.Email).IsRequired().HasMaxLength(255);
-            entity.Property(u => u.CreatedAt).IsRequired();
-            entity.Property(u => u.IsActive).IsRequired().HasDefaultValue(true);
 
-            // Index unique sur l'email pour garantir l'unicité
-            entity.HasIndex(u => u.Email).IsUnique();
+            // Pseudo / Nom du joueur
+            entity.Property(u => u.Name)
+                  .IsRequired()
+                  .HasMaxLength(50); // cohérent avec un pseudo court
 
-            // Index pour améliorer les recherches
-            entity.HasIndex(u => u.IsActive);
-            entity.HasIndex(u => u.Email);
+            // Email du joueur (identifiant unique)
+            entity.Property(u => u.Email)
+                  .IsRequired()
+                  .HasMaxLength(255); // 255 = standard pour les emails
 
-            // Relation User -> Sessions (un utilisateur a plusieurs sessions)
-            entity.HasMany(u => u.Sessions)
-                .WithOne(s => s.User)
-                .HasForeignKey(s => s.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
+            // Index unique sur l'email (une seule entrée par email)
+            entity.HasIndex(u => u.Email)
+                  .IsUnique();
 
-        // Configuration du Session
-        modelBuilder.Entity<Session>(entity =>
+            // Dates & état
+            entity.Property(u => u.CreatedAt)
+                  .HasDefaultValueSql("CURRENT_TIMESTAMP"); // SQLite : date de création auto
+
+            entity.Property(u => u.IsActive)
+                  .HasDefaultValue(true);
+
+            // Relation logique User (1) -> (N) Sessions
+            // On ne dépend pas forcément des propriétés de navigation,
+            // EF peut gérer la relation via la FK UserId.
+            entity.HasMany<Session>()
+                  .WithOne()
+                  .HasForeignKey(s => s.UserId)
+                  .OnDelete(DeleteBehavior.Cascade); // suppression d'un user = supprime ses sessions + games
+        }
+
+        // ============================
+        // Configuration Session
+        // ============================
+
+        /// <summary>
+        /// Configure la table Sessions :
+        /// - Token unique et requis
+        /// - Date d'expiration obligatoire
+        /// - Lien obligatoire vers User (UserId).
+        /// </summary>
+        private static void ConfigureSession(ModelBuilder modelBuilder)
         {
+            var entity = modelBuilder.Entity<Session>();
+
+            entity.ToTable("Sessions");
+
             entity.HasKey(s => s.Id);
-            entity.Property(s => s.SessionToken).IsRequired().HasMaxLength(255);
-            entity.Property(s => s.CreatedAt).IsRequired();
-            entity.Property(s => s.ExpiresAt).IsRequired();
-            entity.Property(s => s.LastActivityAt).IsRequired();
-            entity.Property(s => s.IsActive).IsRequired().HasDefaultValue(true);
-            entity.Property(s => s.IpAddress).HasMaxLength(45); // IPv6 max length
-            entity.Property(s => s.UserAgent).HasMaxLength(500);
 
-            // Index unique sur le token pour garantir l'unicité
-            entity.HasIndex(s => s.SessionToken).IsUnique();
+            // Token de session (GUID + timestamp)
+            entity.Property(s => s.SessionToken)
+                  .IsRequired()
+                  .HasMaxLength(128);
 
-            // Index pour améliorer les recherches
+            // Index unique sur le token
+            entity.HasIndex(s => s.SessionToken)
+                  .IsUnique();
+
+            // Session active par défaut
+            entity.Property(s => s.IsActive)
+                  .HasDefaultValue(true);
+
+            // Date d'expiration obligatoire
+            entity.Property(s => s.ExpiresAt)
+                  .IsRequired();
+
+            // Index sur UserId pour accélérer les requêtes par utilisateur
             entity.HasIndex(s => s.UserId);
-            entity.HasIndex(s => new { s.IsActive, s.ExpiresAt });
-            entity.HasIndex(s => s.CreatedAt);
+        }
 
-            // Relation Session -> Games (une session a plusieurs parties)
-            entity.HasMany(s => s.Games)
-                .WithOne(g => g.Session)
-                .HasForeignKey(g => g.SessionId)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
+        // ============================
+        // Configuration Game (Parties)
+        // ============================
 
-        // Configuration du Game
-        modelBuilder.Entity<Game>(entity =>
+        /// <summary>
+        /// Configure la table Games :
+        /// - Lien obligatoire vers Session (SessionId) et Puzzle (PuzzleId)
+        /// - Score avec valeur par défaut 0
+        /// - Statut requis (InProgress, Completed, etc.)
+        /// - Index sur SessionId pour les stats / leaderboard par joueur.
+        /// </summary>
+        private static void ConfigureGame(ModelBuilder modelBuilder)
         {
-            entity.HasKey(g => g.Id);
-            entity.Property(g => g.SessionId).IsRequired();
-            entity.Property(g => g.StartedAt).IsRequired();
-            entity.Property(g => g.Status).IsRequired();
-            entity.Property(g => g.PlayerBridgesJson).IsRequired().HasDefaultValue("[]");
-            entity.Property(g => g.Score).HasDefaultValue(0);
-            entity.Property(g => g.HintsUsed).HasDefaultValue(0);
+            var entity = modelBuilder.Entity<Game>();
 
-            // Index pour rechercher les parties d'une session
+            entity.ToTable("Games");
+
+            entity.HasKey(g => g.Id);
+
+            // Statut de la partie (en cours, terminée, etc.)
+            entity.Property(g => g.Status)
+                  .IsRequired();
+
+            // Score de la partie (utilisé pour le leaderboard)
+            entity.Property(g => g.Score)
+                  .HasDefaultValue(0);
+
+            // Date de début : par défaut maintenant
+            entity.Property(g => g.StartedAt)
+                  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            // Index pour les requêtes par SessionId (stats par session/joueur)
             entity.HasIndex(g => g.SessionId);
-            
-            // Index pour rechercher les parties par statut
-            entity.HasIndex(g => g.Status);
-        });
+
+            // Relation Game -> Session (N -> 1)
+            entity.HasOne<Session>()
+                  .WithMany()
+                  .HasForeignKey(g => g.SessionId)
+                  .OnDelete(DeleteBehavior.Cascade); // cohérent avec "supprimer User supprime Sessions + Games"
+
+            // Relation Game -> Puzzle (N -> 1)
+            entity.HasOne<Puzzle>()
+                  .WithMany()
+                  .HasForeignKey(g => g.PuzzleId)
+                  .OnDelete(DeleteBehavior.Restrict); // on évite de supprimer un puzzle utilisé par des games
+        }
+
+        // ============================
+        // Configuration Puzzle
+        // ============================
+
+        /// <summary>
+        /// Configure la table Puzzles :
+        /// - Dimensions obligatoires (width/height)
+        /// - Difficulté requise (pour le leaderboard : colonne « Difficulté »)
+        /// - Index sur Difficulty pour filtrer facilement par niveau.
+        /// </summary>
+        private static void ConfigurePuzzle(ModelBuilder modelBuilder)
+        {
+            var entity = modelBuilder.Entity<Puzzle>();
+
+            entity.ToTable("Puzzles");
+
+            entity.HasKey(p => p.Id);
+
+            entity.Property(p => p.Name)
+                  .HasMaxLength(100); // nom de la grille (optionnel mais limité)
+
+            entity.Property(p => p.Width)
+                  .IsRequired();
+
+            entity.Property(p => p.Height)
+                  .IsRequired();
+
+            // Difficulté (Easy/Medium/Hard/Expert)
+            entity.Property(p => p.Difficulty)
+                  .IsRequired();
+
+            // Index pour accélérer les requêtes par difficulté
+            entity.HasIndex(p => p.Difficulty);
+        }
+
+        // ============================
+        // Configuration Island
+        // ============================
+
+        /// <summary>
+        /// Configure la table Islands :
+        /// - Position (X, Y) et RequiredBridges obligatoires
+        /// - Lien obligatoire vers Puzzle (PuzzleId).
+        /// </summary>
+        private static void ConfigureIsland(ModelBuilder modelBuilder)
+        {
+            var entity = modelBuilder.Entity<Island>();
+
+            entity.ToTable("Islands");
+
+            entity.HasKey(i => i.Id);
+
+            entity.Property(i => i.X)
+                  .IsRequired();
+
+            entity.Property(i => i.Y)
+                  .IsRequired();
+
+            entity.Property(i => i.RequiredBridges)
+                  .IsRequired();
+
+            // Index sur PuzzleId pour retrouver toutes les îles d'une grille
+            entity.HasIndex(i => i.PuzzleId);
+
+            entity.HasOne<Puzzle>()
+                  .WithMany()
+                  .HasForeignKey(i => i.PuzzleId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        }
+
+        // ============================
+        // Configuration Bridge
+        // ============================
+
+        /// <summary>
+        /// Configure la table Bridges :
+        /// - Lien vers Puzzle (PuzzleId) pour la solution
+        /// - Indicateur IsDouble requis (pont simple/double).
+        /// </summary>
+        private static void ConfigureBridge(ModelBuilder modelBuilder)
+        {
+            var entity = modelBuilder.Entity<Bridge>();
+
+            entity.ToTable("Bridges");
+
+            // Clé primaire
+            entity.HasKey(b => b.Id);
+
+            // Pont simple ou double
+            entity.Property(b => b.IsDouble)
+                  .IsRequired();
+
+            // Direction (Horizontal / Vertical)
+            entity.Property(b => b.Direction)
+                  .IsRequired();
+
+            // Index utiles pour les requêtes
+            entity.HasIndex(b => b.PuzzleId);
+            entity.HasIndex(b => b.FromIslandId);
+            entity.HasIndex(b => b.ToIslandId);
+
+            // ============================
+            // Relations
+            // ============================
+
+            // Bridge -> Puzzle (N ponts pour 1 puzzle)
+            entity.HasOne(b => b.Puzzle)
+                  .WithMany()              // ou .WithMany(p => p.Bridges) si tu as cette collec dans Puzzle
+                  .HasForeignKey(b => b.PuzzleId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            // Bridge -> Island (île de départ)
+            entity.HasOne(b => b.FromIsland)
+                  .WithMany()              // pas de collection explicite côté Island
+                  .HasForeignKey(b => b.FromIslandId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            // Bridge -> Island (île d’arrivée)
+            entity.HasOne(b => b.ToIsland)
+                  .WithMany()
+                  .HasForeignKey(b => b.ToIslandId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        }
     }
 }
-
