@@ -31,24 +31,24 @@ const emit = defineEmits<{
 // ====================================================
 
 /**
- * Position de départ du pont (X)
+ * Position de départ du pont (X) - centré sur l'île
  */
-const x1 = computed(() => props.fromIsland.x * props.cellSize)
+const x1 = computed(() => props.fromIsland.x * props.cellSize + props.cellSize / 2)
 
 /**
- * Position de départ du pont (Y)
+ * Position de départ du pont (Y) - centré sur l'île
  */
-const y1 = computed(() => props.fromIsland.y * props.cellSize)
+const y1 = computed(() => props.fromIsland.y * props.cellSize + props.cellSize / 2)
 
 /**
- * Position d'arrivée du pont (X)
+ * Position d'arrivée du pont (X) - centré sur l'île
  */
-const x2 = computed(() => props.toIsland.x * props.cellSize)
+const x2 = computed(() => props.toIsland.x * props.cellSize + props.cellSize / 2)
 
 /**
- * Position d'arrivée du pont (Y)
+ * Position d'arrivée du pont (Y) - centré sur l'île
  */
-const y2 = computed(() => props.toIsland.y * props.cellSize)
+const y2 = computed(() => props.toIsland.y * props.cellSize + props.cellSize / 2)
 
 /**
  * Vérifie si le pont est horizontal
@@ -63,27 +63,33 @@ const offset = computed(() => 5)
 
 /**
  * Coordonnées de la première ligne (pour pont double)
+ * Les ponts partent de la surface des îles
  */
 const line1 = computed(() => {
   if (!props.bridge.isDouble) {
-    return { x1: x1.value, y1: y1.value, x2: x2.value, y2: y2.value }
+    return { 
+      x1: startPoint.value.x, 
+      y1: startPoint.value.y, 
+      x2: endPoint.value.x, 
+      y2: endPoint.value.y 
+    }
   }
 
   if (isHorizontal.value) {
     // Pont horizontal : décaler verticalement
     return {
-      x1: x1.value,
-      y1: y1.value - offset.value,
-      x2: x2.value,
-      y2: y2.value - offset.value
+      x1: startPoint.value.x,
+      y1: startPoint.value.y - offset.value,
+      x2: endPoint.value.x,
+      y2: endPoint.value.y - offset.value
     }
   } else {
     // Pont vertical : décaler horizontalement
     return {
-      x1: x1.value - offset.value,
-      y1: y1.value,
-      x2: x2.value - offset.value,
-      y2: y2.value
+      x1: startPoint.value.x - offset.value,
+      y1: startPoint.value.y,
+      x2: endPoint.value.x - offset.value,
+      y2: endPoint.value.y
     }
   }
 })
@@ -96,18 +102,57 @@ const line2 = computed(() => {
 
   if (isHorizontal.value) {
     return {
-      x1: x1.value,
-      y1: y1.value + offset.value,
-      x2: x2.value,
-      y2: y2.value + offset.value
+      x1: startPoint.value.x,
+      y1: startPoint.value.y + offset.value,
+      x2: endPoint.value.x,
+      y2: endPoint.value.y + offset.value
     }
   } else {
     return {
-      x1: x1.value + offset.value,
-      y1: y1.value,
-      x2: x2.value + offset.value,
-      y2: y2.value
+      x1: startPoint.value.x + offset.value,
+      y1: startPoint.value.y,
+      x2: endPoint.value.x + offset.value,
+      y2: endPoint.value.y
     }
+  }
+})
+
+/**
+ * Rayon des îles pour calculer où les ponts doivent commencer/finir
+ */
+const islandRadius = computed(() => Math.min(props.cellSize * 0.35, 25))
+
+/**
+ * Calcule le point de départ du pont (à la surface de l'île)
+ */
+const startPoint = computed(() => {
+  const dx = x2.value - x1.value
+  const dy = y2.value - y1.value
+  const distance = Math.sqrt(dx * dx + dy * dy)
+  
+  if (distance === 0) return { x: x1.value, y: y1.value }
+  
+  const ratio = islandRadius.value / distance
+  return {
+    x: x1.value + dx * ratio,
+    y: y1.value + dy * ratio
+  }
+})
+
+/**
+ * Calcule le point d'arrivée du pont (à la surface de l'île)
+ */
+const endPoint = computed(() => {
+  const dx = x2.value - x1.value
+  const dy = y2.value - y1.value
+  const distance = Math.sqrt(dx * dx + dy * dy)
+  
+  if (distance === 0) return { x: x2.value, y: y2.value }
+  
+  const ratio = islandRadius.value / distance
+  return {
+    x: x2.value - dx * ratio,
+    y: y2.value - dy * ratio
   }
 })
 
@@ -118,10 +163,10 @@ const line2 = computed(() => {
 const clickArea = computed(() => {
   const padding = 10
   return {
-    x1: x1.value,
-    y1: y1.value,
-    x2: x2.value,
-    y2: y2.value,
+    x1: startPoint.value.x,
+    y1: startPoint.value.y,
+    x2: endPoint.value.x,
+    y2: endPoint.value.y,
     strokeWidth: padding * 2
   }
 })
@@ -135,7 +180,11 @@ function handleClick() {
 </script>
 
 <template>
-  <g class="bridge" @click="handleClick">
+  <g 
+    class="bridge" 
+    :data-direction="isHorizontal ? 'horizontal' : 'vertical'"
+    @click="handleClick"
+  >
     <!-- Zone cliquable invisible -->
     <line
       :x1="clickArea.x1"
@@ -146,23 +195,33 @@ function handleClick() {
       class="bridge__click-area"
     />
     
-    <!-- Première ligne (ou ligne unique si pont simple) -->
+    <!-- Première ligne (ou ligne unique si pont simple) - NOIR TRÈS VISIBLE -->
     <line
       :x1="line1.x1"
       :y1="line1.y1"
       :x2="line1.x2"
       :y2="line1.y2"
-      class="bridge__line"
+      stroke="#000000"
+      :stroke-width="15"
+      fill="none"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      vector-effect="non-scaling-stroke"
     />
     
-    <!-- Deuxième ligne (si pont double) -->
+    <!-- Deuxième ligne (si pont double) - NOIR TRÈS VISIBLE -->
     <line
       v-if="line2"
       :x1="line2.x1"
       :y1="line2.y1"
       :x2="line2.x2"
       :y2="line2.y2"
-      class="bridge__line"
+      stroke="#000000"
+      :stroke-width="15"
+      fill="none"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      vector-effect="non-scaling-stroke"
     />
   </g>
 </template>
@@ -181,18 +240,22 @@ function handleClick() {
 .bridge:hover .bridge__click-area {
   stroke: rgba(66, 153, 225, 0.2);
 }
+</style>
 
-/* Ligne du pont */
-.bridge__line {
-  stroke: #2d3748;
-  stroke-width: 4;
-  stroke-linecap: round;
-  transition: stroke 0.2s ease;
-  pointer-events: none;
+<style>
+/* Style global pour forcer la visibilité des lignes - NOIR TRÈS VISIBLE */
+.bridge line {
+  stroke: #000000 !important;
+  stroke-width: 15px !important;
+  opacity: 1 !important;
+  fill: none !important;
+  visibility: visible !important;
 }
 
-.bridge:hover .bridge__line {
-  stroke: #4299e1;
+/* Effet au survol */
+.bridge:hover line {
+  stroke: #dc2626 !important;
+  stroke-width: 17px !important;
 }
 </style>
 

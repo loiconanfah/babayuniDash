@@ -70,18 +70,36 @@ function handleClick() {
 
 <template>
   <g class="island" :class="islandClasses" @click="handleClick">
-    <!-- Cercle de l'île -->
+    <!-- Cercle extérieur du verrou (bordure métallique) -->
     <circle
       :cx="xPosition"
       :cy="yPosition"
       :r="radius"
+      class="island__outer-ring"
+    />
+    
+    <!-- Cercle intérieur du verrou (corps principal) -->
+    <circle
+      :cx="xPosition"
+      :cy="yPosition"
+      :r="radius * 0.85"
       class="island__circle"
+    />
+    
+    <!-- Trou de serrure (petit rectangle en haut) -->
+    <rect
+      :x="xPosition - radius * 0.3"
+      :y="yPosition - radius * 0.7"
+      :width="radius * 0.6"
+      :height="radius * 0.3"
+      rx="2"
+      class="island__keyhole"
     />
     
     <!-- Nombre de ponts requis -->
     <text
       :x="xPosition"
-      :y="yPosition"
+      :y="yPosition + radius * 0.15"
       class="island__text"
       text-anchor="middle"
       dominant-baseline="middle"
@@ -94,54 +112,233 @@ function handleClick() {
 <style scoped>
 .island {
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  animation: islandFloat 3s ease-in-out infinite;
+}
+
+/* Animation de flottement pour les verrous */
+@keyframes islandFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+.island:hover {
+  transform: scale(1.1) translateY(-3px);
+  animation: none;
 }
 
 .island:hover .island__circle {
-  filter: brightness(1.2);
+  filter: brightness(1.3) drop-shadow(0 4px 8px rgba(255, 255, 255, 0.2));
 }
 
-/* Cercle de l'île */
-.island__circle {
-  fill: #4a5568;
-  stroke: #2d3748;
+.island:hover .island__outer-ring {
+  filter: drop-shadow(0 4px 8px rgba(255, 255, 255, 0.3));
+}
+
+/* Bordure extérieure du verrou (métallique) */
+.island__outer-ring {
+  fill: #2a2a2a;
+  stroke: #1a1a1a;
   stroke-width: 2;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.6));
+}
+
+/* Cercle intérieur du verrou (corps principal) */
+.island__circle {
+  fill: url(#verrou-gradient);
+  stroke: #2a2a2a;
+  stroke-width: 3;
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+/* Trou de serrure */
+.island__keyhole {
+  fill: #0a0a0a;
+  stroke: #1a1a1a;
+  stroke-width: 1.5;
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.8));
 }
 
 /* Île sélectionnée */
+.island--selected {
+  animation: islandSelected 1s ease-in-out infinite;
+}
+
+@keyframes islandSelected {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
 .island--selected .island__circle {
-  fill: #4299e1;
-  stroke: #2b6cb0;
+  fill: url(#verrou-selected-gradient);
+  stroke: #3b82f6;
+  stroke-width: 4;
+  filter: drop-shadow(0 4px 12px rgba(59, 130, 246, 0.7));
+  animation: selectedPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes selectedPulse {
+  0%, 100% {
+    filter: drop-shadow(0 4px 12px rgba(59, 130, 246, 0.7));
+  }
+  50% {
+    filter: drop-shadow(0 6px 16px rgba(59, 130, 246, 1));
+  }
+}
+
+.island--selected .island__outer-ring {
+  fill: #3b82f6;
+  stroke: #2563eb;
   stroke-width: 3;
+  filter: drop-shadow(0 4px 8px rgba(59, 130, 246, 0.6));
 }
 
 /* Île complète (bon nombre de ponts) */
+.island--complete {
+  animation: islandComplete 2s ease-in-out infinite;
+}
+
+@keyframes islandComplete {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+}
+
 .island--complete .island__circle {
-  fill: #48bb78;
-  stroke: #2f855a;
+  fill: url(#verrou-complete-gradient);
+  stroke: #10b981;
+  stroke-width: 3;
+  filter: drop-shadow(0 4px 12px rgba(16, 185, 129, 0.7));
+  animation: completeGlow 2s ease-in-out infinite;
+}
+
+@keyframes completeGlow {
+  0%, 100% {
+    filter: drop-shadow(0 4px 12px rgba(16, 185, 129, 0.7));
+  }
+  50% {
+    filter: drop-shadow(0 6px 16px rgba(16, 185, 129, 1));
+  }
+}
+
+.island--complete .island__outer-ring {
+  fill: #10b981;
+  stroke: #059669;
+  stroke-width: 3;
+  filter: drop-shadow(0 4px 8px rgba(16, 185, 129, 0.6));
 }
 
 /* Île incomplète mais avec des ponts */
 .island--incomplete .island__circle {
-  fill: #ed8936;
-  stroke: #c05621;
+  fill: #f59e0b;
+  stroke: #f97316;
+  stroke-width: 3;
+  filter: drop-shadow(0 3px 6px rgba(245, 158, 11, 0.6));
+  animation: incompletePulse 2s ease-in-out infinite;
+}
+
+@keyframes incompletePulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.island--incomplete .island__outer-ring {
+  fill: #f97316;
+  stroke: #ea580c;
+  stroke-width: 2;
+  filter: drop-shadow(0 3px 6px rgba(245, 158, 11, 0.5));
 }
 
 /* Île en erreur (trop de ponts) */
+.island--error {
+  animation: islandError 0.5s ease-in-out infinite;
+}
+
+@keyframes islandError {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-2px);
+  }
+  75% {
+    transform: translateX(2px);
+  }
+}
+
 .island--error .island__circle {
-  fill: #f56565;
-  stroke: #c53030;
+  fill: #ef4444;
+  stroke: #f87171;
+  stroke-width: 3;
+  filter: drop-shadow(0 3px 6px rgba(239, 68, 68, 0.7));
+  animation: errorFlash 0.5s ease-in-out infinite;
+}
+
+@keyframes errorFlash {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.island--error .island__outer-ring {
+  fill: #f87171;
+  stroke: #dc2626;
+  stroke-width: 2;
+  filter: drop-shadow(0 3px 6px rgba(239, 68, 68, 0.6));
 }
 
 /* Texte du nombre */
 .island__text {
-  fill: white;
-  font-size: 18px;
-  font-weight: bold;
-  font-family: 'Arial', sans-serif;
+  fill: #ffffff;
+  font-size: 20px;
+  font-weight: 900;
+  font-family: 'Arial', 'Helvetica', sans-serif;
   pointer-events: none;
   user-select: none;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.9));
+  transition: all 0.3s ease;
+}
+
+.island:hover .island__text {
+  font-size: 22px;
+  filter: drop-shadow(0 2px 4px rgba(255, 255, 255, 0.5));
+}
+
+.island--selected .island__text {
+  fill: #ffffff;
+  text-shadow: 0 2px 6px rgba(59, 130, 246, 0.8);
+}
+
+.island--complete .island__text {
+  fill: #ffffff;
+  text-shadow: 0 2px 6px rgba(16, 185, 129, 0.8);
+}
+
+.island--error .island__text {
+  fill: #ffffff;
+  text-shadow: 0 2px 6px rgba(239, 68, 68, 0.8);
 }
 </style>
 

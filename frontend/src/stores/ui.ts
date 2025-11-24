@@ -10,6 +10,7 @@ interface UiState {
   currentScreen: Screen;
   isUserModalOpen: boolean;
   isTutorialModalOpen: boolean;
+  isVictoryModalOpen: boolean;
   selectedDifficulty: Difficulty;
 }
 
@@ -18,6 +19,7 @@ export const useUiStore = defineStore('ui', {
     currentScreen: 'home',
     isUserModalOpen: false,
     isTutorialModalOpen: false,
+    isVictoryModalOpen: false,
     selectedDifficulty: null
   }),
 
@@ -52,9 +54,17 @@ export const useUiStore = defineStore('ui', {
       this.isTutorialModalOpen = false;
     },
 
-    // Sélection de difficulté
-    selectDifficulty(diff: Difficulty) {
-      this.selectedDifficulty = diff;
-    }
-  }
-});
+          // Sélection de difficulté
+          selectDifficulty(diff: Difficulty) {
+            this.selectedDifficulty = diff;
+          },
+
+          // Modale de victoire
+          openVictoryModal() {
+            this.isVictoryModalOpen = true;
+          },
+          closeVictoryModal() {
+            this.isVictoryModalOpen = false;
+          }
+        }
+      });

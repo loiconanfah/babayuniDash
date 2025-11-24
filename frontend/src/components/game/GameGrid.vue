@@ -127,8 +127,9 @@ watch([() => props.width, () => props.height], adjustCellSize, { immediate: true
       class="game-grid__svg"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <!-- Grille de fond (optionnel, pour le debug) -->
+      <!-- Définitions SVG (gradients, patterns, etc.) -->
       <defs>
+        <!-- Pattern de grille -->
         <pattern
           id="grid"
           :width="cellSize"
@@ -138,10 +139,49 @@ watch([() => props.width, () => props.height], adjustCellSize, { immediate: true
           <path
             :d="`M ${cellSize} 0 L 0 0 0 ${cellSize}`"
             fill="none"
-            stroke="#e2e8f0"
-            stroke-width="0.5"
+            stroke="#cbd5e1"
+            stroke-width="1"
+            opacity="0.6"
           />
         </pattern>
+        
+        <!-- Gradient pour les barreaux de prison (horizontal) - NOIR TRÈS VISIBLE -->
+        <linearGradient id="barreau-gradient-h" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:#2d2d2d;stop-opacity:1" />
+          <stop offset="10%" style="stop-color:#1a1a1a;stop-opacity:1" />
+          <stop offset="50%" style="stop-color:#000000;stop-opacity:1" />
+          <stop offset="90%" style="stop-color:#1a1a1a;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#2d2d2d;stop-opacity:1" />
+        </linearGradient>
+        
+        <!-- Gradient pour les barreaux de prison (vertical) - NOIR TRÈS VISIBLE -->
+        <linearGradient id="barreau-gradient-v" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#2d2d2d;stop-opacity:1" />
+          <stop offset="10%" style="stop-color:#1a1a1a;stop-opacity:1" />
+          <stop offset="50%" style="stop-color:#000000;stop-opacity:1" />
+          <stop offset="90%" style="stop-color:#1a1a1a;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#2d2d2d;stop-opacity:1" />
+        </linearGradient>
+        
+        <!-- Gradients pour les verrous (plus visibles) -->
+        <radialGradient id="verrou-gradient" cx="50%" cy="30%">
+          <stop offset="0%" style="stop-color:#9ca3af;stop-opacity:1" />
+          <stop offset="40%" style="stop-color:#6b7280;stop-opacity:1" />
+          <stop offset="80%" style="stop-color:#4b5563;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#374151;stop-opacity:1" />
+        </radialGradient>
+        <radialGradient id="verrou-selected-gradient" cx="50%" cy="30%">
+          <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
+          <stop offset="40%" style="stop-color:#3b82f6;stop-opacity:1" />
+          <stop offset="80%" style="stop-color:#2563eb;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#1e40af;stop-opacity:1" />
+        </radialGradient>
+        <radialGradient id="verrou-complete-gradient" cx="50%" cy="30%">
+          <stop offset="0%" style="stop-color:#34d399;stop-opacity:1" />
+          <stop offset="40%" style="stop-color:#10b981;stop-opacity:1" />
+          <stop offset="80%" style="stop-color:#059669;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#047857;stop-opacity:1" />
+        </radialGradient>
       </defs>
       
       <!-- Fond avec grille -->
@@ -158,6 +198,8 @@ watch([() => props.width, () => props.height], adjustCellSize, { immediate: true
           :cell-size="cellSize"
           @click="handleBridgeClick(bridge)"
         />
+        <!-- Debug : afficher le nombre de ponts -->
+        <!-- <text x="10" y="20" fill="red" font-size="12">Ponts: {{ bridges.length }}</text> -->
       </g>
       
       <!-- Îles (dessinées au-dessus des ponts) -->
@@ -190,9 +232,10 @@ watch([() => props.width, () => props.height], adjustCellSize, { immediate: true
 }
 
 .game-grid__svg {
-  background: white;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border-radius: 0.5rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  border: 2px solid #e2e8f0;
 }
 </style>
 

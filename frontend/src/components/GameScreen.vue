@@ -1,6 +1,6 @@
 <!-- src/components/GameScreen.vue -->
 <template>
-  <section class="w-full h-full px-2 sm:px-4 lg:px-8 py-4">
+  <section class="w-full h-full px-2 sm:px-4 lg:px-8 py-4 relative">
     <div
       class="w-full h-full max-w-6xl mx-auto rounded-3xl border border-slate-700 bg-[radial-gradient(circle_at_top,_#7f1d1d_0,_#020617_55%,_#000000_100%)] text-slate-100 shadow-2xl p-3 sm:p-4 lg:p-6"
     >
@@ -123,6 +123,17 @@
         {{ gameStore.error }}
       </div>
     </div>
+
+    <!-- Bouton pour changer de niveau (en haut à droite) -->
+    <button
+      class="absolute top-4 right-4 px-4 py-2 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-200 text-sm font-medium hover:bg-slate-700 transition-colors z-10"
+      @click="handleChangeLevel"
+    >
+      ← Changer de Niveau
+    </button>
+
+    <!-- Modale de victoire -->
+    <VictoryModal v-if="uiStore.isVictoryModalOpen" />
   </section>
 </template>
 
@@ -131,6 +142,7 @@ import { computed } from 'vue';
 import { useGameStore } from '@/stores/game';
 import { useUiStore } from '@/stores/ui';
 import GameGrid from './game/GameGrid.vue';
+import VictoryModal from './VictoryModal.vue';
 
 const gameStore = useGameStore();
 const uiStore = useUiStore();
@@ -152,13 +164,27 @@ async function handleValidate() {
   try {
     const result = await gameStore.validateSolution();
     if (result.isValid) {
-      alert('🎉 Félicitations ! Vous avez résolu le puzzle !');
-      uiStore.goToHome();
+      // Ouvrir la modale de victoire
+      uiStore.openVictoryModal();
     } else {
-      alert(`Solution incorrecte :\n${result.errors.join('\n')}`);
+      // Afficher les erreurs
+      const errorMessage = result.errors.length > 0 
+        ? result.errors.join('\n')
+        : 'Solution incorrecte. Vérifiez que tous les verrous sont correctement connectés.';
+      alert(errorMessage);
     }
   } catch (error) {
     console.error('Erreur lors de la validation:', error);
+  }
+}
+
+/**
+ * Change de niveau
+ */
+function handleChangeLevel() {
+  if (confirm('Êtes-vous sûr de vouloir changer de niveau ? Votre progression actuelle sera perdue.')) {
+    gameStore.resetGame();
+    uiStore.goToLevels();
   }
 }
 
