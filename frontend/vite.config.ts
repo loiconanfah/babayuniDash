@@ -17,4 +17,16 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
+  server: {
+    proxy: {
+      // Proxy toutes les requêtes /api/* vers le backend ASP.NET Core
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        secure: false,
+        // Ne pas réécrire l'URL, garder /api dans le chemin
+        rewrite: (path) => path
+      }
+    }
+  }
 })

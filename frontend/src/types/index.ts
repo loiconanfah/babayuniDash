@@ -141,7 +141,7 @@ export interface GeneratePuzzleRequest {
 export interface CreateGameRequest {
   /** ID du puzzle à jouer */
   puzzleId: number
-  /** ID du joueur (optionnel) */
-  playerId?: string
+  /** ID de la session de jeu */
+  sessionId: number
 }
 

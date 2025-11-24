@@ -35,41 +35,59 @@
         <div
           class="lg:col-span-6 flex items-center justify-center rounded-2xl bg-slate-900/70 border border-slate-700 p-2 sm:p-4"
         >
-          <!-- Ici on intégrera plus tard ton composant GameGrid -->
+          <!-- Grille Hashi intégrée -->
+          <GameGrid
+            v-if="gameStore.currentPuzzle"
+            :width="gameStore.currentPuzzle.width"
+            :height="gameStore.currentPuzzle.height"
+            class="w-full h-full"
+          />
           <div
+            v-else
             class="w-full h-64 sm:h-80 lg:h-[26rem] flex items-center justify-center border border-dashed border-slate-600 rounded-xl text-slate-400 text-sm"
           >
-            Grille Hashi (GameGrid) à intégrer ici
+            Chargement du puzzle...
           </div>
         </div>
 
-        <!-- Colonne droite : timer + porte -->
+        <!-- Colonne droite : timer + contrôles -->
         <div
           class="lg:col-span-3 flex flex-col justify-between items-center gap-4"
         >
           <!-- Timer + boutons -->
           <div class="w-full flex flex-col items-center gap-3">
             <div
-              class="w-full rounded-2xl bg-slate-900/80 border border-slate-600 px-4 py-3 flex items-center justify-between"
+              class="w-full rounded-2xl bg-slate-900/80 border border-slate-600 px-4 py-3 flex flex-col gap-3"
             >
-              <div>
-                <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400">
-                  Temps restant
-                </p>
-                <p class="text-lg font-mono text-orange-300">
-                  15:00
-                </p>
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400">
+                    Temps écoulé
+                  </p>
+                  <p class="text-lg font-mono text-orange-300">
+                    {{ formattedTime }}
+                  </p>
+                </div>
               </div>
               <div class="flex flex-col gap-2">
                 <button
-                  class="px-2 py-1 rounded-lg bg-slate-700 text-xs hover:bg-slate-600"
+                  class="px-3 py-2 rounded-lg bg-green-600 text-sm font-semibold hover:bg-green-500 transition-colors"
+                  @click="handleValidate"
+                  :disabled="gameStore.isLoading"
                 >
-                  Pause
+                  Valider
                 </button>
                 <button
-                  class="px-2 py-1 rounded-lg bg-red-600 text-xs hover:bg-red-500"
+                  class="px-3 py-2 rounded-lg bg-slate-700 text-sm hover:bg-slate-600 transition-colors"
+                  @click="handleReset"
                 >
-                  Quitter
+                  Réinitialiser
+                </button>
+                <button
+                  class="px-3 py-2 rounded-lg bg-red-600 text-sm hover:bg-red-500 transition-colors"
+                  @click="handleAbandon"
+                >
+                  Abandonner
                 </button>
               </div>
             </div>
@@ -96,10 +114,75 @@
           </div>
         </div>
       </div>
+
+      <!-- Message d'erreur -->
+      <div
+        v-if="gameStore.error"
+        class="mt-4 p-3 rounded-lg bg-red-900/80 border border-red-700 text-red-100 text-sm"
+      >
+        {{ gameStore.error }}
+      </div>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-// Plus tard, on pourra importer useGame() et le store de jeu ici.
+import { computed } from 'vue';
+import { useGameStore } from '@/stores/game';
+import { useUiStore } from '@/stores/ui';
+import GameGrid from './game/GameGrid.vue';
+
+const gameStore = useGameStore();
+const uiStore = useUiStore();
+
+/**
+ * Formate le temps écoulé en MM:SS
+ */
+const formattedTime = computed(() => {
+  const seconds = gameStore.elapsedTime;
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+});
+
+/**
+ * Valide la solution actuelle
+ */
+async function handleValidate() {
+  try {
+    const result = await gameStore.validateSolution();
+    if (result.isValid) {
+      alert('🎉 Félicitations ! Vous avez résolu le puzzle !');
+      uiStore.goToHome();
+    } else {
+      alert(`Solution incorrecte :\n${result.errors.join('\n')}`);
+    }
+  } catch (error) {
+    console.error('Erreur lors de la validation:', error);
+  }
+}
+
+/**
+ * Réinitialise la grille (supprime tous les ponts)
+ */
+function handleReset() {
+  if (confirm('Êtes-vous sûr de vouloir effacer tous les ponts ?')) {
+    gameStore.playerBridges = [];
+    gameStore.saveBridges();
+  }
+}
+
+/**
+ * Abandonne la partie
+ */
+async function handleAbandon() {
+  if (confirm('Êtes-vous sûr de vouloir abandonner cette partie ?')) {
+    try {
+      await gameStore.abandonGame();
+      uiStore.goToHome();
+    } catch (error) {
+      console.error("Erreur lors de l'abandon:", error);
+    }
+  }
+}
 </script>

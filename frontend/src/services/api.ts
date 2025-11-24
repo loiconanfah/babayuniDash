@@ -14,9 +14,9 @@ import type {
 } from '@/types'
 
 // URL de base de l'API
-// En développement avec Visual Studio SPA Proxy : utilise l'URL relative /api
-// En développement manuel : utilise https://localhost:5001/api
-// La variable d'environnement VITE_API_URL peut être définie dans .env
+// En développement avec SPA Proxy : utilise /api (URL relative, proxyfiée automatiquement)
+// En développement sans proxy : utilise http://localhost:5000/api
+// En production : utilise la variable d'environnement VITE_API_URL ou https://localhost:5001/api
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
   (import.meta.env.DEV ? '/api' : 'https://localhost:5001/api')
 
@@ -39,7 +39,13 @@ export class ApiError extends Error {
  */
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    const errorData = await response.json().catch(() => null)
+    let errorData = null
+    try {
+      const text = await response.text()
+      errorData = text ? JSON.parse(text) : null
+    } catch {
+      // Si la réponse n'est pas du JSON, on ignore
+    }
     throw new ApiError(
       errorData?.message || `Erreur HTTP ${response.status}`,
       response.status,
@@ -57,15 +63,30 @@ export const puzzleApi = {
    * Récupère tous les puzzles disponibles
    */
   async getAll(): Promise<Puzzle[]> {
-    const response = await fetch(`${API_BASE_URL}/puzzles`)
-    return handleResponse<Puzzle[]>(response)
+    try {
+      const response = await fetch(`${API_BASE_URL}/Puzzles`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      })
+      return handleResponse<Puzzle[]>(response)
+    } catch (error) {
+      console.error('Erreur lors de l\'appel à getAll:', error)
+      throw new ApiError(
+        error instanceof Error ? error.message : 'Erreur réseau lors de la récupération des puzzles',
+        undefined,
+        error
+      )
+    }
   },
 
   /**
    * Récupère un puzzle par son ID
    */
   async getById(id: number): Promise<Puzzle> {
-    const response = await fetch(`${API_BASE_URL}/puzzles/${id}`)
+    const response = await fetch(`${API_BASE_URL}/Puzzles/${id}`)
     return handleResponse<Puzzle>(response)
   },
 
@@ -73,7 +94,7 @@ export const puzzleApi = {
    * Récupère les puzzles d'un niveau de difficulté
    */
   async getByDifficulty(difficulty: DifficultyLevel): Promise<Puzzle[]> {
-    const response = await fetch(`${API_BASE_URL}/puzzles/difficulty/${difficulty}`)
+    const response = await fetch(`${API_BASE_URL}/Puzzles/difficulty/${difficulty}`)
     return handleResponse<Puzzle[]>(response)
   },
 
@@ -81,7 +102,7 @@ export const puzzleApi = {
    * Génère un nouveau puzzle
    */
   async generate(request: GeneratePuzzleRequest): Promise<Puzzle> {
-    const response = await fetch(`${API_BASE_URL}/puzzles/generate`, {
+    const response = await fetch(`${API_BASE_URL}/Puzzles/generate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -100,12 +121,15 @@ export const gameApi = {
    * Crée une nouvelle partie
    */
   async create(request: CreateGameRequest): Promise<Game> {
-    const response = await fetch(`${API_BASE_URL}/games`, {
+    const response = await fetch(`${API_BASE_URL}/Games`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(request)
+      body: JSON.stringify({
+        puzzleId: request.puzzleId,
+        sessionId: request.sessionId
+      })
     })
     return handleResponse<Game>(response)
   },
@@ -114,7 +138,7 @@ export const gameApi = {
    * Récupère une partie par son ID
    */
   async getById(id: number): Promise<Game> {
-    const response = await fetch(`${API_BASE_URL}/games/${id}`)
+    const response = await fetch(`${API_BASE_URL}/Games/${id}`)
     return handleResponse<Game>(response)
   },
 
@@ -122,7 +146,7 @@ export const gameApi = {
    * Met à jour les ponts placés par le joueur
    */
   async updateBridges(gameId: number, bridges: Bridge[]): Promise<Game> {
-    const response = await fetch(`${API_BASE_URL}/games/${gameId}/bridges`, {
+    const response = await fetch(`${API_BASE_URL}/Games/${gameId}/bridges`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json'
@@ -136,7 +160,7 @@ export const gameApi = {
    * Valide la solution actuelle
    */
   async validate(gameId: number): Promise<ValidationResult> {
-    const response = await fetch(`${API_BASE_URL}/games/${gameId}/validate`, {
+    const response = await fetch(`${API_BASE_URL}/Games/${gameId}/validate`, {
       method: 'POST'
     })
     return handleResponse<ValidationResult>(response)
@@ -146,7 +170,7 @@ export const gameApi = {
    * Abandonne une partie
    */
   async abandon(gameId: number): Promise<Game> {
-    const response = await fetch(`${API_BASE_URL}/games/${gameId}/abandon`, {
+    const response = await fetch(`${API_BASE_URL}/Games/${gameId}/abandon`, {
       method: 'POST'
     })
     return handleResponse<Game>(response)

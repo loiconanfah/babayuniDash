@@ -3,6 +3,7 @@ using System.Text.Json;
 using prisonbreak.Server.Data;
 using prisonbreak.Server.DTOs;
 using prisonbreak.Server.Models;
+using System.Linq;
 
 namespace prisonbreak.Server.Services;
 
@@ -30,11 +31,17 @@ public class GameService : IGameService
     /// <exception cref="ArgumentException">Si le puzzle ou la session n'existe pas</exception>
     public async Task<Game> CreateGameAsync(int puzzleId, int sessionId)
     {
-        // Vérifier que le puzzle existe
+        // Vérifier que le puzzle existe et a des îles
         var puzzle = await _puzzleService.GetPuzzleByIdAsync(puzzleId);
         if (puzzle == null)
         {
             throw new ArgumentException($"Le puzzle avec l'ID {puzzleId} n'existe pas", nameof(puzzleId));
+        }
+
+        // Vérifier que le puzzle a au moins une île
+        if (puzzle.Islands == null || !puzzle.Islands.Any())
+        {
+            throw new ArgumentException($"Le puzzle avec l'ID {puzzleId} n'a pas d'îles", nameof(puzzleId));
         }
 
         // Vérifier que la session existe et est valide
@@ -60,13 +67,15 @@ public class GameService : IGameService
             PlayerBridgesJson = "[]",
             Score = 0,
             HintsUsed = 0,
-            ElapsedSeconds = 0
+            ElapsedSeconds = 0,
+            Puzzle = puzzle // Assigner le puzzle pour qu'il soit disponible dans ConvertToDto
         };
 
         _context.Games.Add(game);
         await _context.SaveChangesAsync();
 
-        return game;
+        // Recharger le jeu avec toutes les relations pour s'assurer que tout est chargé
+        return await GetGameByIdAsync(game.Id) ?? game;
     }
 
     /// <summary>

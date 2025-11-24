@@ -116,12 +116,9 @@ namespace prisonbreak.Server.Data
                   .HasDefaultValue(true);
 
             // Relation logique User (1) -> (N) Sessions
-            // On ne dépend pas forcément des propriétés de navigation,
-            // EF peut gérer la relation via la FK UserId.
-            entity.HasMany<Session>()
-                  .WithOne()
-                  .HasForeignKey(s => s.UserId)
-                  .OnDelete(DeleteBehavior.Cascade); // suppression d'un user = supprime ses sessions + games
+            // Note: La collection Sessions n'existe pas dans User, mais la relation est gérée via UserId dans Session
+            // On configure la relation depuis Session vers User
+            // Cette configuration sera complétée dans ConfigureSession
         }
 
         // ============================
@@ -161,6 +158,12 @@ namespace prisonbreak.Server.Data
 
             // Index sur UserId pour accélérer les requêtes par utilisateur
             entity.HasIndex(s => s.UserId);
+
+            // Relation Session -> User (N -> 1)
+            entity.HasOne(s => s.User)
+                  .WithMany()
+                  .HasForeignKey(s => s.UserId)
+                  .OnDelete(DeleteBehavior.Cascade); // suppression d'un user = supprime ses sessions + games
         }
 
         // ============================
@@ -198,14 +201,14 @@ namespace prisonbreak.Server.Data
             entity.HasIndex(g => g.SessionId);
 
             // Relation Game -> Session (N -> 1)
-            entity.HasOne<Session>()
-                  .WithMany()
+            entity.HasOne(g => g.Session)
+                  .WithMany(s => s.Games)
                   .HasForeignKey(g => g.SessionId)
                   .OnDelete(DeleteBehavior.Cascade); // cohérent avec "supprimer User supprime Sessions + Games"
 
             // Relation Game -> Puzzle (N -> 1)
-            entity.HasOne<Puzzle>()
-                  .WithMany()
+            entity.HasOne(g => g.Puzzle)
+                  .WithMany(p => p.Games)
                   .HasForeignKey(g => g.PuzzleId)
                   .OnDelete(DeleteBehavior.Restrict); // on évite de supprimer un puzzle utilisé par des games
         }
@@ -243,6 +246,8 @@ namespace prisonbreak.Server.Data
 
             // Index pour accélérer les requêtes par difficulté
             entity.HasIndex(p => p.Difficulty);
+
+            // Relation Puzzle -> Islands (1 -> N) - configurée dans ConfigureIsland
         }
 
         // ============================
@@ -274,8 +279,9 @@ namespace prisonbreak.Server.Data
             // Index sur PuzzleId pour retrouver toutes les îles d'une grille
             entity.HasIndex(i => i.PuzzleId);
 
-            entity.HasOne<Puzzle>()
-                  .WithMany()
+            // Relation Island -> Puzzle (N -> 1)
+            entity.HasOne(i => i.Puzzle)
+                  .WithMany(p => p.Islands)
                   .HasForeignKey(i => i.PuzzleId)
                   .OnDelete(DeleteBehavior.Cascade);
         }
@@ -317,19 +323,19 @@ namespace prisonbreak.Server.Data
 
             // Bridge -> Puzzle (N ponts pour 1 puzzle)
             entity.HasOne(b => b.Puzzle)
-                  .WithMany()              // ou .WithMany(p => p.Bridges) si tu as cette collec dans Puzzle
+                  .WithMany(p => p.SolutionBridges)
                   .HasForeignKey(b => b.PuzzleId)
                   .OnDelete(DeleteBehavior.Cascade);
 
             // Bridge -> Island (île de départ)
             entity.HasOne(b => b.FromIsland)
-                  .WithMany()              // pas de collection explicite côté Island
+                  .WithMany(i => i.BridgesFrom)
                   .HasForeignKey(b => b.FromIslandId)
                   .OnDelete(DeleteBehavior.Restrict);
 
-            // Bridge -> Island (île d’arrivée)
+            // Bridge -> Island (île d'arrivée)
             entity.HasOne(b => b.ToIsland)
-                  .WithMany()
+                  .WithMany(i => i.BridgesTo)
                   .HasForeignKey(b => b.ToIslandId)
                   .OnDelete(DeleteBehavior.Restrict);
         }

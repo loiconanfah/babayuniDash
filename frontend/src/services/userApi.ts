@@ -15,16 +15,14 @@ export interface UserDto {
  * URL de base de l'API backend.
  *
  * ⚠ IMPORTANT :
- * On ne met PAS d'URL relative ici, parce que le frontend tourne sur
- * http://localhost:5173 (Vite) alors que le backend tourne sur
- * http://localhost:5000 (ASP.NET Core).
- *
- * Si on faisait juste `fetch("/api/Users")`, ça irait vers
- * http://localhost:5173/api/Users → 404 (Vite ne connaît pas cette route).
- *
- * Du coup on force la bonne origine : http://localhost:5000
+ * En développement avec SPA Proxy (Visual Studio) : utilise /api (URL relative)
+ * Le SPA Proxy redirige automatiquement /api/* vers le backend ASP.NET Core
+ * 
+ * En développement sans proxy : utilise http://localhost:5000/api
+ * En production : utilise la variable d'environnement VITE_API_URL ou https://localhost:5001/api
  */
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || 
+  (import.meta.env.DEV ? '/api' : 'https://localhost:5001/api');
 
 /**
  * Appelle l'API backend pour créer ou connecter un joueur.
@@ -34,7 +32,7 @@ export async function createOrLoginUser(
   name: string,
   email: string
 ): Promise<UserDto> {
-  const response = await fetch(`${API_BASE_URL}/api/Users`, {
+  const response = await fetch(`${API_BASE_URL}/Users`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"

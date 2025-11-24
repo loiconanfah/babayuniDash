@@ -5,7 +5,7 @@
 
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { Game, Puzzle, Bridge, Island } from '@/types'
+import type { Game, Puzzle, Bridge, Island, ValidationResult } from '@/types'
 import { gameApi } from '@/services/api'
 
 export const useGameStore = defineStore('game', () => {
@@ -47,11 +47,9 @@ export const useGameStore = defineStore('game', () => {
   /**
    * Récupère une île par son ID
    */
-  const getIslandById = computed(() => {
-    return (id: number): Island | undefined => {
-      return currentPuzzle.value?.islands.find((island) => island.id === id)
-    }
-  })
+  function getIslandById(id: number): Island | undefined {
+    return currentPuzzle.value?.islands.find((island) => island.id === id)
+  }
 
   /**
    * Compte le nombre de ponts connectés à une île
@@ -106,20 +104,21 @@ export const useGameStore = defineStore('game', () => {
 
   /**
    * Démarre une nouvelle partie avec un puzzle
+   * Nécessite qu'un utilisateur soit connecté avec une session active
    */
-  async function startGame(puzzle: Puzzle): Promise<void> {
+  async function startGame(puzzle: Puzzle, sessionId: number): Promise<void> {
     try {
       isLoading.value = true
       error.value = null
 
       // Créer une nouvelle partie via l'API
-      const game = await gameApi.create({ puzzleId: puzzle.id })
+      const game = await gameApi.create({ puzzleId: puzzle.id, sessionId })
 
       currentGame.value = game
       currentPuzzle.value = puzzle
-      playerBridges.value = []
+      playerBridges.value = game.playerBridges || []
       selectedIsland.value = null
-      elapsedTime.value = 0
+      elapsedTime.value = game.elapsedSeconds || 0
 
       // Démarrer le timer
       startTimer()
@@ -238,8 +237,10 @@ export const useGameStore = defineStore('game', () => {
   /**
    * Valide la solution actuelle
    */
-  async function validateSolution(): Promise<void> {
-    if (!currentGame.value) return
+  async function validateSolution(): Promise<ValidationResult> {
+    if (!currentGame.value) {
+      throw new Error('Aucune partie en cours')
+    }
 
     try {
       isLoading.value = true

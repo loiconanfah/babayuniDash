@@ -36,14 +36,14 @@ const emit = defineEmits<{
 // ====================================================
 
 /**
- * Position X de l'île en pixels
+ * Position X de l'île en pixels (centrée dans la cellule)
  */
-const xPosition = computed(() => props.island.x * props.cellSize)
+const xPosition = computed(() => props.island.x * props.cellSize + props.cellSize / 2)
 
 /**
- * Position Y de l'île en pixels
+ * Position Y de l'île en pixels (centrée dans la cellule)
  */
-const yPosition = computed(() => props.island.y * props.cellSize)
+const yPosition = computed(() => props.island.y * props.cellSize + props.cellSize / 2)
 
 /**
  * Rayon du cercle de l'île

@@ -41,7 +41,18 @@ public class GamesController : ControllerBase
     {
         try
         {
+            if (request == null)
+            {
+                return BadRequest("La requête ne peut pas être nulle");
+            }
+
+            _logger.LogInformation("Création d'une partie : PuzzleId={PuzzleId}, SessionId={SessionId}", 
+                request.PuzzleId, request.SessionId);
+
             var game = await _gameService.CreateGameAsync(request.PuzzleId, request.SessionId);
+            
+            _logger.LogInformation("Partie créée avec succès : GameId={GameId}", game.Id);
+            
             var gameDto = _gameService.ConvertToDto(game);
             
             _logger.LogInformation("Nouvelle partie créée : {GameId} pour le puzzle {PuzzleId} et la session {SessionId}", 
@@ -51,16 +62,18 @@ public class GamesController : ControllerBase
         }
         catch (ArgumentException ex)
         {
-            return BadRequest(ex.Message);
+            _logger.LogWarning(ex, "Erreur ArgumentException lors de la création de la partie : {Message}", ex.Message);
+            return BadRequest(new { message = ex.Message, error = "ArgumentException" });
         }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(ex.Message);
+            _logger.LogWarning(ex, "Erreur InvalidOperationException lors de la création de la partie : {Message}", ex.Message);
+            return BadRequest(new { message = ex.Message, error = "InvalidOperationException" });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur lors de la création de la partie");
-            return StatusCode(500, "Erreur interne du serveur");
+            _logger.LogError(ex, "Erreur inattendue lors de la création de la partie : {Message}", ex.Message);
+            return StatusCode(500, new { message = "Erreur interne du serveur", error = ex.GetType().Name, details = ex.Message });
         }
     }
 

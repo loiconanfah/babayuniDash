@@ -78,15 +78,21 @@ var app = builder.Build();
 // INITIALISATION DE LA BASE DE DONNÉES
 // ====================================================
 
-// Créer automatiquement la base de données si elle n'existe pas
-// En développement seulement - en production, utilisez les migrations
+// Appliquer les migrations automatiquement au démarrage
+// En développement : applique les migrations automatiquement
+// En production : utilisez 'dotnet ef database update' manuellement ou via un script de déploiement
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
         var context = services.GetRequiredService<HashiDbContext>();
-        context.Database.EnsureCreated();
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        
+        // Appliquer les migrations en attente
+        logger.LogInformation("Application des migrations de base de données...");
+        context.Database.Migrate();
+        logger.LogInformation("Migrations appliquées avec succès.");
 
         // TODO: Ajouter des données de test ici si nécessaire
         // Par exemple : créer quelques puzzles de base
@@ -94,7 +100,7 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Erreur lors de la création de la base de données");
+        logger.LogError(ex, "Erreur lors de l'application des migrations de base de données");
     }
 }
 
