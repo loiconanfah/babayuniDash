@@ -33,14 +33,14 @@
 
         <!-- Colonne centrale : grille de jeu -->
         <div
-          class="lg:col-span-6 flex items-center justify-center rounded-2xl bg-slate-900/70 border border-slate-700 p-2 sm:p-4"
+          class="lg:col-span-6 flex items-center justify-center rounded-2xl bg-slate-900/70 border border-slate-700 p-2 sm:p-4 overflow-hidden"
         >
           <!-- Grille Hashi intégrée -->
           <GameGrid
             v-if="gameStore.currentPuzzle"
             :width="gameStore.currentPuzzle.width"
             :height="gameStore.currentPuzzle.height"
-            class="w-full h-full"
+            class="w-full h-full max-w-full max-h-full"
           />
           <div
             v-else
@@ -84,6 +84,12 @@
                   Réinitialiser
                 </button>
                 <button
+                  class="px-3 py-2 rounded-lg bg-purple-600 text-sm hover:bg-purple-500 transition-colors"
+                  @click="handleHelp"
+                >
+                  ❓ Aide
+                </button>
+                <button
                   class="px-3 py-2 rounded-lg bg-red-600 text-sm hover:bg-red-500 transition-colors"
                   @click="handleAbandon"
                 >
@@ -94,9 +100,13 @@
           </div>
 
           <!-- Porte Escape -->
-          <div class="w-full flex flex-col items-center gap-3">
+          <button
+            class="w-full flex flex-col items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+            @click="handleEscape"
+            title="Résoudre le puzzle pour s'échapper"
+          >
             <div
-              class="w-24 h-32 sm:w-28 sm:h-36 rounded-2xl bg-slate-950 border-4 border-slate-800 flex items-center justify-center"
+              class="w-24 h-32 sm:w-28 sm:h-36 rounded-2xl bg-slate-950 border-4 border-slate-800 flex items-center justify-center hover:border-amber-500 transition-colors"
             >
               <div class="space-y-2 w-14">
                 <div class="h-1.5 bg-slate-500 rounded"></div>
@@ -111,7 +121,7 @@
             >
               Escape
             </p>
-          </div>
+          </button>
         </div>
       </div>
 
@@ -208,6 +218,32 @@ async function handleAbandon() {
       uiStore.goToHome();
     } catch (error) {
       console.error("Erreur lors de l'abandon:", error);
+    }
+  }
+}
+
+/**
+ * Résout automatiquement le puzzle (bouton d'aide)
+ */
+async function handleHelp() {
+  if (confirm('Voulez-vous résoudre automatiquement ce puzzle ? Cette action remplacera tous vos ponts actuels.')) {
+    try {
+      await gameStore.solvePuzzle();
+    } catch (error) {
+      console.error('Erreur lors de la résolution:', error);
+    }
+  }
+}
+
+/**
+ * Résout automatiquement le puzzle (bouton Escape)
+ */
+async function handleEscape() {
+  if (confirm('Voulez-vous résoudre automatiquement ce puzzle pour vous échapper ? Cette action remplacera tous vos ponts actuels.')) {
+    try {
+      await gameStore.solvePuzzle();
+    } catch (error) {
+      console.error('Erreur lors de la résolution:', error);
     }
   }
 }

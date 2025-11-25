@@ -110,6 +110,14 @@ export const puzzleApi = {
       body: JSON.stringify(request)
     })
     return handleResponse<Puzzle>(response)
+  },
+
+  /**
+   * Récupère la solution d'un puzzle (les ponts de la solution)
+   */
+  async getSolution(puzzleId: number): Promise<Bridge[]> {
+    const response = await fetch(`${API_BASE_URL}/Puzzles/${puzzleId}/solution`)
+    return handleResponse<Bridge[]>(response)
   }
 }
 

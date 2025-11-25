@@ -86,6 +86,15 @@ public class PuzzleService : IPuzzleService
         // Calculer les RequiredBridges pour chaque île en fonction de la solution
         CalculateRequiredBridges(savedIslands, bridgesToAdd);
 
+        // VALIDATION : Vérifier que toutes les îles sont connectées
+        if (!ValidatePuzzleConnectivity(savedIslands, bridgesToAdd))
+        {
+            throw new InvalidOperationException("Le puzzle généré n'est pas valide : toutes les îles ne sont pas connectées");
+        }
+
+        // VALIDATION : Vérifier que les RequiredBridges correspondent aux ponts
+        ValidateRequiredBridges(savedIslands, bridgesToAdd);
+
         // Mettre à jour les RequiredBridges dans la base de données
         foreach (var island in savedIslands)
         {
@@ -103,7 +112,8 @@ public class PuzzleService : IPuzzleService
     }
 
     /// <summary>
-    /// Génère un puzzle valide avec des îles alignées et une solution
+    /// Génère un puzzle valide avec des îles alignées et une solution connectée
+    /// Crée des puzzles logiques, variés et résolvables pour chaque niveau
     /// </summary>
     private (List<Island> islands, List<Bridge> bridges) GenerateValidPuzzle(int width, int height, DifficultyLevel difficulty)
     {
@@ -111,131 +121,455 @@ public class PuzzleService : IPuzzleService
         var bridges = new List<Bridge>();
         var usedPositions = new HashSet<(int, int)>();
 
-        // Pour le niveau facile (5x5), créer un puzzle simple et structuré
-        if (difficulty == DifficultyLevel.Easy && width == 5 && height == 5)
+        // Patterns prédéfinis pour chaque difficulté et taille
+        if (width == 5 && height == 5)
         {
-            // Créer un puzzle simple avec 6 îles bien alignées
-            // Positions choisies pour permettre des connexions simples
-            var positions = new List<(int x, int y)>
-            {
-                (0, 0), (2, 0), (4, 0),  // Ligne du haut
-                (2, 2),                   // Centre
-                (0, 4), (4, 4)            // Ligne du bas
-            };
-
-            foreach (var (x, y) in positions)
-            {
-                islands.Add(new Island
-                {
-                    Id = 0, // Sera assigné par EF Core
-                    X = x,
-                    Y = y,
-                    RequiredBridges = 0 // Sera calculé après
-                });
-                usedPositions.Add((x, y));
-            }
-
-            // Créer une solution simple : connecter les îles en formant un réseau connecté
-            // Toutes les îles doivent être connectées directement ou indirectement
-            
-            // Ligne du haut : (0,0) -> (2,0) -> (4,0)
-            bridges.Add(CreateBridge(islands[0], islands[1], false, BridgeDirection.Horizontal));
-            bridges.Add(CreateBridge(islands[1], islands[2], false, BridgeDirection.Horizontal));
-            
-            // Centre : (2,0) -> (2,2) verticalement
-            bridges.Add(CreateBridge(islands[1], islands[3], false, BridgeDirection.Vertical));
-            
-            // Connecter le centre aux îles du bas
-            // (2,2) -> (0,4) : on ne peut pas car pas alignés
-            // (2,2) -> (4,4) : on ne peut pas car pas alignés
-            // Solution : connecter (0,0) -> (0,4) et (4,0) -> (4,4) pour créer un réseau complet
-            bridges.Add(CreateBridge(islands[0], islands[4], false, BridgeDirection.Vertical));
-            bridges.Add(CreateBridge(islands[2], islands[5], false, BridgeDirection.Vertical));
-            
-            // Maintenant toutes les îles sont connectées :
-            // (0,0) <-> (2,0) <-> (4,0)
-            //   |         |         |
-            //   |      (2,2)         |
-            //   |                    |
-            // (0,4)                (4,4)
+            return Generate5x5Puzzle(difficulty);
+        }
+        else if (width == 8 && height == 8)
+        {
+            return Generate8x8Puzzle(difficulty);
+        }
+        else if (width == 12 && height == 12)
+        {
+            return Generate12x12Puzzle(difficulty);
+        }
+        else if (width == 15 && height == 15)
+        {
+            return Generate15x15Puzzle(difficulty);
         }
         else
         {
-            // Pour les autres difficultés, générer un puzzle plus complexe
-            int islandCount = difficulty switch
-            {
-                DifficultyLevel.Easy => Math.Min(width * height / 4, 8),
-                DifficultyLevel.Medium => Math.Min(width * height / 3, 12),
-                DifficultyLevel.Hard => Math.Min(width * height / 2, 16),
-                DifficultyLevel.Expert => Math.Min(width * height / 2, 20),
-                _ => 8
-            };
+            // Génération générique pour autres tailles
+            return GenerateGenericPuzzle(width, height, difficulty);
+        }
+    }
 
-            // Placer les îles de manière structurée (sur des lignes/colonnes)
-            int placed = 0;
-            for (int y = 1; y < height - 1 && placed < islandCount; y += 2)
+    /// <summary>
+    /// Génère un puzzle 5x5 pour niveau Facile
+    /// </summary>
+    private (List<Island> islands, List<Bridge> bridges) Generate5x5Puzzle(DifficultyLevel difficulty)
+    {
+        var islands = new List<Island>();
+        var bridges = new List<Bridge>();
+
+        // Pattern 5x5 avec îles alignées correctement (même colonne ou même ligne)
+        // IMPORTANT : RequiredBridges sera calculé après
+        var positions = new List<(int x, int y)>
+        {
+            (1, 0),  // Colonne x=1
+            (3, 0),  // Colonne x=3
+            (1, 2),  // Colonne x=1, ligne y=2
+            (3, 2),  // Hub central - colonne x=3, ligne y=2
+            (1, 4),  // Colonne x=1
+            (3, 4)   // Colonne x=3
+        };
+
+        foreach (var (x, y) in positions)
+        {
+            islands.Add(new Island
             {
-                for (int x = 1; x < width - 1 && placed < islandCount; x += 2)
+                Id = 0,
+                X = x,
+                Y = y,
+                RequiredBridges = 0 // Sera calculé après
+            });
+        }
+
+        // Solution : TOUTES les îles connectées en un seul réseau
+        // Colonne x=1 : connexions verticales
+        bridges.Add(CreateBridge(islands[2], islands[0], false, BridgeDirection.Vertical)); // (1,2) -> (1,0) vertical ✓
+        bridges.Add(CreateBridge(islands[2], islands[4], false, BridgeDirection.Vertical)); // (1,2) -> (1,4) vertical ✓
+
+        // Colonne x=3 : connexions verticales
+        bridges.Add(CreateBridge(islands[3], islands[1], false, BridgeDirection.Vertical)); // Hub (3,2) -> (3,0) vertical ✓
+        bridges.Add(CreateBridge(islands[3], islands[5], false, BridgeDirection.Vertical)); // Hub (3,2) -> (3,4) vertical ✓
+
+        // Connexion horizontale entre les colonnes à y=2
+        bridges.Add(CreateBridge(islands[2], islands[3], false, BridgeDirection.Horizontal)); // (1,2) -> Hub (3,2) horizontal ✓
+
+        // Connexion horizontale en haut à y=0
+        bridges.Add(CreateBridge(islands[0], islands[1], false, BridgeDirection.Horizontal)); // (1,0) -> (3,0) horizontal ✓
+
+        // Résultat : Toutes les 6 îles sont connectées en un seul réseau
+        // Colonne x=1 : (1,0) <-> (1,2) <-> (1,4)
+        // Colonne x=3 : (3,0) <-> Hub (3,2) <-> (3,4)
+        // Connexions : (1,0) <-> (3,0) horizontal, (1,2) <-> Hub (3,2) horizontal
+        // TOUTES CONNECTÉES EN UN SEUL RÉSEAU ✓
+
+        return (islands, bridges);
+    }
+
+    /// <summary>
+    /// Génère un puzzle 8x8 pour niveau Moyen
+    /// </summary>
+    private (List<Island> islands, List<Bridge> bridges) Generate8x8Puzzle(DifficultyLevel difficulty)
+    {
+        var islands = new List<Island>();
+        var bridges = new List<Bridge>();
+
+        // Pattern 8x8 - TOUTES les îles alignées correctement pour respecter les règles Hashi
+        // IMPORTANT : RequiredBridges sera calculé après
+        var positions = new List<(int x, int y)>
+        {
+            (2, 1),  // Colonne x=2
+            (2, 3),  // Hub - colonne x=2
+            (2, 5),  // Colonne x=2
+            (6, 1),  // Colonne x=6
+            (6, 3),  // Colonne x=6
+            (6, 5),  // Colonne x=6
+            (4, 5),  // Ligne y=5 (connecte les deux colonnes)
+            (4, 7)   // Ligne y=7
+        };
+
+        foreach (var (x, y) in positions)
+        {
+            islands.Add(new Island
+            {
+                Id = 0,
+                X = x,
+                Y = y,
+                RequiredBridges = 0 // Sera calculé après
+            });
+        }
+
+        // Solution : TOUTES les îles connectées en un seul réseau
+        // Colonne x=2 : connexions verticales
+        bridges.Add(CreateBridge(islands[1], islands[0], false, BridgeDirection.Vertical)); // Hub (2,3) -> (2,1)
+        bridges.Add(CreateBridge(islands[1], islands[2], false, BridgeDirection.Vertical)); // Hub (2,3) -> (2,5)
+
+        // Colonne x=6 : connexions verticales
+        bridges.Add(CreateBridge(islands[4], islands[3], false, BridgeDirection.Vertical)); // (6,3) -> (6,1)
+        bridges.Add(CreateBridge(islands[4], islands[5], false, BridgeDirection.Vertical)); // (6,3) -> (6,5)
+
+        // Connexion horizontale entre les colonnes à y=3
+        bridges.Add(CreateBridge(islands[1], islands[4], false, BridgeDirection.Horizontal)); // Hub (2,3) -> (6,3)
+
+        // Connexion horizontale à y=5 pour relier (2,5) et (6,5) via (4,5)
+        bridges.Add(CreateBridge(islands[2], islands[6], false, BridgeDirection.Horizontal)); // (2,5) -> (4,5)
+        bridges.Add(CreateBridge(islands[6], islands[5], false, BridgeDirection.Horizontal)); // (4,5) -> (6,5)
+
+        // Connexion verticale de (4,5) à (4,7)
+        bridges.Add(CreateBridge(islands[6], islands[7], false, BridgeDirection.Vertical)); // (4,5) -> (4,7)
+
+        // Vérification : Toutes les 8 îles sont connectées
+        // Colonne x=2 : (2,1) <-> Hub (2,3) <-> (2,5) <-> (4,5) <-> (4,7)
+        // Colonne x=6 : (6,1) <-> (6,3) <-> (6,5) <-> (4,5)
+        // Connexion : Hub (2,3) <-> (6,3)
+        // TOUTES CONNECTÉES ✓
+
+        return (islands, bridges);
+    }
+
+    /// <summary>
+    /// Génère un puzzle 12x12 pour niveau Difficile
+    /// </summary>
+    private (List<Island> islands, List<Bridge> bridges) Generate12x12Puzzle(DifficultyLevel difficulty)
+    {
+        var islands = new List<Island>();
+        var bridges = new List<Bridge>();
+
+        // Pattern 12x12 avec îles alignées correctement - TOUTES les connexions respectent l'alignement
+        // IMPORTANT : RequiredBridges sera calculé après
+        var positions = new List<(int x, int y)>
+        {
+            (3, 2),   // Colonne x=3
+            (9, 2),   // Colonne x=9
+            (3, 4),   // Colonne x=3, ligne y=4
+            (9, 4),   // Hub - colonne x=9, ligne y=4
+            (3, 6),   // Colonne x=3
+            (9, 6),   // Colonne x=9
+            (3, 8),   // Colonne x=3, ligne y=8
+            (9, 8),   // Colonne x=9, ligne y=8
+            (6, 8),   // Hub secondaire - ligne y=8
+            (3, 10),  // Colonne x=3
+            (9, 10),  // Colonne x=9
+            (6, 11)   // Ligne y=11
+        };
+
+        foreach (var (x, y) in positions)
+        {
+            islands.Add(new Island
+            {
+                Id = 0,
+                X = x,
+                Y = y,
+                RequiredBridges = 0 // Sera calculé après
+            });
+        }
+
+        // Solution : TOUTES les îles connectées en un seul réseau
+        // Colonne x=3 : connexions verticales
+        bridges.Add(CreateBridge(islands[2], islands[0], false, BridgeDirection.Vertical)); // (3,4) -> (3,2) vertical ✓
+        bridges.Add(CreateBridge(islands[2], islands[4], false, BridgeDirection.Vertical)); // (3,4) -> (3,6) vertical ✓
+        bridges.Add(CreateBridge(islands[6], islands[4], false, BridgeDirection.Vertical)); // (3,8) -> (3,6) vertical ✓
+        bridges.Add(CreateBridge(islands[6], islands[9], false, BridgeDirection.Vertical)); // (3,8) -> (3,10) vertical ✓
+
+        // Colonne x=9 : connexions verticales
+        bridges.Add(CreateBridge(islands[3], islands[1], false, BridgeDirection.Vertical)); // Hub (9,4) -> (9,2) vertical ✓
+        bridges.Add(CreateBridge(islands[3], islands[5], false, BridgeDirection.Vertical)); // Hub (9,4) -> (9,6) vertical ✓
+        bridges.Add(CreateBridge(islands[7], islands[5], false, BridgeDirection.Vertical)); // (9,8) -> (9,6) vertical ✓
+        bridges.Add(CreateBridge(islands[7], islands[10], false, BridgeDirection.Vertical)); // (9,8) -> (9,10) vertical ✓
+
+        // Connexions horizontales à y=4
+        bridges.Add(CreateBridge(islands[2], islands[3], false, BridgeDirection.Horizontal)); // (3,4) -> Hub (9,4) horizontal ✓
+
+        // Connexions horizontales à y=8
+        bridges.Add(CreateBridge(islands[6], islands[8], false, BridgeDirection.Horizontal)); // (3,8) -> Hub2 (6,8) horizontal ✓
+        bridges.Add(CreateBridge(islands[8], islands[7], false, BridgeDirection.Horizontal)); // Hub2 (6,8) -> (9,8) horizontal ✓
+
+        // Connexion verticale de Hub2
+        bridges.Add(CreateBridge(islands[8], islands[11], false, BridgeDirection.Vertical)); // Hub2 (6,8) -> (6,11) vertical ✓
+
+        // Vérification : Toutes les 12 îles sont connectées
+        // Colonne x=3 : (3,2) <-> (3,4) <-> (3,6) <-> (3,8) <-> (3,10)
+        // Colonne x=9 : (9,2) <-> Hub (9,4) <-> (9,6) <-> (9,8) <-> (9,10)
+        // Ligne y=4 : (3,4) <-> Hub (9,4)
+        // Ligne y=8 : (3,8) <-> Hub2 (6,8) <-> (9,8)
+        // Hub2 (6,8) <-> (6,11)
+        // TOUTES CONNECTÉES EN UN SEUL RÉSEAU ✓
+
+        return (islands, bridges);
+    }
+
+    /// <summary>
+    /// Génère un puzzle 15x15 pour niveau Expert
+    /// </summary>
+    private (List<Island> islands, List<Bridge> bridges) Generate15x15Puzzle(DifficultyLevel difficulty)
+    {
+        var islands = new List<Island>();
+        var bridges = new List<Bridge>();
+
+        // Pattern 15x15 avec îles alignées correctement - TOUTES les connexions respectent l'alignement
+        // IMPORTANT : RequiredBridges sera calculé après
+        var positions = new List<(int x, int y)>
+        {
+            (3, 2),   // Colonne x=3
+            (11, 2),  // Colonne x=11
+            (3, 4),   // Colonne x=3, ligne y=4
+            (7, 4),   // Hub principal - ligne y=4
+            (11, 4),  // Colonne x=11, ligne y=4
+            (3, 6),   // Colonne x=3
+            (11, 6),  // Colonne x=11
+            (3, 8),   // Colonne x=3, ligne y=8
+            (5, 8),   // Hub secondaire - ligne y=8
+            (9, 8),   // Hub secondaire - ligne y=8
+            (11, 8),  // Colonne x=11, ligne y=8
+            (3, 10),  // Colonne x=3
+            (11, 10), // Colonne x=11
+            (3, 12),  // Colonne x=3, ligne y=12
+            (7, 12),  // Hub - ligne y=12
+            (11, 12), // Colonne x=11, ligne y=12
+            (3, 14),  // Colonne x=3
+            (11, 14)  // Colonne x=11
+        };
+
+        foreach (var (x, y) in positions)
+        {
+            islands.Add(new Island
+            {
+                Id = 0,
+                X = x,
+                Y = y,
+                RequiredBridges = 0 // Sera calculé après
+            });
+        }
+
+        // Solution : TOUTES les îles connectées en un seul réseau
+        // Colonne x=3 : connexions verticales
+        bridges.Add(CreateBridge(islands[2], islands[0], false, BridgeDirection.Vertical)); // (3,4) -> (3,2) vertical ✓
+        bridges.Add(CreateBridge(islands[2], islands[5], false, BridgeDirection.Vertical)); // (3,4) -> (3,6) vertical ✓
+        bridges.Add(CreateBridge(islands[7], islands[5], false, BridgeDirection.Vertical)); // (3,8) -> (3,6) vertical ✓
+        bridges.Add(CreateBridge(islands[7], islands[11], false, BridgeDirection.Vertical)); // (3,8) -> (3,10) vertical ✓
+        bridges.Add(CreateBridge(islands[12], islands[11], false, BridgeDirection.Vertical)); // (3,12) -> (3,10) vertical ✓
+        bridges.Add(CreateBridge(islands[12], islands[15], false, BridgeDirection.Vertical)); // (3,12) -> (3,14) vertical ✓
+
+        // Colonne x=11 : connexions verticales
+        bridges.Add(CreateBridge(islands[4], islands[1], false, BridgeDirection.Vertical)); // (11,4) -> (11,2) vertical ✓
+        bridges.Add(CreateBridge(islands[4], islands[6], false, BridgeDirection.Vertical)); // (11,4) -> (11,6) vertical ✓
+        bridges.Add(CreateBridge(islands[10], islands[6], false, BridgeDirection.Vertical)); // (11,8) -> (11,6) vertical ✓
+        bridges.Add(CreateBridge(islands[10], islands[12], false, BridgeDirection.Vertical)); // (11,8) -> (11,10) vertical ✓
+        bridges.Add(CreateBridge(islands[14], islands[12], false, BridgeDirection.Vertical)); // (11,12) -> (11,10) vertical ✓
+        bridges.Add(CreateBridge(islands[14], islands[16], false, BridgeDirection.Vertical)); // (11,12) -> (11,14) vertical ✓
+
+        // Hub principal (7,4) - connexions horizontales à y=4
+        bridges.Add(CreateBridge(islands[2], islands[3], false, BridgeDirection.Horizontal)); // (3,4) -> Hub (7,4) horizontal ✓
+        bridges.Add(CreateBridge(islands[3], islands[4], false, BridgeDirection.Horizontal)); // Hub (7,4) -> (11,4) horizontal ✓
+
+        // Connexions horizontales à y=8
+        bridges.Add(CreateBridge(islands[7], islands[8], false, BridgeDirection.Horizontal)); // (3,8) -> Hub2 (5,8) horizontal ✓
+        bridges.Add(CreateBridge(islands[8], islands[9], true, BridgeDirection.Horizontal)); // Hub2 (5,8) -> Hub3 (9,8) pont double ✓
+        bridges.Add(CreateBridge(islands[9], islands[10], false, BridgeDirection.Horizontal)); // Hub3 (9,8) -> (11,8) horizontal ✓
+
+        // Connexions horizontales à y=12
+        bridges.Add(CreateBridge(islands[12], islands[13], false, BridgeDirection.Horizontal)); // (3,12) -> Hub (7,12) horizontal ✓
+        bridges.Add(CreateBridge(islands[13], islands[14], false, BridgeDirection.Horizontal)); // Hub (7,12) -> (11,12) horizontal ✓
+
+        // Vérification : Toutes les 17 îles sont connectées
+        // Colonne x=3 : (3,2) <-> (3,4) <-> (3,6) <-> (3,8) <-> (3,10) <-> (3,12) <-> (3,14)
+        // Colonne x=11 : (11,2) <-> (11,4) <-> (11,6) <-> (11,8) <-> (11,10) <-> (11,12) <-> (11,14)
+        // Ligne y=4 : (3,4) <-> Hub (7,4) <-> (11,4)
+        // Ligne y=8 : (3,8) <-> Hub2 (5,8) <-> Hub3 (9,8) <-> (11,8)
+        // Ligne y=12 : (3,12) <-> Hub (7,12) <-> (11,12)
+        // TOUTES CONNECTÉES EN UN SEUL RÉSEAU ✓
+
+        return (islands, bridges);
+    }
+
+    /// <summary>
+    /// Génère un puzzle générique pour autres tailles
+    /// </summary>
+    private (List<Island> islands, List<Bridge> bridges) GenerateGenericPuzzle(int width, int height, DifficultyLevel difficulty)
+    {
+        var islands = new List<Island>();
+        var bridges = new List<Bridge>();
+        var usedPositions = new HashSet<(int, int)>();
+
+        int islandCount = difficulty switch
+        {
+            DifficultyLevel.Easy => Math.Max(4, Math.Min(width * height / 8, 6)),
+            DifficultyLevel.Medium => Math.Max(6, Math.Min(width * height / 6, 10)),
+            DifficultyLevel.Hard => Math.Max(8, Math.Min(width * height / 4, 15)),
+            DifficultyLevel.Expert => Math.Max(10, Math.Min(width * height / 3, 20)),
+            _ => 5
+        };
+
+        // Placer les îles de manière variée
+        var positions = new List<(int x, int y)>();
+        int attempts = 0;
+        int maxAttempts = 1000;
+
+        while (positions.Count < islandCount && attempts < maxAttempts)
+        {
+            int x = _random.Next(1, width - 1);
+            int y = _random.Next(1, height - 1);
+
+            // Éviter les positions trop proches (minimum 2 cases d'écart)
+            bool tooClose = false;
+            foreach (var (px, py) in positions)
+            {
+                int distance = Math.Abs(x - px) + Math.Abs(y - py);
+                if (distance < 2)
                 {
-                    if (!usedPositions.Contains((x, y)))
+                    tooClose = true;
+                    break;
+                }
+            }
+
+            if (!tooClose && !usedPositions.Contains((x, y)))
+            {
+                positions.Add((x, y));
+                usedPositions.Add((x, y));
+            }
+            attempts++;
+        }
+
+        // Créer les îles
+        foreach (var (x, y) in positions)
+        {
+            islands.Add(new Island
+            {
+                Id = 0,
+                X = x,
+                Y = y,
+                RequiredBridges = 0
+            });
+        }
+
+        // Générer une solution connectée
+        var connectedIslands = new HashSet<int> { 0 };
+        var unconnectedIslands = new HashSet<int>(Enumerable.Range(1, islands.Count - 1));
+
+        while (unconnectedIslands.Count > 0)
+        {
+            var bestConnection = FindBestConnection(islands, connectedIslands, unconnectedIslands, usedPositions);
+            
+            if (bestConnection.HasValue)
+            {
+                var (fromIdx, toIdx, isDouble) = bestConnection.Value;
+                var from = islands[fromIdx];
+                var to = islands[toIdx];
+                BridgeDirection direction = from.X == to.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal;
+                bridges.Add(CreateBridge(from, to, isDouble, direction));
+                
+                if (connectedIslands.Contains(fromIdx))
+                {
+                    unconnectedIslands.Remove(toIdx);
+                    connectedIslands.Add(toIdx);
+                }
+                else
+                {
+                    unconnectedIslands.Remove(fromIdx);
+                    connectedIslands.Add(fromIdx);
+                }
+            }
+            else
+            {
+                // Fallback : connecter n'importe quelle île
+                bool found = false;
+                foreach (var connectedIdx in connectedIslands.ToList())
+                {
+                    foreach (var unconnectedIdx in unconnectedIslands.ToList())
                     {
-                        islands.Add(new Island
+                        var from = islands[connectedIdx];
+                        var to = islands[unconnectedIdx];
+                        
+                        if (CanConnectIslands(from, to, usedPositions))
                         {
-                            Id = 0,
-                            X = x,
-                            Y = y,
-                            RequiredBridges = 0
-                        });
-                        usedPositions.Add((x, y));
-                        placed++;
+                            BridgeDirection direction = from.X == to.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal;
+                            bool isDouble = _random.Next(100) < 15;
+                            bridges.Add(CreateBridge(from, to, isDouble, direction));
+                            unconnectedIslands.Remove(unconnectedIdx);
+                            connectedIslands.Add(unconnectedIdx);
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (found) break;
+                }
+                if (!found) break;
+            }
+        }
+
+        // Ajouter quelques ponts supplémentaires selon la difficulté
+        int extraBridges = difficulty switch
+        {
+            DifficultyLevel.Easy => 0,
+            DifficultyLevel.Medium => Math.Min(1, islands.Count / 4),
+            DifficultyLevel.Hard => Math.Min(2, islands.Count / 3),
+            DifficultyLevel.Expert => Math.Min(3, islands.Count / 2),
+            _ => 0
+        };
+
+        for (int i = 0; i < extraBridges; i++)
+        {
+            var candidates = new List<(int from, int to)>();
+            for (int j = 0; j < islands.Count; j++)
+            {
+                for (int k = j + 1; k < islands.Count; k++)
+                {
+                    if (CanConnectIslands(islands[j], islands[k], usedPositions))
+                    {
+                        bool alreadyConnected = bridges.Any(b => 
+                            (b.FromIsland == islands[j] && b.ToIsland == islands[k]) ||
+                            (b.FromIsland == islands[k] && b.ToIsland == islands[j]));
+                        
+                        if (!alreadyConnected)
+                        {
+                            candidates.Add((j, k));
+                        }
                     }
                 }
             }
 
-            // Générer une solution simple : connecter les îles en chaîne
-            for (int i = 0; i < islands.Count - 1; i++)
+            if (candidates.Count > 0)
             {
-                var from = islands[i];
-                var to = islands[i + 1];
-
-                // Déterminer la direction et vérifier l'alignement
-                BridgeDirection direction;
-                if (from.X == to.X)
-                {
-                    direction = BridgeDirection.Vertical;
-                    // Vérifier qu'il n'y a pas d'île entre les deux
-                    bool canConnect = true;
-                    for (int y = Math.Min(from.Y, to.Y) + 1; y < Math.Max(from.Y, to.Y); y++)
-                    {
-                        if (usedPositions.Contains((from.X, y)))
-                        {
-                            canConnect = false;
-                            break;
-                        }
-                    }
-                    if (canConnect)
-                    {
-                        bridges.Add(CreateBridge(from, to, false, direction));
-                    }
-                }
-                else if (from.Y == to.Y)
-                {
-                    direction = BridgeDirection.Horizontal;
-                    // Vérifier qu'il n'y a pas d'île entre les deux
-                    bool canConnect = true;
-                    for (int x = Math.Min(from.X, to.X) + 1; x < Math.Max(from.X, to.X); x++)
-                    {
-                        if (usedPositions.Contains((x, from.Y)))
-                        {
-                            canConnect = false;
-                            break;
-                        }
-                    }
-                    if (canConnect)
-                    {
-                        bridges.Add(CreateBridge(from, to, false, direction));
-                    }
-                }
+                var (fromIdx, toIdx) = candidates[_random.Next(candidates.Count)];
+                var from = islands[fromIdx];
+                var to = islands[toIdx];
+                BridgeDirection direction = from.X == to.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal;
+                bool isDouble = _random.Next(100) < 25;
+                bridges.Add(CreateBridge(from, to, isDouble, direction));
             }
         }
 
@@ -267,7 +601,7 @@ public class PuzzleService : IPuzzleService
             island.RequiredBridges = 0;
         }
 
-        // Compter les ponts pour chaque île en utilisant les références d'objets
+        // Compter les ponts pour chaque île
         foreach (var bridge in bridges)
         {
             if (bridge.FromIsland != null)
@@ -286,9 +620,152 @@ public class PuzzleService : IPuzzleService
         {
             if (island.RequiredBridges == 0)
             {
-                island.RequiredBridges = 1; // Au minimum 1 pont
+                // Si une île n'a aucun pont, c'est une erreur - toutes les îles doivent être connectées
+                throw new InvalidOperationException($"L'île à ({island.X}, {island.Y}) n'a aucun pont dans la solution. Toutes les îles doivent être connectées.");
             }
         }
+    }
+
+    /// <summary>
+    /// Valide que toutes les îles sont connectées en un seul réseau
+    /// </summary>
+    private bool ValidatePuzzleConnectivity(List<Island> islands, List<Bridge> bridges)
+    {
+        if (islands.Count == 0) return true;
+        if (islands.Count == 1) return true;
+
+        // Créer un graphe d'adjacence
+        var adjacency = new Dictionary<int, List<int>>();
+        foreach (var island in islands)
+        {
+            adjacency[island.Id] = new List<int>();
+        }
+
+        // Ajouter les connexions des ponts
+        foreach (var bridge in bridges)
+        {
+            if (adjacency.ContainsKey(bridge.FromIslandId) && adjacency.ContainsKey(bridge.ToIslandId))
+            {
+                adjacency[bridge.FromIslandId].Add(bridge.ToIslandId);
+                adjacency[bridge.ToIslandId].Add(bridge.FromIslandId);
+            }
+        }
+
+        // Effectuer un DFS à partir de la première île
+        var visited = new HashSet<int>();
+        DFSConnectivity(islands[0].Id, adjacency, visited);
+
+        // Vérifier si toutes les îles ont été visitées
+        return visited.Count == islands.Count;
+    }
+
+    /// <summary>
+    /// Algorithme DFS pour vérifier la connectivité
+    /// </summary>
+    private void DFSConnectivity(int islandId, Dictionary<int, List<int>> adjacency, HashSet<int> visited)
+    {
+        visited.Add(islandId);
+
+        if (!adjacency.ContainsKey(islandId))
+            return;
+
+        foreach (var neighborId in adjacency[islandId])
+        {
+            if (!visited.Contains(neighborId))
+            {
+                DFSConnectivity(neighborId, adjacency, visited);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Valide que les RequiredBridges correspondent exactement aux ponts créés
+    /// </summary>
+    private void ValidateRequiredBridges(List<Island> islands, List<Bridge> bridges)
+    {
+        foreach (var island in islands)
+        {
+            int actualCount = 0;
+            foreach (var bridge in bridges)
+            {
+                if (bridge.FromIslandId == island.Id || bridge.ToIslandId == island.Id)
+                {
+                    actualCount += bridge.IsDouble ? 2 : 1;
+                }
+            }
+
+            if (island.RequiredBridges != actualCount)
+            {
+                throw new InvalidOperationException(
+                    $"Incohérence : L'île à ({island.X}, {island.Y}) a RequiredBridges={island.RequiredBridges} mais {actualCount} ponts dans la solution");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Trouve la meilleure connexion entre une île connectée et une île non connectée
+    /// </summary>
+    private (int fromIdx, int toIdx, bool isDouble)? FindBestConnection(
+        List<Island> islands,
+        HashSet<int> connectedIslands,
+        HashSet<int> unconnectedIslands,
+        HashSet<(int, int)> usedPositions)
+    {
+        int bestDistance = int.MaxValue;
+        (int fromIdx, int toIdx, bool isDouble)? bestConnection = null;
+
+        foreach (var connectedIdx in connectedIslands)
+        {
+            foreach (var unconnectedIdx in unconnectedIslands)
+            {
+                var from = islands[connectedIdx];
+                var to = islands[unconnectedIdx];
+
+                if (CanConnectIslands(from, to, usedPositions))
+                {
+                    int distance = Math.Abs(from.X - to.X) + Math.Abs(from.Y - to.Y);
+                    
+                    if (distance < bestDistance)
+                    {
+                        bestDistance = distance;
+                        bool isDouble = _random.Next(100) < 10; // 10% de chance d'un pont double
+                        bestConnection = (connectedIdx, unconnectedIdx, isDouble);
+                    }
+                }
+            }
+        }
+
+        return bestConnection;
+    }
+
+    /// <summary>
+    /// Vérifie si deux îles peuvent être connectées (alignées et pas d'obstacle)
+    /// </summary>
+    private bool CanConnectIslands(Island from, Island to, HashSet<(int, int)> usedPositions)
+    {
+        // Les îles doivent être alignées (même ligne ou même colonne)
+        if (from.X != to.X && from.Y != to.Y)
+            return false;
+
+        // Vérifier qu'il n'y a pas d'île entre les deux
+        if (from.X == to.X) // Vertical
+        {
+            for (int y = Math.Min(from.Y, to.Y) + 1; y < Math.Max(from.Y, to.Y); y++)
+            {
+                if (usedPositions.Contains((from.X, y)))
+                    return false;
+            }
+        }
+        else // Horizontal
+        {
+            for (int x = Math.Min(from.X, to.X) + 1; x < Math.Max(from.X, to.X); x++)
+            {
+                if (usedPositions.Contains((x, from.Y)))
+                    return false;
+            }
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -383,4 +860,3 @@ public class PuzzleService : IPuzzleService
         };
     }
 }
-

@@ -6,12 +6,14 @@
 
 import { computed } from 'vue'
 import { useGameStore } from '@/stores/game'
+import { useUiStore } from '@/stores/ui'
 
 // ====================================================
 // STORE
 // ====================================================
 
 const gameStore = useGameStore()
+const uiStore = useUiStore()
 
 // ====================================================
 // COMPUTED
@@ -79,6 +81,26 @@ function handleReset() {
     gameStore.saveBridges()
   }
 }
+
+/**
+ * Résout automatiquement le puzzle
+ */
+async function handleSolve() {
+  if (confirm('Voulez-vous résoudre automatiquement ce puzzle ? Cette action remplacera tous vos ponts actuels.')) {
+    try {
+      await gameStore.solvePuzzle()
+    } catch (error) {
+      console.error('Erreur lors de la résolution:', error)
+    }
+  }
+}
+
+/**
+ * Ouvre le modal d'aide/tutoriel
+ */
+function handleHelp() {
+  uiStore.openTutorialModal()
+}
 </script>
 
 <template>
@@ -110,8 +132,16 @@ function handleReset() {
         ✓ Valider la solution
       </button>
       
+      <button class="btn btn--solve" @click="handleSolve" :disabled="gameStore.isLoading">
+        🔓 Résoudre
+      </button>
+      
       <button class="btn btn--secondary" @click="handleReset">
         ↺ Réinitialiser
+      </button>
+      
+      <button class="btn btn--help" @click="handleHelp" title="Aide et tutoriel">
+        ❓ Aide
       </button>
       
       <button class="btn btn--danger" @click="handleAbandon">
@@ -167,13 +197,12 @@ function handleReset() {
 /* Boutons d'action */
 .game-controls__actions {
   display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .btn {
-  flex: 1;
-  min-width: 150px;
+  width: 100%;
   padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 0.5rem;
@@ -197,6 +226,15 @@ function handleReset() {
   background: #38a169;
 }
 
+.btn--help {
+  background: #9f7aea;
+  color: white;
+}
+
+.btn--help:hover {
+  background: #805ad5;
+}
+
 .btn--secondary {
   background: #4299e1;
   color: white;
@@ -204,6 +242,21 @@ function handleReset() {
 
 .btn--secondary:hover {
   background: #3182ce;
+}
+
+.btn--solve {
+  background: #ed8936;
+  color: white;
+}
+
+.btn--solve:hover {
+  background: #dd6b20;
+}
+
+.btn--solve:disabled {
+  background: #a0aec0;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .btn--danger {

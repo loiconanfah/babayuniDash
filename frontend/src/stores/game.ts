@@ -6,7 +6,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { Game, Puzzle, Bridge, Island, ValidationResult } from '@/types'
-import { gameApi } from '@/services/api'
+import { gameApi, puzzleApi } from '@/services/api'
 
 export const useGameStore = defineStore('game', () => {
   // ====================================================
@@ -316,6 +316,38 @@ export const useGameStore = defineStore('game', () => {
     error.value = null
   }
 
+  /**
+   * Résout automatiquement le puzzle en utilisant la solution stockée
+   */
+  async function solvePuzzle(): Promise<void> {
+    if (!currentPuzzle.value) {
+      error.value = 'Aucun puzzle en cours'
+      return
+    }
+
+    try {
+      isLoading.value = true
+      error.value = null
+
+      // Récupérer la solution depuis l'API
+      const solutionBridges = await puzzleApi.getSolution(currentPuzzle.value.id)
+
+      // Appliquer la solution
+      playerBridges.value = solutionBridges
+
+      // Sauvegarder les ponts sur le serveur
+      await saveBridges()
+
+      // Valider automatiquement la solution
+      await validateSolution()
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Erreur lors de la résolution du puzzle'
+      console.error('Erreur lors de la résolution:', err)
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   // ====================================================
   // RETOUR DES PROPRIÉTÉS ET MÉTHODES PUBLIQUES
   // ====================================================
@@ -348,6 +380,7 @@ export const useGameStore = defineStore('game', () => {
     validateSolution,
     abandonGame,
     resetGame,
+    solvePuzzle,
     clearError
   }
 })

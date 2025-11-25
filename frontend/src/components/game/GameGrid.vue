@@ -80,6 +80,13 @@ function findIslandById(id: number): Island | undefined {
   return gameStore.getIslandById(id)
 }
 
+// Vérification que les îles sont bien chargées
+watch(() => islands.value, (newIslands) => {
+  if (newIslands.length > 0) {
+    console.log('Îles chargées:', newIslands.length, newIslands)
+  }
+}, { immediate: true })
+
 // ====================================================
 // METHODS - Gestion des événements
 // ====================================================
@@ -100,32 +107,54 @@ function handleBridgeClick(bridge: Bridge) {
 }
 
 /**
- * Ajuste la taille des cellules selon la taille de la fenêtre
+ * Référence au conteneur de la grille
+ */
+const gridContainer = ref<HTMLElement | null>(null)
+
+/**
+ * Ajuste la taille des cellules selon la taille du conteneur
+ * Prend en compte le padding pour éviter que le puzzle dépasse
  */
 function adjustCellSize() {
-  const container = document.querySelector('.game-grid')
-  if (!container) return
+  if (!gridContainer.value) {
+    // Réessayer après un court délai si le conteneur n'est pas encore monté
+    setTimeout(adjustCellSize, 100)
+    return
+  }
 
-  const containerWidth = container.clientWidth
-  const containerHeight = container.clientHeight
+  // Obtenir les dimensions réelles du conteneur (sans padding)
+  const containerRect = gridContainer.value.getBoundingClientRect()
+  const padding = 32 // 2rem = 32px de padding de chaque côté
+  const availableWidth = containerRect.width - (padding * 2)
+  const availableHeight = containerRect.height - (padding * 2)
 
-  const cellWidth = Math.floor(containerWidth / props.width)
-  const cellHeight = Math.floor(containerHeight / props.height)
+  // Calculer la taille de cellule maximale pour tenir dans l'espace disponible
+  const cellWidth = Math.floor(availableWidth / props.width)
+  const cellHeight = Math.floor(availableHeight / props.height)
 
-  cellSize.value = Math.min(cellWidth, cellHeight, 80) // Max 80px par cellule
+  // Utiliser la plus petite dimension pour garder les proportions
+  // Limiter à 80px max par cellule pour les grands puzzles
+  cellSize.value = Math.max(20, Math.min(cellWidth, cellHeight, 80))
 }
 
-// Ajuster la taille au montage et lors du redimensionnement
+// Ajuster la taille au montage, lors du redimensionnement et quand les dimensions changent
 watch([() => props.width, () => props.height], adjustCellSize, { immediate: true })
+
+// Ajuster aussi lors du redimensionnement de la fenêtre
+if (typeof window !== 'undefined') {
+  window.addEventListener('resize', adjustCellSize)
+}
 </script>
 
 <template>
-  <div class="game-grid">
+  <div ref="gridContainer" class="game-grid">
     <svg
       :width="svgWidth"
       :height="svgHeight"
+      :viewBox="`0 0 ${svgWidth} ${svgHeight}`"
       class="game-grid__svg"
       xmlns="http://www.w3.org/2000/svg"
+      preserveAspectRatio="xMidYMid meet"
     >
       <!-- Définitions SVG (gradients, patterns, etc.) -->
       <defs>
@@ -196,6 +225,8 @@ watch([() => props.width, () => props.height], adjustCellSize, { immediate: true
           :from-island="findIslandById(bridge.fromIslandId)!"
           :to-island="findIslandById(bridge.toIslandId)!"
           :cell-size="cellSize"
+          :is-from-island-complete="isIslandComplete(findIslandById(bridge.fromIslandId)!)"
+          :is-to-island-complete="isIslandComplete(findIslandById(bridge.toIslandId)!)"
           @click="handleBridgeClick(bridge)"
         />
         <!-- Debug : afficher le nombre de ponts -->
@@ -227,8 +258,12 @@ watch([() => props.width, () => props.height], adjustCellSize, { immediate: true
   justify-content: center;
   align-items: center;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 2rem;
+  padding: 1rem;
   border-radius: 1rem;
+  overflow: hidden; /* Empêche le contenu de dépasser */
+  box-sizing: border-box; /* Inclut le padding dans les dimensions */
+  min-width: 0; /* Permet au flex de rétrécir si nécessaire */
+  min-height: 0; /* Permet au flex de rétrécir si nécessaire */
 }
 
 .game-grid__svg {
@@ -236,6 +271,11 @@ watch([() => props.width, () => props.height], adjustCellSize, { immediate: true
   border-radius: 0.5rem;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   border: 2px solid #e2e8f0;
+  max-width: 100%; /* Ne dépasse pas le conteneur */
+  max-height: 100%; /* Ne dépasse pas le conteneur */
+  width: auto; /* S'adapte au contenu */
+  height: auto; /* S'adapte au contenu */
+  display: block; /* Évite les espaces inline */
 }
 </style>
 

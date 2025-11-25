@@ -101,6 +101,45 @@ public class PuzzlesController : ControllerBase
     }
 
     /// <summary>
+    /// GET api/puzzles/{id}/solution
+    /// Récupère la solution d'un puzzle (les ponts de la solution)
+    /// </summary>
+    /// <param name="id">ID du puzzle</param>
+    /// <returns>Liste des ponts de la solution</returns>
+    [HttpGet("{id}/solution")]
+    public async Task<ActionResult<List<BridgeDto>>> GetPuzzleSolution(int id)
+    {
+        try
+        {
+            var puzzle = await _puzzleService.GetPuzzleByIdAsync(id);
+            
+            if (puzzle == null)
+            {
+                return NotFound($"Le puzzle avec l'ID {id} n'existe pas");
+            }
+
+            if (puzzle.SolutionBridges == null || !puzzle.SolutionBridges.Any())
+            {
+                return NotFound("Ce puzzle n'a pas de solution enregistrée");
+            }
+
+            var solutionBridges = puzzle.SolutionBridges.Select(b => new BridgeDto
+            {
+                FromIslandId = b.FromIslandId,
+                ToIslandId = b.ToIslandId,
+                IsDouble = b.IsDouble
+            }).ToList();
+
+            return Ok(solutionBridges);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération de la solution du puzzle {PuzzleId}", id);
+            return StatusCode(500, "Erreur interne du serveur");
+        }
+    }
+
+    /// <summary>
     /// POST api/puzzles/generate
     /// Génère un nouveau puzzle aléatoire
     /// </summary>

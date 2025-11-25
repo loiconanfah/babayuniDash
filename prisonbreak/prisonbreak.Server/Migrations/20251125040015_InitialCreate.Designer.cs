@@ -11,7 +11,7 @@ using prisonbreak.Server.Data;
 namespace prisonbreak.Server.Migrations
 {
     [DbContext(typeof(HashiDbContext))]
-    [Migration("20251124203007_InitialCreate")]
+    [Migration("20251125040015_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

@@ -4,8 +4,9 @@
  * Un pont peut être simple (une ligne) ou double (deux lignes parallèles)
  */
 
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { Bridge, Island } from '@/types'
+import PrisonnierAnimation from './PrisonnierAnimation.vue'
 
 // Props du composant
 interface Props {
@@ -17,14 +18,46 @@ interface Props {
   toIsland: Island
   /** Taille de la cellule dans la grille (en pixels) */
   cellSize: number
+  /** Indique si l'île de départ est complète */
+  isFromIslandComplete?: boolean
+  /** Indique si l'île d'arrivée est complète */
+  isToIslandComplete?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  isFromIslandComplete: false,
+  isToIslandComplete: false
+})
 
 // Événements
 const emit = defineEmits<{
   click: [bridge: Bridge]
 }>()
+
+// État de l'animation du prisonnier
+const showPrisonnier = ref(false)
+const hasAnimated = ref(false)
+
+/**
+ * Vérifie si la connexion est correcte (les deux îles sont complètes)
+ */
+const isConnectionCorrect = computed(() => {
+  return props.isFromIslandComplete && props.isToIslandComplete
+})
+
+/**
+ * Surveille les changements de complétion pour déclencher l'animation
+ */
+watch(
+  () => isConnectionCorrect.value,
+  (newValue, oldValue) => {
+    // Déclencher l'animation seulement quand les deux îles deviennent complètes
+    if (newValue && !oldValue && !hasAnimated.value) {
+      showPrisonnier.value = true
+      hasAnimated.value = true
+    }
+  }
+)
 
 // ====================================================
 // COMPUTED - Propriétés calculées
@@ -222,6 +255,15 @@ function handleClick() {
       stroke-linecap="round"
       stroke-linejoin="round"
       vector-effect="non-scaling-stroke"
+    />
+    
+    <!-- Animation du prisonnier quand la connexion est correcte -->
+    <PrisonnierAnimation
+      v-if="showPrisonnier && isConnectionCorrect"
+      :from-island="fromIsland"
+      :to-island="toIsland"
+      :cell-size="cellSize"
+      @complete="showPrisonnier = false"
     />
   </g>
 </template>

@@ -70,39 +70,46 @@ function handleClick() {
 
 <template>
   <g class="island" :class="islandClasses" @click="handleClick">
-    <!-- Cercle extérieur du verrou (bordure métallique) -->
+    <!-- Cercle extérieur de la serrure (bordure métallique) -->
     <circle
       :cx="xPosition"
       :cy="yPosition"
-      :r="radius"
+      :r="radius * 0.9"
       class="island__outer-ring"
     />
     
-    <!-- Cercle intérieur du verrou (corps principal) -->
+    <!-- Cercle intérieur de la serrure (corps principal) -->
     <circle
       :cx="xPosition"
       :cy="yPosition"
-      :r="radius * 0.85"
+      :r="radius * 0.75"
       class="island__circle"
     />
     
-    <!-- Trou de serrure (petit rectangle en haut) -->
+    <!-- Trou de serrure (rectangle avec barre horizontale) -->
     <rect
       :x="xPosition - radius * 0.3"
-      :y="yPosition - radius * 0.7"
+      :y="yPosition - radius * 0.5"
       :width="radius * 0.6"
-      :height="radius * 0.3"
+      :height="radius * 0.6"
       rx="2"
       class="island__keyhole"
     />
+    <line
+      :x1="xPosition - radius * 0.15"
+      :y1="yPosition - radius * 0.3"
+      :x2="xPosition + radius * 0.15"
+      :y2="yPosition - radius * 0.3"
+      class="island__keyhole-bar"
+    />
     
-    <!-- Nombre de ponts requis -->
+    <!-- Nombre de ponts requis - CENTRÉ sur l'île -->
     <text
       :x="xPosition"
-      :y="yPosition + radius * 0.15"
+      :y="yPosition"
       class="island__text"
       text-anchor="middle"
-      dominant-baseline="middle"
+      dominant-baseline="central"
     >
       {{ island.requiredBridges }}
     </text>
@@ -112,11 +119,12 @@ function handleClick() {
 <style scoped>
 .island {
   cursor: pointer;
-  transition: all 0.3s ease;
-  animation: islandFloat 3s ease-in-out infinite;
+  transition: all 0.2s ease;
+  /* Animation désactivée pour faciliter la sélection */
+  /* animation: islandFloat 3s ease-in-out infinite; */
 }
 
-/* Animation de flottement pour les verrous */
+/* Animation de flottement pour les verrous - désactivée pour faciliter la sélection */
 @keyframes islandFloat {
   0%, 100% {
     transform: translateY(0);
@@ -127,8 +135,8 @@ function handleClick() {
 }
 
 .island:hover {
-  transform: scale(1.1) translateY(-3px);
-  animation: none;
+  transform: scale(1.05);
+  /* Désactiver l'animation au survol pour faciliter le clic */
 }
 
 .island:hover .island__circle {
@@ -139,16 +147,25 @@ function handleClick() {
   filter: drop-shadow(0 4px 8px rgba(255, 255, 255, 0.3));
 }
 
-/* Bordure extérieure du verrou (métallique) */
+/* Corps principal de la serrure (forme rectangulaire) */
+.island__lock-body {
+  fill: #3a3a3a;
+  stroke: #1a1a1a;
+  stroke-width: 2;
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.7));
+}
+
+/* Bordure extérieure de la serrure (métallique) */
 .island__outer-ring {
   fill: #2a2a2a;
   stroke: #1a1a1a;
-  stroke-width: 2;
+  stroke-width: 2.5;
   transition: all 0.3s ease;
   filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.6));
 }
 
-/* Cercle intérieur du verrou (corps principal) */
+/* Cercle intérieur de la serrure (corps principal) */
 .island__circle {
   fill: url(#verrou-gradient);
   stroke: #2a2a2a;
@@ -157,13 +174,20 @@ function handleClick() {
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
 }
 
-/* Trou de serrure */
+/* Trou de serrure (forme de trou de clé) */
 .island__keyhole {
   fill: #0a0a0a;
   stroke: #1a1a1a;
   stroke-width: 1.5;
   transition: all 0.3s ease;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.8));
+}
+
+/* Barre horizontale dans le trou de serrure */
+.island__keyhole-bar {
+  stroke: #0a0a0a;
+  stroke-width: 2;
+  transition: all 0.3s ease;
 }
 
 /* Île sélectionnée */
