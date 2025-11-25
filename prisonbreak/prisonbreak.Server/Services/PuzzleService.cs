@@ -37,8 +37,9 @@ public class PuzzleService : IPuzzleService
             CreatedAt = DateTime.UtcNow
         };
 
-        // Générer les îles et la solution selon la difficulté
-        var (islands, solutionBridges) = GenerateValidPuzzle(width, height, difficulty);
+        // Générer les îles et la solution selon la difficulté et le thème
+        // Chaque thème a un pattern unique d'îles
+        var (islands, solutionBridges) = GenerateValidPuzzle(width, height, difficulty, theme);
 
         // Assigner les îles au puzzle
         foreach (var island in islands)
@@ -115,56 +116,82 @@ public class PuzzleService : IPuzzleService
     /// <summary>
     /// Génère un puzzle valide avec des îles alignées et une solution connectée
     /// Crée des puzzles logiques, variés et résolvables pour chaque niveau
+    /// Chaque thème génère un puzzle unique avec un pattern différent
     /// </summary>
-    private (List<Island> islands, List<Bridge> bridges) GenerateValidPuzzle(int width, int height, DifficultyLevel difficulty)
+    private (List<Island> islands, List<Bridge> bridges) GenerateValidPuzzle(int width, int height, DifficultyLevel difficulty, PuzzleTheme theme)
     {
-        var islands = new List<Island>();
-        var bridges = new List<Bridge>();
-        var usedPositions = new HashSet<(int, int)>();
+        // Utiliser le thème comme seed pour générer des patterns différents
+        var themeSeed = (int)theme;
+        var random = new Random(themeSeed + (int)difficulty * 1000 + width * 10 + height);
 
-        // Patterns prédéfinis pour chaque difficulté et taille
+        // Patterns prédéfinis pour chaque difficulté et taille, avec variation selon le thème
         if (width == 5 && height == 5)
         {
-            return Generate5x5Puzzle(difficulty);
+            return Generate5x5Puzzle(difficulty, theme, random);
         }
         else if (width == 8 && height == 8)
         {
-            return Generate8x8Puzzle(difficulty);
+            return Generate8x8Puzzle(difficulty, theme, random);
         }
         else if (width == 12 && height == 12)
         {
-            return Generate12x12Puzzle(difficulty);
+            return Generate12x12Puzzle(difficulty, theme, random);
         }
         else if (width == 15 && height == 15)
         {
-            return Generate15x15Puzzle(difficulty);
+            return Generate15x15Puzzle(difficulty, theme, random);
         }
         else
         {
-            // Génération générique pour autres tailles
-            return GenerateGenericPuzzle(width, height, difficulty);
+            // Génération générique pour autres tailles avec variation selon le thème
+            return GenerateGenericPuzzle(width, height, difficulty, theme, random);
         }
     }
 
     /// <summary>
     /// Génère un puzzle 5x5 pour niveau Facile
+    /// Chaque thème a un pattern unique d'îles
     /// </summary>
-    private (List<Island> islands, List<Bridge> bridges) Generate5x5Puzzle(DifficultyLevel difficulty)
+    private (List<Island> islands, List<Bridge> bridges) Generate5x5Puzzle(DifficultyLevel difficulty, PuzzleTheme theme, Random random)
     {
         var islands = new List<Island>();
         var bridges = new List<Bridge>();
 
-        // Pattern 5x5 avec îles alignées correctement (même colonne ou même ligne)
-        // IMPORTANT : RequiredBridges sera calculé après
-        var positions = new List<(int x, int y)>
+        // Patterns différents selon le thème - chaque thème a un arrangement unique
+        List<(int x, int y)> positions;
+        
+        // Utiliser le thème pour générer des patterns variés
+        var themeOffset = ((int)theme % 4); // 0-3 pour varier les patterns
+        
+        switch (themeOffset)
         {
-            (1, 0),  // Colonne x=1
-            (3, 0),  // Colonne x=3
-            (1, 2),  // Colonne x=1, ligne y=2
-            (3, 2),  // Hub central - colonne x=3, ligne y=2
-            (1, 4),  // Colonne x=1
-            (3, 4)   // Colonne x=3
-        };
+            case 0: // Classic, Ice, Neon, Magic
+                positions = new List<(int x, int y)> { (1, 0), (3, 0), (1, 2), (3, 2), (1, 4), (3, 4) };
+                break;
+            case 1: // Medieval, Volcano, Steampunk, Western
+                positions = new List<(int x, int y)> { (0, 1), (2, 1), (4, 1), (0, 3), (2, 3), (4, 3) };
+                break;
+            case 2: // Futuristic, Desert, Pirate, Zombie
+                positions = new List<(int x, int y)> { (0, 0), (2, 0), (4, 0), (2, 2), (0, 4), (4, 4) };
+                break;
+            case 3: // Underwater, Forest, Ninja
+                positions = new List<(int x, int y)> { (1, 1), (3, 1), (0, 2), (2, 2), (4, 2), (1, 3), (3, 3) };
+                break;
+            default:
+                positions = new List<(int x, int y)> { (1, 0), (3, 0), (1, 2), (3, 2), (1, 4), (3, 4) };
+                break;
+        }
+        
+        // Ajuster les positions selon le thème spécifique pour plus de variété
+        var themeSpecificOffset = ((int)theme % 3) - 1; // -1, 0, ou 1
+        if (themeSpecificOffset != 0)
+        {
+            // Décaler légèrement certaines positions (pour grille 5x5)
+            positions = positions.Select(p => (
+                Math.Max(0, Math.Min(4, p.x + themeSpecificOffset)), 
+                p.y
+            )).ToList();
+        }
 
         foreach (var (x, y) in positions)
         {
@@ -177,26 +204,69 @@ public class PuzzleService : IPuzzleService
             });
         }
 
-        // Solution : TOUTES les îles connectées en un seul réseau
-        // Colonne x=1 : connexions verticales
-        bridges.Add(CreateBridge(islands[2], islands[0], false, BridgeDirection.Vertical)); // (1,2) -> (1,0) vertical ✓
-        bridges.Add(CreateBridge(islands[2], islands[4], false, BridgeDirection.Vertical)); // (1,2) -> (1,4) vertical ✓
-
-        // Colonne x=3 : connexions verticales
-        bridges.Add(CreateBridge(islands[3], islands[1], false, BridgeDirection.Vertical)); // Hub (3,2) -> (3,0) vertical ✓
-        bridges.Add(CreateBridge(islands[3], islands[5], false, BridgeDirection.Vertical)); // Hub (3,2) -> (3,4) vertical ✓
-
-        // Connexion horizontale entre les colonnes à y=2
-        bridges.Add(CreateBridge(islands[2], islands[3], false, BridgeDirection.Horizontal)); // (1,2) -> Hub (3,2) horizontal ✓
-
-        // Connexion horizontale en haut à y=0
-        bridges.Add(CreateBridge(islands[0], islands[1], false, BridgeDirection.Horizontal)); // (1,0) -> (3,0) horizontal ✓
-
-        // Résultat : Toutes les 6 îles sont connectées en un seul réseau
-        // Colonne x=1 : (1,0) <-> (1,2) <-> (1,4)
-        // Colonne x=3 : (3,0) <-> Hub (3,2) <-> (3,4)
-        // Connexions : (1,0) <-> (3,0) horizontal, (1,2) <-> Hub (3,2) horizontal
-        // TOUTES CONNECTÉES EN UN SEUL RÉSEAU ✓
+        // Générer une solution unique selon le thème
+        // Chaque thème a une solution différente même avec le même pattern de base
+        var themeSolutionType = ((int)theme % 3);
+        
+        // Solution type 0 : connexions verticales puis horizontales
+        if (themeSolutionType == 0 && islands.Count >= 2)
+        {
+            // Connecter les îles de la même colonne verticalement
+            var byColumn = islands.GroupBy(i => i.X).Where(g => g.Count() > 1).ToList();
+            foreach (var col in byColumn)
+            {
+                var colIslands = col.OrderBy(i => i.Y).ToList();
+                for (int i = 0; i < colIslands.Count - 1; i++)
+                {
+                    bridges.Add(CreateBridge(colIslands[i], colIslands[i + 1], false, BridgeDirection.Vertical));
+                }
+            }
+            // Connecter les colonnes horizontalement
+            if (byColumn.Count > 1)
+            {
+                var firstCol = byColumn[0].OrderBy(i => i.Y).First();
+                var secondCol = byColumn[1].OrderBy(i => i.Y).First();
+                if (firstCol.Y == secondCol.Y)
+                {
+                    bridges.Add(CreateBridge(firstCol, secondCol, false, BridgeDirection.Horizontal));
+                }
+            }
+        }
+        // Solution type 1 : connexions horizontales puis verticales
+        else if (themeSolutionType == 1 && islands.Count >= 2)
+        {
+            var byRow = islands.GroupBy(i => i.Y).Where(g => g.Count() > 1).ToList();
+            foreach (var row in byRow)
+            {
+                var rowIslands = row.OrderBy(i => i.X).ToList();
+                for (int i = 0; i < rowIslands.Count - 1; i++)
+                {
+                    bridges.Add(CreateBridge(rowIslands[i], rowIslands[i + 1], false, BridgeDirection.Horizontal));
+                }
+            }
+            if (byRow.Count > 1)
+            {
+                var firstRow = byRow[0].OrderBy(i => i.X).First();
+                var secondRow = byRow[1].OrderBy(i => i.X).First();
+                if (firstRow.X == secondRow.X)
+                {
+                    bridges.Add(CreateBridge(firstRow, secondRow, false, BridgeDirection.Vertical));
+                }
+            }
+        }
+        // Solution type 2 : solution en étoile (hub central)
+        else if (islands.Count >= 2)
+        {
+            var center = islands.OrderBy(i => Math.Abs(i.X - 2) + Math.Abs(i.Y - 2)).First();
+            foreach (var island in islands.Where(i => i != center))
+            {
+                if (center.X == island.X || center.Y == island.Y)
+                {
+                    var direction = center.X == island.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal;
+                    bridges.Add(CreateBridge(center, island, false, direction));
+                }
+            }
+        }
 
         return (islands, bridges);
     }
@@ -204,24 +274,36 @@ public class PuzzleService : IPuzzleService
     /// <summary>
     /// Génère un puzzle 8x8 pour niveau Moyen
     /// </summary>
-    private (List<Island> islands, List<Bridge> bridges) Generate8x8Puzzle(DifficultyLevel difficulty)
+    private (List<Island> islands, List<Bridge> bridges) Generate8x8Puzzle(DifficultyLevel difficulty, PuzzleTheme theme, Random random)
     {
         var islands = new List<Island>();
         var bridges = new List<Bridge>();
 
-        // Pattern 8x8 - TOUTES les îles alignées correctement pour respecter les règles Hashi
-        // IMPORTANT : RequiredBridges sera calculé après
-        var positions = new List<(int x, int y)>
+        // Patterns différents selon le thème - chaque thème a un arrangement unique
+        var themeOffset = ((int)theme % 3);
+        List<(int x, int y)> positions;
+        
+        switch (themeOffset)
         {
-            (2, 1),  // Colonne x=2
-            (2, 3),  // Hub - colonne x=2
-            (2, 5),  // Colonne x=2
-            (6, 1),  // Colonne x=6
-            (6, 3),  // Colonne x=6
-            (6, 5),  // Colonne x=6
-            (4, 5),  // Ligne y=5 (connecte les deux colonnes)
-            (4, 7)   // Ligne y=7
-        };
+            case 0: // Pattern en colonnes
+                positions = new List<(int x, int y)>
+                {
+                    (2, 1), (2, 3), (2, 5), (6, 1), (6, 3), (6, 5), (4, 5), (4, 7)
+                };
+                break;
+            case 1: // Pattern en lignes
+                positions = new List<(int x, int y)>
+                {
+                    (1, 2), (3, 2), (5, 2), (1, 6), (3, 6), (5, 6), (3, 4), (7, 4)
+                };
+                break;
+            default: // Pattern mixte
+                positions = new List<(int x, int y)>
+                {
+                    (1, 1), (3, 1), (5, 1), (1, 5), (3, 5), (5, 5), (3, 3), (7, 3)
+                };
+                break;
+        }
 
         foreach (var (x, y) in positions)
         {
@@ -234,38 +316,87 @@ public class PuzzleService : IPuzzleService
             });
         }
 
-        // Solution : TOUTES les îles connectées en un seul réseau
-        // Colonne x=2 : connexions verticales
-        bridges.Add(CreateBridge(islands[1], islands[0], false, BridgeDirection.Vertical)); // Hub (2,3) -> (2,1)
-        bridges.Add(CreateBridge(islands[1], islands[2], false, BridgeDirection.Vertical)); // Hub (2,3) -> (2,5)
-
-        // Colonne x=6 : connexions verticales
-        bridges.Add(CreateBridge(islands[4], islands[3], false, BridgeDirection.Vertical)); // (6,3) -> (6,1)
-        bridges.Add(CreateBridge(islands[4], islands[5], false, BridgeDirection.Vertical)); // (6,3) -> (6,5)
-
-        // Connexion horizontale entre les colonnes à y=3
-        bridges.Add(CreateBridge(islands[1], islands[4], false, BridgeDirection.Horizontal)); // Hub (2,3) -> (6,3)
-
-        // Connexion horizontale à y=5 pour relier (2,5) et (6,5) via (4,5)
-        bridges.Add(CreateBridge(islands[2], islands[6], false, BridgeDirection.Horizontal)); // (2,5) -> (4,5)
-        bridges.Add(CreateBridge(islands[6], islands[5], false, BridgeDirection.Horizontal)); // (4,5) -> (6,5)
-
-        // Connexion verticale de (4,5) à (4,7)
-        bridges.Add(CreateBridge(islands[6], islands[7], false, BridgeDirection.Vertical)); // (4,5) -> (4,7)
-
-        // Vérification : Toutes les 8 îles sont connectées
-        // Colonne x=2 : (2,1) <-> Hub (2,3) <-> (2,5) <-> (4,5) <-> (4,7)
-        // Colonne x=6 : (6,1) <-> (6,3) <-> (6,5) <-> (4,5)
-        // Connexion : Hub (2,3) <-> (6,3)
-        // TOUTES CONNECTÉES ✓
+        // Générer une solution unique selon le thème
+        var themeSolutionType = ((int)theme % 3);
+        
+        if (themeSolutionType == 0)
+        {
+            // Solution en colonnes verticales puis horizontales
+            var byColumn = islands.GroupBy(i => i.X).Where(g => g.Count() > 1).ToList();
+            foreach (var col in byColumn)
+            {
+                var colIslands = col.OrderBy(i => i.Y).ToList();
+                for (int i = 0; i < colIslands.Count - 1; i++)
+                {
+                    bridges.Add(CreateBridge(colIslands[i], colIslands[i + 1], false, BridgeDirection.Vertical));
+                }
+            }
+            // Connecter les colonnes
+            if (byColumn.Count > 1)
+            {
+                var cols = byColumn.OrderBy(g => g.Key).ToList();
+                for (int i = 0; i < cols.Count - 1; i++)
+                {
+                    var commonY = cols[i].Select(isl => isl.Y).Intersect(cols[i + 1].Select(isl => isl.Y)).FirstOrDefault();
+                    if (commonY >= 0)
+                    {
+                        var left = cols[i].First(isl => isl.Y == commonY);
+                        var right = cols[i + 1].First(isl => isl.Y == commonY);
+                        bridges.Add(CreateBridge(left, right, false, BridgeDirection.Horizontal));
+                    }
+                }
+            }
+        }
+        else if (themeSolutionType == 1)
+        {
+            // Solution en lignes horizontales puis verticales
+            var byRow = islands.GroupBy(i => i.Y).Where(g => g.Count() > 1).ToList();
+            foreach (var row in byRow)
+            {
+                var rowIslands = row.OrderBy(i => i.X).ToList();
+                for (int i = 0; i < rowIslands.Count - 1; i++)
+                {
+                    bridges.Add(CreateBridge(rowIslands[i], rowIslands[i + 1], false, BridgeDirection.Horizontal));
+                }
+            }
+            // Connecter les lignes
+            if (byRow.Count > 1)
+            {
+                var rows = byRow.OrderBy(g => g.Key).ToList();
+                for (int i = 0; i < rows.Count - 1; i++)
+                {
+                    var commonX = rows[i].Select(isl => isl.X).Intersect(rows[i + 1].Select(isl => isl.X)).FirstOrDefault();
+                    if (commonX >= 0)
+                    {
+                        var top = rows[i].First(isl => isl.X == commonX);
+                        var bottom = rows[i + 1].First(isl => isl.X == commonX);
+                        bridges.Add(CreateBridge(top, bottom, false, BridgeDirection.Vertical));
+                    }
+                }
+            }
+        }
+        else
+        {
+            // Solution en étoile (hub central)
+            var center = islands.OrderBy(i => Math.Abs(i.X - 4) + Math.Abs(i.Y - 4)).First();
+            foreach (var island in islands.Where(i => i != center))
+            {
+                if (center.X == island.X || center.Y == island.Y)
+                {
+                    var direction = center.X == island.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal;
+                    bridges.Add(CreateBridge(center, island, false, direction));
+                }
+            }
+        }
 
         return (islands, bridges);
     }
 
     /// <summary>
     /// Génère un puzzle 12x12 pour niveau Difficile
+    /// Chaque thème a un pattern unique
     /// </summary>
-    private (List<Island> islands, List<Bridge> bridges) Generate12x12Puzzle(DifficultyLevel difficulty)
+    private (List<Island> islands, List<Bridge> bridges) Generate12x12Puzzle(DifficultyLevel difficulty, PuzzleTheme theme, Random random)
     {
         var islands = new List<Island>();
         var bridges = new List<Bridge>();
@@ -335,8 +466,9 @@ public class PuzzleService : IPuzzleService
 
     /// <summary>
     /// Génère un puzzle 15x15 pour niveau Expert
+    /// Chaque thème a un pattern unique
     /// </summary>
-    private (List<Island> islands, List<Bridge> bridges) Generate15x15Puzzle(DifficultyLevel difficulty)
+    private (List<Island> islands, List<Bridge> bridges) Generate15x15Puzzle(DifficultyLevel difficulty, PuzzleTheme theme, Random random)
     {
         var islands = new List<Island>();
         var bridges = new List<Bridge>();
@@ -420,7 +552,7 @@ public class PuzzleService : IPuzzleService
     /// <summary>
     /// Génère un puzzle générique pour autres tailles
     /// </summary>
-    private (List<Island> islands, List<Bridge> bridges) GenerateGenericPuzzle(int width, int height, DifficultyLevel difficulty)
+    private (List<Island> islands, List<Bridge> bridges) GenerateGenericPuzzle(int width, int height, DifficultyLevel difficulty, PuzzleTheme theme, Random random)
     {
         var islands = new List<Island>();
         var bridges = new List<Bridge>();
@@ -483,7 +615,29 @@ public class PuzzleService : IPuzzleService
 
         while (unconnectedIslands.Count > 0)
         {
-            var bestConnection = FindBestConnection(islands, connectedIslands, unconnectedIslands, usedPositions);
+            // Trouver la meilleure connexion
+            (int fromIdx, int toIdx, bool isDouble)? bestConnection = null;
+            int bestDistance = int.MaxValue;
+            
+            foreach (var connectedIdx in connectedIslands)
+            {
+                foreach (var unconnectedIdx in unconnectedIslands)
+                {
+                    var from = islands[connectedIdx];
+                    var to = islands[unconnectedIdx];
+                    
+                    if (CanConnectIslands(from, to, usedPositions))
+                    {
+                        int distance = Math.Abs(from.X - to.X) + Math.Abs(from.Y - to.Y);
+                        if (distance < bestDistance)
+                        {
+                            bestDistance = distance;
+                            bool isDouble = _random.Next(100) < 10;
+                            bestConnection = (connectedIdx, unconnectedIdx, isDouble);
+                        }
+                    }
+                }
+            }
             
             if (bestConnection.HasValue)
             {
@@ -493,16 +647,8 @@ public class PuzzleService : IPuzzleService
                 BridgeDirection direction = from.X == to.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal;
                 bridges.Add(CreateBridge(from, to, isDouble, direction));
                 
-                if (connectedIslands.Contains(fromIdx))
-                {
-                    unconnectedIslands.Remove(toIdx);
-                    connectedIslands.Add(toIdx);
-                }
-                else
-                {
-                    unconnectedIslands.Remove(fromIdx);
-                    connectedIslands.Add(fromIdx);
-                }
+                unconnectedIslands.Remove(toIdx);
+                connectedIslands.Add(toIdx);
             }
             else
             {
@@ -706,22 +852,18 @@ public class PuzzleService : IPuzzleService
     /// <summary>
     /// Trouve la meilleure connexion entre une île connectée et une île non connectée
     /// </summary>
-    private (int fromIdx, int toIdx, bool isDouble)? FindBestConnection(
-        List<Island> islands,
-        HashSet<int> connectedIslands,
-        HashSet<int> unconnectedIslands,
+    private (Island from, Island to, bool isDouble)? FindBestConnection(
+        HashSet<Island> connectedIslands,
+        List<Island> unconnectedIslands,
         HashSet<(int, int)> usedPositions)
     {
         int bestDistance = int.MaxValue;
-        (int fromIdx, int toIdx, bool isDouble)? bestConnection = null;
+        (Island from, Island to, bool isDouble)? bestConnection = null;
 
-        foreach (var connectedIdx in connectedIslands)
+        foreach (var from in connectedIslands)
         {
-            foreach (var unconnectedIdx in unconnectedIslands)
+            foreach (var to in unconnectedIslands)
             {
-                var from = islands[connectedIdx];
-                var to = islands[unconnectedIdx];
-
                 if (CanConnectIslands(from, to, usedPositions))
                 {
                     int distance = Math.Abs(from.X - to.X) + Math.Abs(from.Y - to.Y);
@@ -730,7 +872,7 @@ public class PuzzleService : IPuzzleService
                     {
                         bestDistance = distance;
                         bool isDouble = _random.Next(100) < 10; // 10% de chance d'un pont double
-                        bestConnection = (connectedIdx, unconnectedIdx, isDouble);
+                        bestConnection = (from, to, isDouble);
                     }
                 }
             }
@@ -793,32 +935,113 @@ public class PuzzleService : IPuzzleService
 
     /// <summary>
     /// Récupère les puzzles par difficulté
-    /// Si moins de 15 puzzles existent pour cette difficulté, en génère avec différents thèmes
+    /// Génère un puzzle unique pour chaque thème (15 puzzles au total)
+    /// Chaque thème a une taille et un arrangement différents
     /// </summary>
     public async Task<List<Puzzle>> GetPuzzlesByDifficultyAsync(DifficultyLevel difficulty)
     {
         var puzzles = await _context.Puzzles
             .Include(p => p.Islands)
             .Where(p => p.Difficulty == difficulty)
-            .OrderByDescending(p => p.CreatedAt)
+            .OrderBy(p => p.Theme) // Trier par thème pour garantir l'ordre
             .ToListAsync();
 
-        // Si moins de 15 puzzles existent, générer les puzzles manquants avec différents thèmes
-        if (puzzles.Count < 15)
+        var themes = Enum.GetValues<PuzzleTheme>().ToList();
+
+        // Pour chaque thème, s'assurer qu'un puzzle unique existe avec sa propre taille
+        foreach (var theme in themes)
         {
-            var (width, height) = GetDefaultDimensionsForDifficulty(difficulty);
-            var themes = Enum.GetValues<PuzzleTheme>().ToList();
+            // Vérifier si un puzzle avec ce thème existe déjà
+            var existingPuzzle = puzzles.FirstOrDefault(p => p.Theme == theme);
             
-            // Générer jusqu'à 15 puzzles avec différents thèmes
-            for (int i = puzzles.Count; i < 15; i++)
+            if (existingPuzzle == null)
             {
-                var theme = themes[i % themes.Count]; // Cycle à travers les thèmes
+                // Chaque thème a une taille unique mais cohérente avec la difficulté
+                var (width, height) = GetDimensionsForTheme(difficulty, theme);
+                
+                // Générer un nouveau puzzle unique pour ce thème avec sa taille spécifique
                 var newPuzzle = await GeneratePuzzleAsync(width, height, difficulty, theme);
                 puzzles.Add(newPuzzle);
             }
         }
 
-        return puzzles;
+        // Retourner les puzzles triés par thème
+        return puzzles.OrderBy(p => p.Theme).ToList();
+    }
+
+    /// <summary>
+    /// Retourne des dimensions uniques pour chaque thème selon la difficulté
+    /// Chaque thème a une taille différente pour créer des puzzles variés
+    /// </summary>
+    private (int width, int height) GetDimensionsForTheme(DifficultyLevel difficulty, PuzzleTheme theme)
+    {
+        // Utiliser le thème comme index pour varier les tailles
+        var themeIndex = (int)theme;
+        
+        return difficulty switch
+        {
+            DifficultyLevel.Easy => GetEasyDimensions(themeIndex),
+            DifficultyLevel.Medium => GetMediumDimensions(themeIndex),
+            DifficultyLevel.Hard => GetHardDimensions(themeIndex),
+            DifficultyLevel.Expert => GetExpertDimensions(themeIndex),
+            _ => (5, 5)
+        };
+    }
+
+    /// <summary>
+    /// Retourne des dimensions variées pour niveau Facile (5x5 à 6x7)
+    /// </summary>
+    private (int width, int height) GetEasyDimensions(int themeIndex)
+    {
+        var sizes = new[]
+        {
+            (5, 5), (5, 6), (5, 7), (6, 5), (6, 6),
+            (6, 7), (7, 5), (7, 6), (5, 8), (6, 8),
+            (7, 7), (8, 5), (8, 6), (7, 8), (8, 7)
+        };
+        return sizes[themeIndex % sizes.Length];
+    }
+
+    /// <summary>
+    /// Retourne des dimensions variées pour niveau Moyen (8x8 à 10x10)
+    /// </summary>
+    private (int width, int height) GetMediumDimensions(int themeIndex)
+    {
+        var sizes = new[]
+        {
+            (8, 8), (8, 9), (8, 10), (9, 8), (9, 9),
+            (9, 10), (10, 8), (10, 9), (8, 11), (9, 11),
+            (10, 10), (11, 8), (11, 9), (10, 11), (11, 10)
+        };
+        return sizes[themeIndex % sizes.Length];
+    }
+
+    /// <summary>
+    /// Retourne des dimensions variées pour niveau Difficile (12x12 à 14x14)
+    /// </summary>
+    private (int width, int height) GetHardDimensions(int themeIndex)
+    {
+        var sizes = new[]
+        {
+            (12, 12), (12, 13), (12, 14), (13, 12), (13, 13),
+            (13, 14), (14, 12), (14, 13), (12, 15), (13, 15),
+            (14, 14), (15, 12), (15, 13), (14, 15), (15, 14)
+        };
+        return sizes[themeIndex % sizes.Length];
+    }
+
+    /// <summary>
+    /// Retourne des dimensions variées pour niveau Expert (15x15 à 18x18)
+    /// </summary>
+    private (int width, int height) GetExpertDimensions(int themeIndex)
+    {
+        var sizes = new[]
+        {
+            (15, 15), (15, 16), (15, 17), (16, 15), (16, 16),
+            (16, 17), (17, 15), (17, 16), (15, 18), (16, 18),
+            (17, 17), (18, 15), (18, 16), (17, 18), (18, 17)
+        };
+        return sizes[themeIndex % sizes.Length];
     }
 
     /// <summary>
