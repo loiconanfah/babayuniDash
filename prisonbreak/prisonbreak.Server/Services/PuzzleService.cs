@@ -24,15 +24,16 @@ public class PuzzleService : IPuzzleService
     /// Génère un nouveau puzzle Hashi avec une solution valide
     /// Place les îles de manière structurée et génère une solution cohérente
     /// </summary>
-    public async Task<Puzzle> GeneratePuzzleAsync(int width, int height, DifficultyLevel difficulty)
+    public async Task<Puzzle> GeneratePuzzleAsync(int width, int height, DifficultyLevel difficulty, PuzzleTheme theme = PuzzleTheme.Classic)
     {
         // Créer le puzzle
         var puzzle = new Puzzle
         {
-            Name = $"Puzzle {difficulty} ({width}x{height})",
+            Name = $"{GetThemeName(theme)} - {difficulty} ({width}x{height})",
             Width = width,
             Height = height,
             Difficulty = difficulty,
+            Theme = theme,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -459,7 +460,7 @@ public class PuzzleService : IPuzzleService
             if (!tooClose && !usedPositions.Contains((x, y)))
             {
                 positions.Add((x, y));
-                usedPositions.Add((x, y));
+            usedPositions.Add((x, y));
             }
             attempts++;
         }
@@ -792,7 +793,7 @@ public class PuzzleService : IPuzzleService
 
     /// <summary>
     /// Récupère les puzzles par difficulté
-    /// Si aucun puzzle n'existe pour cette difficulté, en génère un avec les dimensions par défaut
+    /// Si moins de 15 puzzles existent pour cette difficulté, en génère avec différents thèmes
     /// </summary>
     public async Task<List<Puzzle>> GetPuzzlesByDifficultyAsync(DifficultyLevel difficulty)
     {
@@ -802,15 +803,48 @@ public class PuzzleService : IPuzzleService
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
 
-        // Si aucun puzzle n'existe pour cette difficulté, en générer un avec les dimensions par défaut
-        if (puzzles.Count == 0)
+        // Si moins de 15 puzzles existent, générer les puzzles manquants avec différents thèmes
+        if (puzzles.Count < 15)
         {
             var (width, height) = GetDefaultDimensionsForDifficulty(difficulty);
-            var newPuzzle = await GeneratePuzzleAsync(width, height, difficulty);
-            puzzles.Add(newPuzzle);
+            var themes = Enum.GetValues<PuzzleTheme>().ToList();
+            
+            // Générer jusqu'à 15 puzzles avec différents thèmes
+            for (int i = puzzles.Count; i < 15; i++)
+            {
+                var theme = themes[i % themes.Count]; // Cycle à travers les thèmes
+                var newPuzzle = await GeneratePuzzleAsync(width, height, difficulty, theme);
+                puzzles.Add(newPuzzle);
+            }
         }
 
         return puzzles;
+    }
+
+    /// <summary>
+    /// Retourne le nom du thème en français
+    /// </summary>
+    private string GetThemeName(PuzzleTheme theme)
+    {
+        return theme switch
+        {
+            PuzzleTheme.Classic => "Prison Classique",
+            PuzzleTheme.Medieval => "Château Fort",
+            PuzzleTheme.Futuristic => "Prison Spatiale",
+            PuzzleTheme.Underwater => "Prison Aquatique",
+            PuzzleTheme.Desert => "Désert Aride",
+            PuzzleTheme.Forest => "Jungle Perdue",
+            PuzzleTheme.Ice => "Glacier Arctique",
+            PuzzleTheme.Volcano => "Volcan Brûlant",
+            PuzzleTheme.Neon => "Cyberpunk",
+            PuzzleTheme.Steampunk => "Steampunk",
+            PuzzleTheme.Pirate => "Pirate",
+            PuzzleTheme.Zombie => "Apocalypse",
+            PuzzleTheme.Ninja => "Ninja Secret",
+            PuzzleTheme.Magic => "Magie Enchantée",
+            PuzzleTheme.Western => "Far West",
+            _ => "Puzzle"
+        };
     }
 
     /// <summary>
@@ -848,6 +882,7 @@ public class PuzzleService : IPuzzleService
             Width = puzzle.Width,
             Height = puzzle.Height,
             Difficulty = (int)puzzle.Difficulty,
+            Theme = (int)puzzle.Theme,
             IslandCount = islands.Count,
             Islands = islands.Select(i => new IslandDto
             {

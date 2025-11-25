@@ -7,6 +7,8 @@
 import { ref, computed, watch } from 'vue'
 import { useGameStore } from '@/stores/game'
 import type { Island, Bridge } from '@/types'
+import { PuzzleTheme } from '@/types'
+import { getThemeConfig } from '@/utils/themeConfig'
 import IslandComponent from './IslandComponent.vue'
 import BridgeComponent from './BridgeComponent.vue'
 
@@ -46,6 +48,16 @@ const islands = computed(() => gameStore.currentPuzzle?.islands || [])
  * Liste des ponts placés par le joueur
  */
 const bridges = computed(() => gameStore.playerBridges)
+
+/**
+ * Thème actuel du puzzle
+ */
+const currentTheme = computed(() => gameStore.currentPuzzle?.theme || PuzzleTheme.Classic)
+
+/**
+ * Configuration du thème actuel
+ */
+const themeConfig = computed(() => getThemeConfig(currentTheme.value))
 
 /**
  * Île actuellement sélectionnée
@@ -158,7 +170,7 @@ if (typeof window !== 'undefined') {
     >
       <!-- Définitions SVG (gradients, patterns, etc.) -->
       <defs>
-        <!-- Pattern de grille -->
+        <!-- Pattern de grille avec couleur du thème -->
         <pattern
           id="grid"
           :width="cellSize"
@@ -168,53 +180,53 @@ if (typeof window !== 'undefined') {
           <path
             :d="`M ${cellSize} 0 L 0 0 0 ${cellSize}`"
             fill="none"
-            stroke="#cbd5e1"
+            :stroke="themeConfig.colors.gridLines"
             stroke-width="1"
             opacity="0.6"
           />
         </pattern>
         
-        <!-- Gradient pour les barreaux de prison (horizontal) - NOIR TRÈS VISIBLE -->
+        <!-- Gradient pour les barreaux de prison (horizontal) selon le thème -->
         <linearGradient id="barreau-gradient-h" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" style="stop-color:#2d2d2d;stop-opacity:1" />
-          <stop offset="10%" style="stop-color:#1a1a1a;stop-opacity:1" />
-          <stop offset="50%" style="stop-color:#000000;stop-opacity:1" />
-          <stop offset="90%" style="stop-color:#1a1a1a;stop-opacity:1" />
-          <stop offset="100%" style="stop-color:#2d2d2d;stop-opacity:1" />
+          <stop offset="0%" :style="`stop-color:${themeConfig.colors.bridgeGradient[0]};stop-opacity:1`" />
+          <stop offset="10%" :style="`stop-color:${themeConfig.colors.bridgeGradient[1]};stop-opacity:1`" />
+          <stop offset="50%" :style="`stop-color:${themeConfig.colors.bridgeGradient[2]};stop-opacity:1`" />
+          <stop offset="90%" :style="`stop-color:${themeConfig.colors.bridgeGradient[3]};stop-opacity:1`" />
+          <stop offset="100%" :style="`stop-color:${themeConfig.colors.bridgeGradient[4]};stop-opacity:1`" />
         </linearGradient>
         
-        <!-- Gradient pour les barreaux de prison (vertical) - NOIR TRÈS VISIBLE -->
+        <!-- Gradient pour les barreaux de prison (vertical) selon le thème -->
         <linearGradient id="barreau-gradient-v" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" style="stop-color:#2d2d2d;stop-opacity:1" />
-          <stop offset="10%" style="stop-color:#1a1a1a;stop-opacity:1" />
-          <stop offset="50%" style="stop-color:#000000;stop-opacity:1" />
-          <stop offset="90%" style="stop-color:#1a1a1a;stop-opacity:1" />
-          <stop offset="100%" style="stop-color:#2d2d2d;stop-opacity:1" />
+          <stop offset="0%" :style="`stop-color:${themeConfig.colors.bridgeGradient[0]};stop-opacity:1`" />
+          <stop offset="10%" :style="`stop-color:${themeConfig.colors.bridgeGradient[1]};stop-opacity:1`" />
+          <stop offset="50%" :style="`stop-color:${themeConfig.colors.bridgeGradient[2]};stop-opacity:1`" />
+          <stop offset="90%" :style="`stop-color:${themeConfig.colors.bridgeGradient[3]};stop-opacity:1`" />
+          <stop offset="100%" :style="`stop-color:${themeConfig.colors.bridgeGradient[4]};stop-opacity:1`" />
         </linearGradient>
         
-        <!-- Gradients pour les verrous (plus visibles) -->
+        <!-- Gradients pour les verrous selon le thème -->
         <radialGradient id="verrou-gradient" cx="50%" cy="30%">
-          <stop offset="0%" style="stop-color:#9ca3af;stop-opacity:1" />
-          <stop offset="40%" style="stop-color:#6b7280;stop-opacity:1" />
-          <stop offset="80%" style="stop-color:#4b5563;stop-opacity:1" />
-          <stop offset="100%" style="stop-color:#374151;stop-opacity:1" />
+          <stop offset="0%" :style="`stop-color:${themeConfig.colors.islandGradient[0]};stop-opacity:1`" />
+          <stop offset="40%" :style="`stop-color:${themeConfig.colors.islandGradient[1]};stop-opacity:1`" />
+          <stop offset="80%" :style="`stop-color:${themeConfig.colors.islandGradient[2]};stop-opacity:1`" />
+          <stop offset="100%" :style="`stop-color:${themeConfig.colors.islandGradient[3]};stop-opacity:1`" />
         </radialGradient>
         <radialGradient id="verrou-selected-gradient" cx="50%" cy="30%">
-          <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
-          <stop offset="40%" style="stop-color:#3b82f6;stop-opacity:1" />
-          <stop offset="80%" style="stop-color:#2563eb;stop-opacity:1" />
-          <stop offset="100%" style="stop-color:#1e40af;stop-opacity:1" />
+          <stop offset="0%" :style="`stop-color:${themeConfig.colors.islandSelected[0]};stop-opacity:1`" />
+          <stop offset="40%" :style="`stop-color:${themeConfig.colors.islandSelected[1]};stop-opacity:1`" />
+          <stop offset="80%" :style="`stop-color:${themeConfig.colors.islandSelected[2]};stop-opacity:1`" />
+          <stop offset="100%" :style="`stop-color:${themeConfig.colors.islandSelected[3]};stop-opacity:1`" />
         </radialGradient>
         <radialGradient id="verrou-complete-gradient" cx="50%" cy="30%">
-          <stop offset="0%" style="stop-color:#34d399;stop-opacity:1" />
-          <stop offset="40%" style="stop-color:#10b981;stop-opacity:1" />
-          <stop offset="80%" style="stop-color:#059669;stop-opacity:1" />
-          <stop offset="100%" style="stop-color:#047857;stop-opacity:1" />
+          <stop offset="0%" :style="`stop-color:${themeConfig.colors.islandComplete[0]};stop-opacity:1`" />
+          <stop offset="40%" :style="`stop-color:${themeConfig.colors.islandComplete[1]};stop-opacity:1`" />
+          <stop offset="80%" :style="`stop-color:${themeConfig.colors.islandComplete[2]};stop-opacity:1`" />
+          <stop offset="100%" :style="`stop-color:${themeConfig.colors.islandComplete[3]};stop-opacity:1`" />
         </radialGradient>
       </defs>
       
-      <!-- Fond avec grille -->
-      <rect width="100%" height="100%" fill="url(#grid)" />
+      <!-- Fond avec grille selon le thème -->
+      <rect width="100%" height="100%" fill="url(#grid)" :style="{ background: themeConfig.colors.gridBackground }" />
       
       <!-- Ponts (dessinés en premier pour être derrière les îles) -->
       <g class="bridges-layer">
@@ -257,25 +269,27 @@ if (typeof window !== 'undefined') {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 1rem;
   border-radius: 1rem;
   overflow: hidden; /* Empêche le contenu de dépasser */
   box-sizing: border-box; /* Inclut le padding dans les dimensions */
   min-width: 0; /* Permet au flex de rétrécir si nécessaire */
   min-height: 0; /* Permet au flex de rétrécir si nécessaire */
+  transition: background 0.5s ease;
+  background: v-bind('themeConfig.colors.background');
 }
 
 .game-grid__svg {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border-radius: 0.5rem;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  border: 2px solid #e2e8f0;
+  border: 2px solid rgba(255, 255, 255, 0.2);
   max-width: 100%; /* Ne dépasse pas le conteneur */
   max-height: 100%; /* Ne dépasse pas le conteneur */
   width: auto; /* S'adapte au contenu */
   height: auto; /* S'adapte au contenu */
   display: block; /* Évite les espaces inline */
+  transition: all 0.5s ease;
+  background: v-bind('themeConfig.colors.gridBackground');
 }
 </style>
 

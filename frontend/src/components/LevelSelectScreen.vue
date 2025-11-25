@@ -135,7 +135,10 @@
             <h3 class="text-lg font-semibold" :class="getDifficultyTitleColor(puzzle.difficulty)">
               {{ puzzle.name || `Puzzle ${puzzle.id}` }}
             </h3>
-            <p class="text-xs mt-2" :class="getDifficultyDescriptionColor(puzzle.difficulty)">
+            <p class="text-xs mt-1" :class="getDifficultyDescriptionColor(puzzle.difficulty)">
+              {{ getThemeName(puzzle.theme) }}
+            </p>
+            <p class="text-xs mt-1" :class="getDifficultyDescriptionColor(puzzle.difficulty)">
               {{ puzzle.width }}x{{ puzzle.height }} - {{ puzzle.islandCount }} îles
             </p>
           </div>
@@ -186,6 +189,7 @@ import { useGameStore } from '@/stores/game';
 import { puzzleApi } from '@/services/api';
 import type { Puzzle } from '@/types';
 import { DifficultyLevel } from '@/types';
+import { getThemeName } from '@/utils/themeConfig';
 
 const uiStore = useUiStore();
 const userStore = useUserStore();
@@ -229,8 +233,10 @@ async function loadPuzzles() {
         'hard': DifficultyLevel.Hard
       };
       const selectedDifficulty = difficultyMap[uiStore.selectedDifficulty];
-      // Le backend génère automatiquement un puzzle s'il n'y en a pas
-      puzzles.value = await puzzleApi.getByDifficulty(selectedDifficulty);
+      if (selectedDifficulty) {
+        // Le backend génère automatiquement un puzzle s'il n'y en a pas
+        puzzles.value = await puzzleApi.getByDifficulty(selectedDifficulty);
+      }
     } else {
       // Si aucune difficulté n'est sélectionnée, ne pas charger de puzzles
       // On affichera les boutons de sélection de niveau

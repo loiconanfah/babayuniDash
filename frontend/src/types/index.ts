@@ -46,6 +46,27 @@ export enum DifficultyLevel {
 }
 
 /**
+ * Thèmes visuels pour les puzzles
+ */
+export enum PuzzleTheme {
+  Classic = 1,
+  Medieval = 2,
+  Futuristic = 3,
+  Underwater = 4,
+  Desert = 5,
+  Forest = 6,
+  Ice = 7,
+  Volcano = 8,
+  Neon = 9,
+  Steampunk = 10,
+  Pirate = 11,
+  Zombie = 12,
+  Ninja = 13,
+  Magic = 14,
+  Western = 15
+}
+
+/**
  * Représente un puzzle complet
  */
 export interface Puzzle {
@@ -59,6 +80,8 @@ export interface Puzzle {
   height: number
   /** Niveau de difficulté */
   difficulty: DifficultyLevel
+  /** Thème visuel du puzzle */
+  theme: PuzzleTheme
   /** Liste des îles */
   islands: Island[]
   /** Nombre total d'îles */

@@ -175,6 +175,10 @@ async function handleNextLevel() {
 
     // Prendre le premier puzzle disponible
     const nextPuzzle = puzzles[0];
+    
+    if (!nextPuzzle) {
+      throw new Error('Aucun puzzle disponible pour le niveau suivant');
+    }
 
     // S'assurer qu'une session active existe
     const sessionId = await userStore.ensureActiveSession();

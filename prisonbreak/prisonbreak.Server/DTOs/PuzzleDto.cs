@@ -32,6 +32,11 @@ public class PuzzleDto
     public int Difficulty { get; set; }
 
     /// <summary>
+    /// Thème visuel du puzzle (1=Classic, 2=Medieval, etc.)
+    /// </summary>
+    public int Theme { get; set; }
+
+    /// <summary>
     /// Liste des îles du puzzle
     /// </summary>
     public List<IslandDto> Islands { get; set; } = new();

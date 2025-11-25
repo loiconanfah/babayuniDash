@@ -5,7 +5,10 @@
  */
 
 import { computed } from 'vue'
+import { useGameStore } from '@/stores/game'
 import type { Island } from '@/types'
+import { PuzzleTheme } from '@/types'
+import { getThemeConfig } from '@/utils/themeConfig'
 
 // Props du composant
 interface Props {
@@ -30,6 +33,19 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   click: [island: Island]
 }>()
+
+// Store pour récupérer le thème
+const gameStore = useGameStore()
+
+/**
+ * Thème actuel du puzzle
+ */
+const currentTheme = computed(() => gameStore.currentPuzzle?.theme || PuzzleTheme.Classic)
+
+/**
+ * Configuration du thème actuel
+ */
+const themeConfig = computed(() => getThemeConfig(currentTheme.value))
 
 // ====================================================
 // COMPUTED - Propriétés calculées
@@ -108,6 +124,7 @@ function handleClick() {
       :x="xPosition"
       :y="yPosition"
       class="island__text"
+      :style="{ fill: themeConfig.colors.textColor }"
       text-anchor="middle"
       dominant-baseline="central"
     >
@@ -120,17 +137,99 @@ function handleClick() {
 .island {
   cursor: pointer;
   transition: all 0.2s ease;
-  /* Animation désactivée pour faciliter la sélection */
-  /* animation: islandFloat 3s ease-in-out infinite; */
 }
 
-/* Animation de flottement pour les verrous - désactivée pour faciliter la sélection */
+/* Animation de flottement selon le thème */
+.island {
+  animation: v-bind('themeConfig.animations.islandFloat || "none"');
+}
+
+/* Animation de flottement pour les verrous */
 @keyframes islandFloat {
   0%, 100% {
     transform: translateY(0);
   }
   50% {
     transform: translateY(-2px);
+  }
+}
+
+/* Animations spéciales selon le thème */
+@keyframes bubbles {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(-5px) scale(1.1);
+    opacity: 0.6;
+  }
+}
+
+@keyframes snowflakes {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(-3px) rotate(180deg);
+    opacity: 0.8;
+  }
+}
+
+@keyframes lava {
+  0%, 100% {
+    filter: brightness(1) hue-rotate(0deg);
+  }
+  50% {
+    filter: brightness(1.3) hue-rotate(10deg);
+  }
+}
+
+@keyframes neonGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 5px currentColor) brightness(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 15px currentColor) brightness(1.5);
+  }
+}
+
+@keyframes waves {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes zombieGlow {
+  0%, 100% {
+    filter: brightness(0.8) hue-rotate(0deg);
+  }
+  50% {
+    filter: brightness(1) hue-rotate(-10deg);
+  }
+}
+
+@keyframes smoke {
+  0%, 100% {
+    opacity: 0.7;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 0.4;
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes magicSparkles {
+  0%, 100% {
+    filter: drop-shadow(0 0 3px currentColor) brightness(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 10px currentColor) brightness(1.4);
   }
 }
 

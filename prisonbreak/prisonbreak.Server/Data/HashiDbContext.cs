@@ -244,8 +244,16 @@ namespace prisonbreak.Server.Data
             entity.Property(p => p.Difficulty)
                   .IsRequired();
 
+            // Thème du puzzle
+            entity.Property(p => p.Theme)
+                  .IsRequired()
+                  .HasDefaultValue(PuzzleTheme.Classic);
+
             // Index pour accélérer les requêtes par difficulté
             entity.HasIndex(p => p.Difficulty);
+            
+            // Index pour accélérer les requêtes par thème
+            entity.HasIndex(p => p.Theme);
 
             // Relation Puzzle -> Islands (1 -> N) - configurée dans ConfigureIsland
         }

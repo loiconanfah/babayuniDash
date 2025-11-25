@@ -5,7 +5,10 @@
  */
 
 import { computed, ref, watch } from 'vue'
+import { useGameStore } from '@/stores/game'
 import type { Bridge, Island } from '@/types'
+import { PuzzleTheme } from '@/types'
+import { getThemeConfig } from '@/utils/themeConfig'
 import PrisonnierAnimation from './PrisonnierAnimation.vue'
 
 // Props du composant
@@ -33,6 +36,19 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   click: [bridge: Bridge]
 }>()
+
+// Store pour récupérer le thème
+const gameStore = useGameStore()
+
+/**
+ * Thème actuel du puzzle
+ */
+const currentTheme = computed(() => gameStore.currentPuzzle?.theme || PuzzleTheme.Classic)
+
+/**
+ * Configuration du thème actuel
+ */
+const themeConfig = computed(() => getThemeConfig(currentTheme.value))
 
 // État de l'animation du prisonnier
 const showPrisonnier = ref(false)
@@ -228,33 +244,35 @@ function handleClick() {
       class="bridge__click-area"
     />
     
-    <!-- Première ligne (ou ligne unique si pont simple) - NOIR TRÈS VISIBLE -->
+    <!-- Première ligne (ou ligne unique si pont simple) - Couleur selon le thème -->
     <line
       :x1="line1.x1"
       :y1="line1.y1"
       :x2="line1.x2"
       :y2="line1.y2"
-      stroke="#000000"
+      :stroke="themeConfig.colors.bridgeColor"
       :stroke-width="15"
       fill="none"
       stroke-linecap="round"
       stroke-linejoin="round"
       vector-effect="non-scaling-stroke"
+      :class="{ 'bridge__line--pulse': themeConfig.animations.bridgePulse }"
     />
     
-    <!-- Deuxième ligne (si pont double) - NOIR TRÈS VISIBLE -->
+    <!-- Deuxième ligne (si pont double) - Couleur selon le thème -->
     <line
       v-if="line2"
       :x1="line2.x1"
       :y1="line2.y1"
       :x2="line2.x2"
       :y2="line2.y2"
-      stroke="#000000"
+      :stroke="themeConfig.colors.bridgeColor"
       :stroke-width="15"
       fill="none"
       stroke-linecap="round"
       stroke-linejoin="round"
       vector-effect="non-scaling-stroke"
+      :class="{ 'bridge__line--pulse': themeConfig.animations.bridgePulse }"
     />
     
     <!-- Animation du prisonnier quand la connexion est correcte -->
@@ -285,19 +303,35 @@ function handleClick() {
 </style>
 
 <style>
-/* Style global pour forcer la visibilité des lignes - NOIR TRÈS VISIBLE */
+/* Style global pour forcer la visibilité des lignes */
 .bridge line {
-  stroke: #000000 !important;
   stroke-width: 15px !important;
   opacity: 1 !important;
   fill: none !important;
   visibility: visible !important;
+  transition: all 0.3s ease;
 }
 
 /* Effet au survol */
 .bridge:hover line {
-  stroke: #dc2626 !important;
   stroke-width: 17px !important;
+  filter: brightness(1.2);
+}
+
+/* Animation de pulsation pour certains thèmes */
+.bridge__line--pulse {
+  animation: bridgePulse 2s ease-in-out infinite;
+}
+
+@keyframes bridgePulse {
+  0%, 100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 0.8;
+    filter: brightness(1.3);
+  }
 }
 </style>
 

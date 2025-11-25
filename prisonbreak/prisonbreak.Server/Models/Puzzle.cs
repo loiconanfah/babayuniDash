@@ -32,6 +32,11 @@ public class Puzzle
     public DifficultyLevel Difficulty { get; set; }
 
     /// <summary>
+    /// Thème visuel du puzzle
+    /// </summary>
+    public PuzzleTheme Theme { get; set; } = PuzzleTheme.Classic;
+
+    /// <summary>
     /// Date de création du puzzle
     /// </summary>
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -89,5 +94,87 @@ public enum DifficultyLevel
     /// Pour les joueurs expérimentés
     /// </summary>
     Expert = 4
+}
+
+/// <summary>
+/// Thèmes visuels pour les puzzles Hashi
+/// Chaque thème a un design unique avec couleurs, animations et styles différents
+/// </summary>
+public enum PuzzleTheme
+{
+    /// <summary>
+    /// Thème classique - Prison traditionnelle
+    /// </summary>
+    Classic = 1,
+
+    /// <summary>
+    /// Thème médiéval - Château fort
+    /// </summary>
+    Medieval = 2,
+
+    /// <summary>
+    /// Thème futuriste - Prison spatiale
+    /// </summary>
+    Futuristic = 3,
+
+    /// <summary>
+    /// Thème sous-marin - Prison aquatique
+    /// </summary>
+    Underwater = 4,
+
+    /// <summary>
+    /// Thème désert - Prison dans le désert
+    /// </summary>
+    Desert = 5,
+
+    /// <summary>
+    /// Thème forêt - Prison dans la jungle
+    /// </summary>
+    Forest = 6,
+
+    /// <summary>
+    /// Thème glace - Prison arctique
+    /// </summary>
+    Ice = 7,
+
+    /// <summary>
+    /// Thème volcan - Prison volcanique
+    /// </summary>
+    Volcano = 8,
+
+    /// <summary>
+    /// Thème néon - Prison cyberpunk
+    /// </summary>
+    Neon = 9,
+
+    /// <summary>
+    /// Thème steampunk - Prison à vapeur
+    /// </summary>
+    Steampunk = 10,
+
+    /// <summary>
+    /// Thème pirate - Prison de pirates
+    /// </summary>
+    Pirate = 11,
+
+    /// <summary>
+    /// Thème zombie - Prison apocalyptique
+    /// </summary>
+    Zombie = 12,
+
+    /// <summary>
+    /// Thème ninja - Prison secrète
+    /// </summary>
+    Ninja = 13,
+
+    /// <summary>
+    /// Thème magie - Prison enchantée
+    /// </summary>
+    Magic = 14,
+
+    /// <summary>
+    /// Thème western - Prison du Far West
+    /// </summary>
+    Western = 15
 }
 

@@ -4,8 +4,11 @@
  * S'affiche quand une connexion correcte est établie entre deux serrures
  */
 
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { useGameStore } from '@/stores/game'
 import type { Island } from '@/types'
+import { PuzzleTheme } from '@/types'
+import { getThemeConfig } from '@/utils/themeConfig'
 
 interface Props {
   /** Île de départ */
@@ -25,6 +28,19 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   complete: []
 }>()
+
+// Store pour récupérer le thème
+const gameStore = useGameStore()
+
+/**
+ * Thème actuel du puzzle
+ */
+const currentTheme = computed(() => gameStore.currentPuzzle?.theme || PuzzleTheme.Classic)
+
+/**
+ * Configuration du thème actuel
+ */
+const themeConfig = computed(() => getThemeConfig(currentTheme.value))
 
 // Position actuelle du prisonnier
 const currentX = ref(0)
@@ -61,7 +77,7 @@ const endY = toY - dy * ratio
 /**
  * Taille du prisonnier
  */
-const prisonerSize = 12
+const prisonnierSize = 12
 
 /**
  * Animation du prisonnier
@@ -116,20 +132,24 @@ onUnmounted(() => {
 
 <template>
   <g v-if="isAnimating" class="prisonnier-animation">
-    <!-- Corps du prisonnier (cercle) -->
+    <!-- Corps du prisonnier (cercle) - Couleur selon le thème -->
     <circle
       :cx="currentX"
       :cy="currentY"
       :r="prisonnierSize"
       class="prisonnier__body"
+      :fill="themeConfig.colors.islandGradient[2]"
+      :stroke="themeConfig.colors.islandGradient[3]"
     />
     
-    <!-- Tête du prisonnier (cercle plus petit) -->
+    <!-- Tête du prisonnier (cercle plus petit) - Couleur selon le thème -->
     <circle
       :cx="currentX"
       :cy="currentY - prisonnierSize * 0.6"
       :r="prisonnierSize * 0.5"
       class="prisonnier__head"
+      :fill="themeConfig.colors.islandSelected[0]"
+      :stroke="themeConfig.colors.islandSelected[1]"
     />
     
     <!-- Rayures de prisonnier (lignes horizontales) -->
@@ -189,17 +209,15 @@ onUnmounted(() => {
 }
 
 .prisonnier__body {
-  fill: #4a5568;
-  stroke: #2d3748;
   stroke-width: 2;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
+  transition: fill 0.3s ease, stroke 0.3s ease;
 }
 
 .prisonnier__head {
-  fill: #fbbf24;
-  stroke: #f59e0b;
   stroke-width: 1.5;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+  transition: fill 0.3s ease, stroke 0.3s ease;
 }
 
 .prisonnier__stripe {
