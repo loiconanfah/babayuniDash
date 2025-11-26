@@ -169,10 +169,13 @@ public class GamesController : ControllerBase
             // Si la solution est valide, terminer la partie
             if (validationResult.IsValid)
             {
-                int score = CalculateScore(game.ElapsedSeconds, game.HintsUsed);
+                // Calculer le score en fonction du temps, des indices et du niveau de difficulté
+                int difficultyLevel = game.Puzzle != null ? (int)game.Puzzle.Difficulty : 1;
+                int score = CalculateScore(game.ElapsedSeconds, game.HintsUsed, difficultyLevel);
                 await _gameService.CompleteGameAsync(id, GameStatus.Completed, score);
                 
-                _logger.LogInformation("Partie {GameId} terminée avec succès. Score: {Score}", id, score);
+                _logger.LogInformation("Partie {GameId} terminée avec succès. Score: {Score}, Niveau: {Difficulty}", 
+                    id, score, difficultyLevel);
             }
 
             return Ok(validationResult);
@@ -214,15 +217,32 @@ public class GamesController : ControllerBase
     }
 
     /// <summary>
-    /// Calcule le score basé sur le temps et les indices utilisés
-    /// Formule: Score de base (1000) - (temps en secondes) - (indices * 100)
+    /// Calcule le score basé sur le temps, les indices utilisés et le niveau de difficulté
+    /// Formule: Score de base (selon niveau) - (temps en secondes) - (indices * 100)
     /// </summary>
-    private int CalculateScore(int elapsedSeconds, int hintsUsed)
+    /// <param name="elapsedSeconds">Temps écoulé en secondes</param>
+    /// <param name="hintsUsed">Nombre d'indices utilisés</param>
+    /// <param name="difficultyLevel">Niveau de difficulté (1=Facile, 2=Moyen, 3=Difficile)</param>
+    /// <returns>Score calculé</returns>
+    private int CalculateScore(int elapsedSeconds, int hintsUsed, int difficultyLevel)
     {
-        int baseScore = 1000;
-        int timePenalty = Math.Min(elapsedSeconds, 500); // Max 500 points de pénalité pour le temps
+        // Score de base selon le niveau de difficulté
+        int baseScore = difficultyLevel switch
+        {
+            1 => 1000,  // Facile
+            2 => 2000,  // Moyen
+            3 => 3000,  // Difficile
+            _ => 1000   // Par défaut
+        };
+
+        // Pénalité pour le temps (max 50% du score de base)
+        int maxTimePenalty = baseScore / 2;
+        int timePenalty = Math.Min(elapsedSeconds, maxTimePenalty);
+
+        // Pénalité pour les indices (100 points par indice)
         int hintPenalty = hintsUsed * 100;
 
+        // Score final (minimum 0)
         int score = Math.Max(0, baseScore - timePenalty - hintPenalty);
         return score;
     }

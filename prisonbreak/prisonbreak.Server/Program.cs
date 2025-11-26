@@ -33,6 +33,7 @@ builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<IPuzzleService, PuzzleService>();
 builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddScoped<IValidationService, ValidationService>();
+builder.Services.AddScoped<IStatsService, StatsService>();
 
 // Configuration des contrôleurs API
 builder.Services.AddControllers();

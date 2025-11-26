@@ -10,7 +10,9 @@ import type {
   ValidationResult,
   GeneratePuzzleRequest,
   CreateGameRequest,
-  DifficultyLevel
+  DifficultyLevel,
+  UserStats,
+  LeaderboardEntry
 } from '@/types'
 
 // URL de base de l'API
@@ -182,6 +184,35 @@ export const gameApi = {
       method: 'POST'
     })
     return handleResponse<Game>(response)
+  }
+}
+
+/**
+ * Service de gestion des statistiques et du classement
+ */
+export const statsApi = {
+  /**
+   * Récupère les statistiques d'un utilisateur par son ID
+   */
+  async getUserStats(userId: number): Promise<UserStats> {
+    const response = await fetch(`${API_BASE_URL}/Stats/user/${userId}`)
+    return handleResponse<UserStats>(response)
+  },
+
+  /**
+   * Récupère les statistiques d'un utilisateur par son email
+   */
+  async getUserStatsByEmail(email: string): Promise<UserStats> {
+    const response = await fetch(`${API_BASE_URL}/Stats/user/email/${encodeURIComponent(email)}`)
+    return handleResponse<UserStats>(response)
+  },
+
+  /**
+   * Récupère le classement des meilleurs joueurs
+   */
+  async getLeaderboard(limit: number = 10): Promise<LeaderboardEntry[]> {
+    const response = await fetch(`${API_BASE_URL}/Stats/leaderboard?limit=${limit}`)
+    return handleResponse<LeaderboardEntry[]>(response)
   }
 }
 

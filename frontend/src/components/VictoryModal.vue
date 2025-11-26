@@ -85,6 +85,7 @@ import { computed } from 'vue';
 import { useGameStore } from '@/stores/game';
 import { useUiStore } from '@/stores/ui';
 import { useUserStore } from '@/stores/user';
+import { useStatsStore } from '@/stores/stats';
 import { puzzleApi } from '@/services/api';
 import { DifficultyLevel } from '@/types';
 import { formatTime } from '@/utils/helpers';
@@ -92,6 +93,7 @@ import { formatTime } from '@/utils/helpers';
 const gameStore = useGameStore();
 const uiStore = useUiStore();
 const userStore = useUserStore();
+const statsStore = useStatsStore();
 
 /**
  * Temps formaté
@@ -104,14 +106,28 @@ const formattedTime = computed(() => {
  * Score calculé (basé sur le temps et les erreurs)
  */
 const score = computed(() => {
-  // Utiliser le score de la partie si disponible, sinon calculer
+  // Utiliser le score de la partie si disponible
   if (gameStore.currentGame?.score) {
     return gameStore.currentGame.score;
   }
-  // Calcul basé sur le temps (plus rapide = meilleur score)
+  // Fallback : calcul basé sur le temps (plus rapide = meilleur score)
   const timeBonus = Math.max(0, 10000 - gameStore.elapsedTime * 10);
   return Math.floor(timeBonus);
 });
+
+/**
+ * Recharger les statistiques après une victoire
+ */
+async function reloadStats() {
+  if (userStore.user?.email) {
+    try {
+      await statsStore.loadUserStatsByEmail(userStore.user.email)
+      await statsStore.loadLeaderboard(10)
+    } catch (err) {
+      console.log('Erreur lors du rechargement des statistiques:', err)
+    }
+  }
+}
 
 /**
  * Message de félicitations personnalisé
@@ -132,6 +148,9 @@ const message = computed(() => {
  */
 async function handleNextLevel() {
   try {
+    // Recharger les statistiques avant de continuer
+    await reloadStats()
+    
     uiStore.closeVictoryModal();
     
     // Récupérer la difficulté actuelle
@@ -196,7 +215,8 @@ async function handleNextLevel() {
 /**
  * Change de niveau
  */
-function handleChangeLevel() {
+async function handleChangeLevel() {
+  await reloadStats()
   uiStore.closeVictoryModal();
   uiStore.goToLevels();
 }
@@ -204,7 +224,8 @@ function handleChangeLevel() {
 /**
  * Retourne à l'accueil
  */
-function handleGoHome() {
+async function handleGoHome() {
+  await reloadStats()
   uiStore.closeVictoryModal();
   gameStore.resetGame();
   uiStore.goToHome();

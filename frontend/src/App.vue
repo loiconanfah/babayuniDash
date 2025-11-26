@@ -46,25 +46,27 @@
           <span>Niveaux</span>
         </button>
 
-        <!-- Classement (désactivé) -->
+        <!-- Classement -->
         <button
-          class="flex items-center gap-2 px-3 py-2 rounded-lg text-left
-                 text-slate-600 cursor-not-allowed opacity-50"
-          @click="() => {}"
-          disabled
+          class="flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors"
+          :class="ui.currentScreen === 'stats'
+            ? 'bg-slate-800 text-slate-50'
+            : 'text-slate-300 hover:bg-slate-800/60 hover:text-slate-50'"
+          @click="ui.goToStats()"
         >
-          <span class="inline-flex h-5 w-5 rounded-full bg-slate-800/40"></span>
+          <span class="inline-flex h-5 w-5 rounded-full bg-slate-800"></span>
           <span>Classement</span>
         </button>
 
-        <!-- Statistiques (désactivé) -->
+        <!-- Statistiques -->
         <button
-          class="flex items-center gap-2 px-3 py-2 rounded-lg text-left
-                 text-slate-600 cursor-not-allowed opacity-50"
-          @click="() => {}"
-          disabled
+          class="flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors"
+          :class="ui.currentScreen === 'stats'
+            ? 'bg-slate-800 text-slate-50'
+            : 'text-slate-300 hover:bg-slate-800/60 hover:text-slate-50'"
+          @click="ui.goToStats()"
         >
-          <span class="inline-flex h-5 w-5 rounded-full bg-slate-800/40"></span>
+          <span class="inline-flex h-5 w-5 rounded-full bg-slate-800"></span>
           <span>Statistiques</span>
         </button>
 
@@ -103,19 +105,32 @@
 import { computed, onMounted } from 'vue';
 import { useUiStore } from '@/stores/ui';
 import { useUserStore } from '@/stores/user';
+import { useStatsStore } from '@/stores/stats';
 
 import HomeScreen from '@/components/HomeScreen.vue';
 import LevelSelectScreen from '@/components/LevelSelectScreen.vue';
 import GameScreen from '@/components/GameScreen.vue';
+import StatsScreen from '@/components/StatsScreen.vue';
 import UserRegisterModal from '@/components/UserRegisterModal.vue';
 import TutorialModal from '@/components/TutorialModal.vue';
 
 const ui = useUiStore();
 const userStore = useUserStore();
+const statsStore = useStatsStore();
 
-// Charger l'utilisateur si stocké en local
-onMounted(() => {
+// Charger l'utilisateur si stocké en local et récupérer ses statistiques
+onMounted(async () => {
   userStore.loadFromLocalStorage();
+  
+  // Si un utilisateur est déjà connecté, charger ses statistiques automatiquement
+  if (userStore.user?.email) {
+    try {
+      await statsStore.loadUserStatsByEmail(userStore.user.email);
+    } catch (err) {
+      // Ignorer les erreurs si l'utilisateur n'a pas encore de statistiques
+      console.log('Aucune statistique disponible pour cet utilisateur');
+    }
+  }
 });
 
 // Sélection dynamique de l'écran actif
@@ -124,6 +139,7 @@ const currentComponent = computed(() => {
     case 'home': return HomeScreen;
     case 'levels': return LevelSelectScreen;
     case 'game': return GameScreen;
+    case 'stats': return StatsScreen;
     case 'leaderboard': return HomeScreen; // temporaire
     default: return HomeScreen;
   }

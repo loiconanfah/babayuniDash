@@ -68,9 +68,11 @@
 import { ref } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { useUiStore } from '@/stores/ui'
+import { useStatsStore } from '@/stores/stats'
 
 const userStore = useUserStore()
 const uiStore = useUiStore()
+const statsStore = useStatsStore()
 
 const name = ref('')
 const email = ref('')
@@ -98,6 +100,17 @@ async function onSubmit() {
   try {
     isSubmitting.value = true
     await userStore.register(name.value.trim(), email.value.trim())
+    
+    // Charger les statistiques de l'utilisateur après connexion
+    if (userStore.user?.email) {
+      try {
+        await statsStore.loadUserStatsByEmail(userStore.user.email)
+      } catch (err) {
+        // Ignorer les erreurs si l'utilisateur n'a pas encore de statistiques
+        console.log('Aucune statistique disponible pour cet utilisateur')
+      }
+    }
+    
     uiStore.closeUserModal()
   } catch (err: unknown) {
     if (err instanceof Error) {

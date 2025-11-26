@@ -168,3 +168,71 @@ export interface CreateGameRequest {
   sessionId: number
 }
 
+/**
+ * Statistiques d'un utilisateur
+ */
+export interface UserStats {
+  /** ID de l'utilisateur */
+  userId: number
+  /** Nom de l'utilisateur */
+  userName: string
+  /** Email de l'utilisateur */
+  email: string
+  /** Score total */
+  totalScore: number
+  /** Score moyen par partie */
+  averageScore: number
+  /** Nombre total de parties jouées */
+  totalGamesPlayed: number
+  /** Nombre de parties complétées */
+  gamesCompleted: number
+  /** Nombre de parties abandonnées */
+  gamesAbandoned: number
+  /** Meilleur score obtenu */
+  bestScore: number
+  /** Temps total de jeu (en secondes) */
+  totalPlayTime: number
+  /** Temps moyen par partie (en secondes) */
+  averagePlayTime: number
+  /** Statistiques par niveau de difficulté */
+  statsByLevel: Record<number, LevelStats>
+}
+
+/**
+ * Statistiques pour un niveau de difficulté spécifique
+ */
+export interface LevelStats {
+  /** Niveau de difficulté (1 = Facile, 2 = Moyen, 3 = Difficile) */
+  difficultyLevel: number
+  /** Nombre de parties jouées à ce niveau */
+  gamesPlayed: number
+  /** Nombre de parties complétées à ce niveau */
+  gamesCompleted: number
+  /** Meilleur score à ce niveau */
+  bestScore: number
+  /** Score moyen à ce niveau */
+  averageScore: number
+  /** Temps moyen à ce niveau (en secondes) */
+  averageTime: number
+}
+
+/**
+ * Entrée du classement (leaderboard)
+ */
+export interface LeaderboardEntry {
+  /** Position dans le classement */
+  rank: number
+  /** ID de l'utilisateur */
+  userId: number
+  /** Nom de l'utilisateur */
+  userName: string
+  /** Score total */
+  totalScore: number
+  /** Nombre de parties complétées */
+  gamesCompleted: number
+  /** Score moyen */
+  averageScore: number
+  /** Meilleur score */
+  bestScore: number
+}
+
