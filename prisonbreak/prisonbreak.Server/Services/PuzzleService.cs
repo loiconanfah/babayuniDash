@@ -601,31 +601,43 @@ public class PuzzleService : IPuzzleService
         var bridges = new List<Bridge>();
         var usedPositions = new HashSet<(int, int)>();
 
+        // Calculer le nombre d'îles selon la difficulté et la taille
+        // Pour les grandes grilles rectangulaires, ajuster le ratio
+        int baseArea = width * height;
         int islandCount = difficulty switch
         {
-            DifficultyLevel.Easy => Math.Max(4, Math.Min(width * height / 8, 6)),
-            DifficultyLevel.Medium => Math.Max(6, Math.Min(width * height / 6, 10)),
-            DifficultyLevel.Hard => Math.Max(8, Math.Min(width * height / 4, 15)),
-            DifficultyLevel.Expert => Math.Max(10, Math.Min(width * height / 3, 20)),
+            DifficultyLevel.Easy => Math.Max(4, Math.Min(baseArea / 8, 6)),
+            DifficultyLevel.Medium => Math.Max(6, Math.Min(baseArea / 6, 10)),
+            DifficultyLevel.Hard => Math.Max(10, Math.Min(baseArea / 5, 18)), // Plus d'îles pour niveau difficile
+            DifficultyLevel.Expert => Math.Max(12, Math.Min(baseArea / 4, 25)),
             _ => 5
         };
+        
+        // Pour les grandes grilles (18x11 = 198 cases), s'assurer d'avoir assez d'îles
+        if (baseArea > 150 && difficulty == DifficultyLevel.Hard)
+        {
+            islandCount = Math.Max(islandCount, 12); // Minimum 12 îles pour grandes grilles difficiles
+        }
 
         // Placer les îles de manière variée
         var positions = new List<(int x, int y)>();
         int attempts = 0;
         int maxAttempts = 1000;
 
+        // Pour les grandes grilles, augmenter la distance minimale entre îles
+        int minDistance = (width > 15 || height > 15) ? 3 : 2;
+        
         while (positions.Count < islandCount && attempts < maxAttempts)
         {
             int x = _random.Next(1, width - 1);
             int y = _random.Next(1, height - 1);
 
-            // Éviter les positions trop proches (minimum 2 cases d'écart)
+            // Éviter les positions trop proches
             bool tooClose = false;
             foreach (var (px, py) in positions)
             {
                 int distance = Math.Abs(x - px) + Math.Abs(y - py);
-                if (distance < 2)
+                if (distance < minDistance)
                 {
                     tooClose = true;
                     break;
@@ -635,9 +647,27 @@ public class PuzzleService : IPuzzleService
             if (!tooClose && !usedPositions.Contains((x, y)))
             {
                 positions.Add((x, y));
-            usedPositions.Add((x, y));
+                usedPositions.Add((x, y));
             }
             attempts++;
+        }
+        
+        // Si on n'a pas assez d'îles, réduire la distance minimale
+        if (positions.Count < Math.Max(8, islandCount / 2) && minDistance > 1)
+        {
+            minDistance = 1;
+            while (positions.Count < islandCount && attempts < maxAttempts * 2)
+            {
+                int x = _random.Next(1, width - 1);
+                int y = _random.Next(1, height - 1);
+
+                if (!usedPositions.Contains((x, y)))
+                {
+                    positions.Add((x, y));
+                    usedPositions.Add((x, y));
+                }
+                attempts++;
+            }
         }
 
         // Créer les îles
@@ -1137,15 +1167,28 @@ public class PuzzleService : IPuzzleService
     }
 
     /// <summary>
-    /// Retourne des dimensions variées pour niveau Difficile (12x12 à 14x14)
+    /// Retourne des dimensions variées pour niveau Difficile
+    /// Inclut des tailles rectangulaires et carrées pour plus de variété
+    /// Tous les puzzles sont résolvables grâce à GenerateGenericPuzzle
     /// </summary>
     private (int width, int height) GetHardDimensions(int themeIndex)
     {
         var sizes = new[]
         {
-            (12, 12), (12, 13), (12, 14), (13, 12), (13, 13),
-            (13, 14), (14, 12), (14, 13), (12, 15), (13, 15),
-            (14, 14), (15, 12), (15, 13), (14, 15), (15, 14)
+            // Tailles carrées
+            (12, 12), (13, 13), (14, 14), (15, 15),
+            // Tailles rectangulaires larges
+            (18, 11), (17, 12), (16, 13), (15, 14),
+            (18, 12), (17, 13), (16, 14), (15, 15),
+            // Tailles rectangulaires hautes
+            (11, 18), (12, 17), (13, 16), (14, 15),
+            (12, 18), (13, 17), (14, 16), (15, 15),
+            // Tailles moyennes variées
+            (16, 12), (14, 13), (13, 15), (15, 13),
+            (17, 11), (16, 11), (15, 12), (14, 14),
+            // Tailles plus grandes
+            (18, 13), (17, 14), (16, 15), (15, 16),
+            (14, 17), (13, 18), (12, 16), (11, 17)
         };
         return sizes[themeIndex % sizes.Length];
     }
