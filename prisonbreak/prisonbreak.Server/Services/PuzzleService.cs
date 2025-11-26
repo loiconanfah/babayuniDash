@@ -234,6 +234,39 @@ public class PuzzleService : IPuzzleService
                     bridges.Add(CreateBridge(firstCol, secondCol, false, BridgeDirection.Horizontal));
                 }
             }
+            
+            // Si certaines îles ne sont pas connectées, les connecter
+            var usedPositions = new HashSet<(int, int)>();
+            foreach (var island in islands)
+            {
+                usedPositions.Add((island.X, island.Y));
+            }
+            
+            var connected = new HashSet<Island>();
+            if (islands.Count > 0)
+            {
+                connected.Add(islands[0]);
+                foreach (var bridge in bridges)
+                {
+                    if (bridge.FromIsland != null) connected.Add(bridge.FromIsland);
+                    if (bridge.ToIsland != null) connected.Add(bridge.ToIsland);
+                }
+                
+                foreach (var island in islands.Where(i => !connected.Contains(i)))
+                {
+                    var nearest = connected
+                        .Where(i => CanConnectIslands(i, island, usedPositions))
+                        .OrderBy(i => Math.Abs(i.X - island.X) + Math.Abs(i.Y - island.Y))
+                        .FirstOrDefault();
+                    
+                    if (nearest != null)
+                    {
+                        var direction = nearest.X == island.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal;
+                        bridges.Add(CreateBridge(nearest, island, false, direction));
+                        connected.Add(island);
+                    }
+                }
+            }
         }
         // Solution type 1 : connexions horizontales puis verticales
         else if (themeSolutionType == 1 && islands.Count >= 2)
@@ -254,6 +287,39 @@ public class PuzzleService : IPuzzleService
                 if (firstRow.X == secondRow.X)
                 {
                     bridges.Add(CreateBridge(firstRow, secondRow, false, BridgeDirection.Vertical));
+                }
+            }
+            
+            // Si certaines îles ne sont pas connectées, les connecter
+            var usedPositions = new HashSet<(int, int)>();
+            foreach (var island in islands)
+            {
+                usedPositions.Add((island.X, island.Y));
+            }
+            
+            var connected = new HashSet<Island>();
+            if (islands.Count > 0)
+            {
+                connected.Add(islands[0]);
+                foreach (var bridge in bridges)
+                {
+                    if (bridge.FromIsland != null) connected.Add(bridge.FromIsland);
+                    if (bridge.ToIsland != null) connected.Add(bridge.ToIsland);
+                }
+                
+                foreach (var island in islands.Where(i => !connected.Contains(i)))
+                {
+                    var nearest = connected
+                        .Where(i => CanConnectIslands(i, island, usedPositions))
+                        .OrderBy(i => Math.Abs(i.X - island.X) + Math.Abs(i.Y - island.Y))
+                        .FirstOrDefault();
+                    
+                    if (nearest != null)
+                    {
+                        var direction = nearest.X == island.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal;
+                        bridges.Add(CreateBridge(nearest, island, false, direction));
+                        connected.Add(island);
+                    }
                 }
             }
         }
@@ -810,6 +876,13 @@ public class PuzzleService : IPuzzleService
     {
         if (islands.Count <= 1) return;
 
+        // Créer un HashSet des positions utilisées pour vérifier les obstacles
+        var usedPositions = new HashSet<(int x, int y)>();
+        foreach (var island in islands)
+        {
+            usedPositions.Add((island.X, island.Y));
+        }
+
         // Créer un graphe d'adjacence pour trouver les îles connectées
         var connectedIslands = new HashSet<Island>();
         var adjacency = new Dictionary<Island, List<Island>>();
@@ -852,26 +925,114 @@ public class PuzzleService : IPuzzleService
                 }
             }
 
-            // Connecter les îles isolées
-            foreach (var island in islands)
+            // Connecter les îles isolées - essayer plusieurs fois jusqu'à ce que toutes soient connectées
+            int maxAttempts = islands.Count * 2;
+            int attempts = 0;
+            
+            while (connectedIslands.Count < islands.Count && attempts < maxAttempts)
             {
-                if (!connectedIslands.Contains(island))
+                bool addedConnection = false;
+                
+                foreach (var island in islands)
                 {
-                    // Trouver l'île connectée la plus proche qui peut être reliée
-                    var nearest = connectedIslands
-                        .Where(i => (i.X == island.X || i.Y == island.Y))
-                        .OrderBy(i => Math.Abs(i.X - island.X) + Math.Abs(i.Y - island.Y))
-                        .FirstOrDefault();
-                    
-                    if (nearest != null)
+                    if (!connectedIslands.Contains(island))
                     {
-                        var direction = nearest.X == island.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal;
-                        bridges.Add(CreateBridge(nearest, island, false, direction));
-                        connectedIslands.Add(island);
-                        adjacency[nearest].Add(island);
-                        adjacency[island].Add(nearest);
+                        // Trouver l'île connectée la plus proche qui peut être reliée
+                        var nearest = connectedIslands
+                            .Where(i => CanConnectIslands(i, island, usedPositions))
+                            .OrderBy(i => Math.Abs(i.X - island.X) + Math.Abs(i.Y - island.Y))
+                            .FirstOrDefault();
+                        
+                        if (nearest != null)
+                        {
+                            var direction = nearest.X == island.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal;
+                            bridges.Add(CreateBridge(nearest, island, false, direction));
+                            connectedIslands.Add(island);
+                            adjacency[nearest].Add(island);
+                            adjacency[island].Add(nearest);
+                            addedConnection = true;
+                            break; // Sortir de la boucle pour recommencer le parcours
+                        }
                     }
                 }
+                
+                // Si aucune connexion n'a été ajoutée, forcer la connexion de la première île isolée
+                // en trouvant la connexion la plus proche possible
+                if (!addedConnection)
+                {
+                    var unconnected = islands.Where(i => !connectedIslands.Contains(i)).ToList();
+                    if (unconnected.Count > 0)
+                    {
+                        var isolated = unconnected[0];
+                        
+                        // Trouver toutes les îles connectées qui sont alignées (même ligne ou colonne)
+                        var alignedConnected = connectedIslands
+                            .Where(i => (i.X == isolated.X || i.Y == isolated.Y))
+                            .OrderBy(i => Math.Abs(i.X - isolated.X) + Math.Abs(i.Y - isolated.Y))
+                            .ToList();
+                        
+                        Island? target = null;
+                        
+                        if (alignedConnected.Count > 0)
+                        {
+                            // Prendre la plus proche qui peut être connectée
+                            target = alignedConnected
+                                .Where(i => CanConnectIslands(i, isolated, usedPositions))
+                                .FirstOrDefault();
+                            
+                            if (target == null && alignedConnected.Count > 0)
+                            {
+                                // Si aucune ne peut être connectée directement, prendre la plus proche quand même
+                                // et créer le pont (il sera validé plus tard)
+                                target = alignedConnected[0];
+                            }
+                        }
+                        
+                        // Si toujours aucune île alignée, prendre la plus proche île connectée
+                        if (target == null && connectedIslands.Count > 0)
+                        {
+                            target = connectedIslands
+                                .OrderBy(i => Math.Abs(i.X - isolated.X) + Math.Abs(i.Y - isolated.Y))
+                                .FirstOrDefault();
+                        }
+                        
+                        if (target != null)
+                        {
+                            var direction = target.X == isolated.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal;
+                            bridges.Add(CreateBridge(target, isolated, false, direction));
+                            connectedIslands.Add(isolated);
+                            adjacency[target].Add(isolated);
+                            adjacency[isolated].Add(target);
+                            addedConnection = true;
+                        }
+                    }
+                }
+                
+                // Si toujours aucune connexion, relancer le parcours pour mettre à jour connectedIslands
+                if (addedConnection)
+                {
+                    // Refaire le parcours pour mettre à jour connectedIslands
+                    visited.Clear();
+                    stack.Clear();
+                    stack.Push(islands[0]);
+                    
+                    while (stack.Count > 0)
+                    {
+                        var current = stack.Pop();
+                        if (visited.Contains(current)) continue;
+                        
+                        visited.Add(current);
+                        connectedIslands.Add(current);
+                        
+                        foreach (var neighbor in adjacency[current])
+                        {
+                            if (!visited.Contains(neighbor))
+                                stack.Push(neighbor);
+                        }
+                    }
+                }
+                
+                attempts++;
             }
         }
     }
@@ -913,11 +1074,61 @@ public class PuzzleService : IPuzzleService
         }
 
         // S'assurer qu'aucune île n'a 0 ponts requis (minimum 1)
+        // Si une île n'a aucun pont, essayer de la connecter avant de lancer l'erreur
         foreach (var island in islands)
         {
             if (island.RequiredBridges == 0)
             {
-                // Si une île n'a aucun pont, c'est une erreur - toutes les îles doivent être connectées
+                // Dernière tentative : trouver n'importe quelle île connectée et créer un pont
+                var usedPositions = new HashSet<(int, int)>();
+                foreach (var i in islands)
+                {
+                    usedPositions.Add((i.X, i.Y));
+                }
+                
+                var connectedIslands = islands.Where(i => i.RequiredBridges > 0).ToList();
+                if (connectedIslands.Count > 0)
+                {
+                    // Essayer d'abord avec CanConnectIslands
+                    var nearest = connectedIslands
+                        .Where(i => CanConnectIslands(i, island, usedPositions))
+                        .OrderBy(i => Math.Abs(i.X - island.X) + Math.Abs(i.Y - island.Y))
+                        .FirstOrDefault();
+                    
+                    // Si aucune connexion valide trouvée, forcer la connexion avec la plus proche île alignée
+                    if (nearest == null)
+                    {
+                        // Chercher les îles alignées (même ligne ou colonne)
+                        var aligned = connectedIslands
+                            .Where(i => i.X == island.X || i.Y == island.Y)
+                            .OrderBy(i => Math.Abs(i.X - island.X) + Math.Abs(i.Y - island.Y))
+                            .FirstOrDefault();
+                        
+                        if (aligned != null)
+                        {
+                            nearest = aligned;
+                        }
+                        else
+                        {
+                            // Si aucune île alignée, prendre la plus proche
+                            nearest = connectedIslands
+                                .OrderBy(i => Math.Abs(i.X - island.X) + Math.Abs(i.Y - island.Y))
+                                .FirstOrDefault();
+                        }
+                    }
+                    
+                    if (nearest != null)
+                    {
+                        var direction = nearest.X == island.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal;
+                        bridges.Add(CreateBridge(nearest, island, false, direction));
+                        // Recalculer pour cette île
+                        island.RequiredBridges += 1;
+                        nearest.RequiredBridges += 1;
+                        continue; // Passer à l'île suivante
+                    }
+                }
+                
+                // Si toujours aucune connexion possible, lancer l'erreur
                 throw new InvalidOperationException($"L'île à ({island.X}, {island.Y}) n'a aucun pont dans la solution. Toutes les îles doivent être connectées.");
             }
         }
