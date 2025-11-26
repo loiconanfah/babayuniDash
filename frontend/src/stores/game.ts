@@ -35,6 +35,9 @@ export const useGameStore = defineStore('game', () => {
   const elapsedTime = ref(0)
   let timerInterval: number | null = null
 
+  /** Indique si le jeu est en pause */
+  const isPaused = ref(false)
+
   // ====================================================
   // GETTERS - Propriétés calculées
   // ====================================================
@@ -158,6 +161,11 @@ export const useGameStore = defineStore('game', () => {
    * Sélectionne une île (pour commencer à placer un pont)
    */
   function selectIsland(island: Island): void {
+    // Ne rien faire si le jeu est en pause
+    if (isPaused.value) {
+      return
+    }
+
     // Si aucune île n'est sélectionnée, sélectionner celle-ci
     if (!selectedIsland.value) {
       selectedIsland.value = island
@@ -286,7 +294,38 @@ export const useGameStore = defineStore('game', () => {
     selectedIsland.value = null
     elapsedTime.value = 0
     error.value = null
+    isPaused.value = false
     stopTimer()
+  }
+
+  /**
+   * Met le jeu en pause
+   */
+  function pauseGame(): void {
+    if (!hasActiveGame.value) return
+    isPaused.value = true
+    selectedIsland.value = null // Désélectionner l'île en cours
+    stopTimer() // Arrêter le timer
+  }
+
+  /**
+   * Reprend le jeu
+   */
+  function resumeGame(): void {
+    if (!hasActiveGame.value) return
+    isPaused.value = false
+    startTimer() // Redémarrer le timer
+  }
+
+  /**
+   * Alterne entre pause et reprise
+   */
+  function togglePause(): void {
+    if (isPaused.value) {
+      resumeGame()
+    } else {
+      pauseGame()
+    }
   }
 
   /**
@@ -294,9 +333,11 @@ export const useGameStore = defineStore('game', () => {
    */
   function startTimer(): void {
     stopTimer() // Arrêter le timer existant s'il y en a un
-    timerInterval = window.setInterval(() => {
-      elapsedTime.value++
-    }, 1000)
+    if (!isPaused.value) {
+      timerInterval = window.setInterval(() => {
+        elapsedTime.value++
+      }, 1000)
+    }
   }
 
   /**
@@ -361,6 +402,7 @@ export const useGameStore = defineStore('game', () => {
     isLoading,
     error,
     elapsedTime,
+    isPaused,
 
     // Getters
     hasActiveGame,
@@ -381,7 +423,10 @@ export const useGameStore = defineStore('game', () => {
     abandonGame,
     resetGame,
     solvePuzzle,
-    clearError
+    clearError,
+    pauseGame,
+    resumeGame,
+    togglePause
   }
 })
 

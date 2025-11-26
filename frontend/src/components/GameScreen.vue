@@ -33,7 +33,7 @@
 
         <!-- Colonne centrale : grille de jeu -->
         <div
-          class="lg:col-span-6 flex items-center justify-center rounded-2xl bg-slate-900/70 border border-slate-700 p-2 sm:p-4 overflow-hidden"
+          class="lg:col-span-6 flex items-center justify-center rounded-2xl bg-slate-900/70 border border-slate-700 p-2 sm:p-4 overflow-hidden relative"
         >
           <!-- Grille Hashi intégrée -->
           <GameGrid
@@ -41,12 +41,25 @@
             :width="gameStore.currentPuzzle.width"
             :height="gameStore.currentPuzzle.height"
             class="w-full h-full max-w-full max-h-full"
+            :class="{ 'opacity-50 pointer-events-none': gameStore.isPaused }"
           />
           <div
             v-else
             class="w-full h-64 sm:h-80 lg:h-[26rem] flex items-center justify-center border border-dashed border-slate-600 rounded-xl text-slate-400 text-sm"
           >
             Chargement du puzzle...
+          </div>
+          
+          <!-- Overlay de pause -->
+          <div
+            v-if="gameStore.isPaused"
+            class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center rounded-2xl z-10"
+          >
+            <div class="text-center">
+              <div class="text-6xl mb-4">⏸️</div>
+              <p class="text-2xl font-bold text-amber-300 mb-2">Jeu en Pause</p>
+              <p class="text-sm text-slate-400">Cliquez sur "Reprendre" pour continuer</p>
+            </div>
           </div>
         </div>
 
@@ -99,27 +112,32 @@
             </div>
           </div>
 
-          <!-- Porte Escape -->
+          <!-- Bouton Pause -->
           <button
             class="w-full flex flex-col items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
-            @click="handleEscape"
-            title="Résoudre le puzzle pour s'échapper"
+            @click="handlePause"
+            :title="gameStore.isPaused ? 'Reprendre le jeu' : 'Mettre le jeu en pause'"
           >
             <div
-              class="w-24 h-32 sm:w-28 sm:h-36 rounded-2xl bg-slate-950 border-4 border-slate-800 flex items-center justify-center hover:border-amber-500 transition-colors"
+              class="w-24 h-32 sm:w-28 sm:h-36 rounded-2xl bg-slate-950 border-4 flex items-center justify-center transition-colors"
+              :class="gameStore.isPaused 
+                ? 'border-green-500 bg-green-950/30' 
+                : 'border-slate-800 hover:border-amber-500'"
             >
-              <div class="space-y-2 w-14">
-                <div class="h-1.5 bg-slate-500 rounded"></div>
-                <div class="h-1.5 bg-slate-500 rounded"></div>
-                <div class="h-1.5 bg-slate-500 rounded"></div>
-                <div class="h-1.5 bg-slate-500 rounded"></div>
-                <div class="h-1.5 bg-slate-500 rounded"></div>
+              <div v-if="gameStore.isPaused" class="flex items-center gap-1.5">
+                <div class="w-2 h-6 bg-green-400 rounded"></div>
+                <div class="w-2 h-6 bg-green-400 rounded"></div>
+              </div>
+              <div v-else class="flex items-center justify-center">
+                <div class="w-0 h-0 border-l-[12px] border-l-amber-400 border-y-[10px] border-y-transparent ml-1"></div>
+                <div class="w-0 h-0 border-l-[12px] border-l-amber-400 border-y-[10px] border-y-transparent"></div>
               </div>
             </div>
             <p
-              class="text-xs uppercase tracking-[0.25em] text-amber-300"
+              class="text-xs uppercase tracking-[0.25em]"
+              :class="gameStore.isPaused ? 'text-green-300' : 'text-amber-300'"
             >
-              Escape
+              {{ gameStore.isPaused ? 'Reprendre' : 'Pause' }}
             </p>
           </button>
         </div>
@@ -236,15 +254,9 @@ async function handleHelp() {
 }
 
 /**
- * Résout automatiquement le puzzle (bouton Escape)
+ * Met le jeu en pause ou le reprend
  */
-async function handleEscape() {
-  if (confirm('Voulez-vous résoudre automatiquement ce puzzle pour vous échapper ? Cette action remplacera tous vos ponts actuels.')) {
-    try {
-      await gameStore.solvePuzzle();
-    } catch (error) {
-      console.error('Erreur lors de la résolution:', error);
-    }
-  }
+function handlePause() {
+  gameStore.togglePause();
 }
 </script>

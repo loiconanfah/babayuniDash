@@ -107,6 +107,10 @@ watch(() => islands.value, (newIslands) => {
  * Gère le clic sur une île
  */
 function handleIslandClick(island: Island) {
+  // Ne rien faire si le jeu est en pause
+  if (gameStore.isPaused) {
+    return
+  }
   gameStore.selectIsland(island)
 }
 
@@ -114,6 +118,10 @@ function handleIslandClick(island: Island) {
  * Gère le clic sur un pont
  */
 function handleBridgeClick(bridge: Bridge) {
+  // Ne rien faire si le jeu est en pause
+  if (gameStore.isPaused) {
+    return
+  }
   // Cliquer sur un pont le supprime
   gameStore.removeBridge(bridge)
 }
