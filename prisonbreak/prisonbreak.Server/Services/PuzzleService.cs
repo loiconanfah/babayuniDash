@@ -26,94 +26,156 @@ public class PuzzleService : IPuzzleService
     /// </summary>
     public async Task<Puzzle> GeneratePuzzleAsync(int width, int height, DifficultyLevel difficulty, PuzzleTheme theme = PuzzleTheme.Classic)
     {
-        // Créer le puzzle
-        var puzzle = new Puzzle
+        const int maxRetries = 10; // Nombre maximum de tentatives
+        int attempt = 0;
+        
+        while (attempt < maxRetries)
         {
-            Name = $"{GetThemeName(theme)} - {difficulty} ({width}x{height})",
-            Width = width,
-            Height = height,
-            Difficulty = difficulty,
-            Theme = theme,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        // Générer les îles et la solution selon la difficulté et le thème
-        // Chaque thème a un pattern unique d'îles
-        var (islands, solutionBridges) = GenerateValidPuzzle(width, height, difficulty, theme);
-
-        // Assigner les îles au puzzle
-        foreach (var island in islands)
-        {
-            island.Puzzle = puzzle;
-        }
-        puzzle.Islands = islands;
-
-        // Sauvegarder d'abord le puzzle et les îles pour obtenir les IDs
-        _context.Puzzles.Add(puzzle);
-        await _context.SaveChangesAsync();
-
-        // Recharger les îles depuis la base de données pour obtenir leurs IDs
-        var savedIslands = await _context.Islands
-            .Where(i => i.PuzzleId == puzzle.Id)
-            .ToListAsync();
-
-        // Maintenant que les îles ont des IDs, créer les ponts avec les IDs corrects
-        var bridgesToAdd = new List<Bridge>();
-        foreach (var bridgeTemplate in solutionBridges)
-        {
-            // Trouver les îles correspondantes par position (X, Y) dans les îles sauvegardées
-            var fromIsland = savedIslands.FirstOrDefault(i => 
-                i.X == bridgeTemplate.FromIsland!.X && 
-                i.Y == bridgeTemplate.FromIsland.Y);
-            var toIsland = savedIslands.FirstOrDefault(i => 
-                i.X == bridgeTemplate.ToIsland!.X && 
-                i.Y == bridgeTemplate.ToIsland.Y);
-
-            if (fromIsland != null && toIsland != null)
+            try
             {
-                bridgesToAdd.Add(new Bridge
+                // Supprimer le puzzle précédent si c'est un retry
+                if (attempt > 0)
                 {
-                    FromIslandId = fromIsland.Id,
-                    ToIslandId = toIsland.Id,
-                    FromIsland = fromIsland,
-                    ToIsland = toIsland,
-                    IsDouble = bridgeTemplate.IsDouble,
-                    Direction = bridgeTemplate.Direction,
-                    PuzzleId = puzzle.Id,
-                    Puzzle = puzzle
-                });
+                    // Nettoyer les puzzles précédents qui ont échoué
+                    var failedPuzzles = await _context.Puzzles
+                        .Where(p => p.Width == width && p.Height == height && 
+                                   p.Difficulty == difficulty && p.Theme == theme &&
+                                   !p.Islands.Any(i => i.RequiredBridges > 0))
+                        .ToListAsync();
+                    
+                    foreach (var failedPuzzle in failedPuzzles)
+                    {
+                        _context.Puzzles.Remove(failedPuzzle);
+                    }
+                    await _context.SaveChangesAsync();
+                }
+
+                // Créer le puzzle
+                var puzzle = new Puzzle
+                {
+                    Name = $"{GetThemeName(theme)} - {difficulty} ({width}x{height})",
+                    Width = width,
+                    Height = height,
+                    Difficulty = difficulty,
+                    Theme = theme,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                // Générer les îles et la solution selon la difficulté et le thème
+                // Chaque thème a un pattern unique d'îles
+                var (islands, solutionBridges) = GenerateValidPuzzle(width, height, difficulty, theme);
+
+                // Assigner les îles au puzzle
+                foreach (var island in islands)
+                {
+                    island.Puzzle = puzzle;
+                }
+                puzzle.Islands = islands;
+
+                // Sauvegarder d'abord le puzzle et les îles pour obtenir les IDs
+                _context.Puzzles.Add(puzzle);
+                await _context.SaveChangesAsync();
+
+                // Recharger les îles depuis la base de données pour obtenir leurs IDs
+                var savedIslands = await _context.Islands
+                    .Where(i => i.PuzzleId == puzzle.Id)
+                    .ToListAsync();
+
+                // Maintenant que les îles ont des IDs, créer les ponts avec les IDs corrects
+                var bridgesToAdd = new List<Bridge>();
+                foreach (var bridgeTemplate in solutionBridges)
+                {
+                    // Trouver les îles correspondantes par position (X, Y) dans les îles sauvegardées
+                    var fromIsland = savedIslands.FirstOrDefault(i => 
+                        i.X == bridgeTemplate.FromIsland!.X && 
+                        i.Y == bridgeTemplate.FromIsland.Y);
+                    var toIsland = savedIslands.FirstOrDefault(i => 
+                        i.X == bridgeTemplate.ToIsland!.X && 
+                        i.Y == bridgeTemplate.ToIsland.Y);
+
+                    if (fromIsland != null && toIsland != null)
+                    {
+                        bridgesToAdd.Add(new Bridge
+                        {
+                            FromIslandId = fromIsland.Id,
+                            ToIslandId = toIsland.Id,
+                            FromIsland = fromIsland,
+                            ToIsland = toIsland,
+                            IsDouble = bridgeTemplate.IsDouble,
+                            Direction = bridgeTemplate.Direction,
+                            PuzzleId = puzzle.Id,
+                            Puzzle = puzzle
+                        });
+                    }
+                }
+
+                // S'assurer que toutes les îles sont connectées AVANT de calculer RequiredBridges
+                EnsureAllIslandsConnected(savedIslands, bridgesToAdd, puzzle.Id);
+
+                // Calculer les RequiredBridges pour chaque île en fonction de la solution
+                // IMPORTANT : Cette méthode doit être appelée APRÈS tous les ponts sont créés
+                CalculateRequiredBridges(savedIslands, bridgesToAdd);
+                
+                // Recalculer une fois de plus pour s'assurer que tout est cohérent
+                // (au cas où des ponts ont été ajoutés dans CalculateRequiredBridges)
+                CalculateRequiredBridges(savedIslands, bridgesToAdd);
+
+                // VALIDATION : Vérifier que toutes les îles sont connectées
+                if (!ValidatePuzzleConnectivity(savedIslands, bridgesToAdd))
+                {
+                    throw new InvalidOperationException("Le puzzle généré n'est pas valide : toutes les îles ne sont pas connectées");
+                }
+
+                // VALIDATION : Vérifier qu'il n'y a pas de croisements illégaux
+                ValidateNoIllegalCrossings(savedIslands, bridgesToAdd);
+
+                // VALIDATION : Vérifier que les RequiredBridges correspondent aux ponts
+                ValidateRequiredBridges(savedIslands, bridgesToAdd);
+
+                // Mettre à jour les RequiredBridges dans la base de données
+                foreach (var island in savedIslands)
+                {
+                    _context.Islands.Update(island);
+                }
+
+                // Ajouter les ponts de la solution
+                _context.Bridges.AddRange(bridgesToAdd);
+
+                // Sauvegarder les modifications
+                await _context.SaveChangesAsync();
+
+                // Recharger le puzzle avec toutes ses relations
+                return await _context.Puzzles
+                    .Include(p => p.Islands)
+                    .FirstOrDefaultAsync(p => p.Id == puzzle.Id) ?? puzzle;
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("Croisement illégal"))
+            {
+                attempt++;
+                // Supprimer le puzzle qui a échoué
+                var failedPuzzle = await _context.Puzzles
+                    .FirstOrDefaultAsync(p => p.Width == width && p.Height == height && 
+                                             p.Difficulty == difficulty && p.Theme == theme &&
+                                             p.CreatedAt >= DateTime.UtcNow.AddSeconds(-5));
+                
+                if (failedPuzzle != null)
+                {
+                    _context.Puzzles.Remove(failedPuzzle);
+                    await _context.SaveChangesAsync();
+                }
+                
+                // Si c'est le dernier essai, relancer l'exception
+                if (attempt >= maxRetries)
+                {
+                    throw new InvalidOperationException($"Impossible de générer un puzzle sans croisements après {maxRetries} tentatives. Dernière erreur : {ex.Message}", ex);
+                }
+                // Sinon, réessayer avec une nouvelle génération
+                continue;
             }
         }
-
-        // S'assurer que toutes les îles sont connectées AVANT de calculer RequiredBridges
-        EnsureAllIslandsConnected(savedIslands, bridgesToAdd);
-
-        // Calculer les RequiredBridges pour chaque île en fonction de la solution
-        CalculateRequiredBridges(savedIslands, bridgesToAdd);
-
-        // VALIDATION : Vérifier que toutes les îles sont connectées
-        if (!ValidatePuzzleConnectivity(savedIslands, bridgesToAdd))
-        {
-            throw new InvalidOperationException("Le puzzle généré n'est pas valide : toutes les îles ne sont pas connectées");
-        }
-
-        // VALIDATION : Vérifier que les RequiredBridges correspondent aux ponts
-        ValidateRequiredBridges(savedIslands, bridgesToAdd);
-
-        // Mettre à jour les RequiredBridges dans la base de données
-        foreach (var island in savedIslands)
-        {
-            _context.Islands.Update(island);
-        }
-
-        // Ajouter les ponts de la solution
-        _context.Bridges.AddRange(bridgesToAdd);
-        puzzle.SolutionBridges = bridgesToAdd;
-
-        // Sauvegarder les modifications
-        await _context.SaveChangesAsync();
-
-        return puzzle;
+        
+        // Ne devrait jamais arriver ici, mais au cas où
+        throw new InvalidOperationException($"Impossible de générer un puzzle valide après {maxRetries} tentatives");
     }
 
     /// <summary>
@@ -261,9 +323,13 @@ public class PuzzleService : IPuzzleService
                     
                     if (nearest != null)
                     {
-                        var direction = nearest.X == island.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal;
-                        bridges.Add(CreateBridge(nearest, island, false, direction));
-                        connected.Add(island);
+                        // Vérifier que les îles sont alignées avant de créer le pont
+                        if (nearest.X == island.X || nearest.Y == island.Y)
+                        {
+                            var direction = nearest.X == island.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal;
+                            bridges.Add(CreateBridge(nearest, island, false, direction));
+                            connected.Add(island);
+                        }
                     }
                 }
             }
@@ -316,9 +382,13 @@ public class PuzzleService : IPuzzleService
                     
                     if (nearest != null)
                     {
-                        var direction = nearest.X == island.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal;
-                        bridges.Add(CreateBridge(nearest, island, false, direction));
-                        connected.Add(island);
+                        // Vérifier que les îles sont alignées avant de créer le pont
+                        if (nearest.X == island.X || nearest.Y == island.Y)
+                        {
+                            var direction = nearest.X == island.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal;
+                            bridges.Add(CreateBridge(nearest, island, false, direction));
+                            connected.Add(island);
+                        }
                     }
                 }
             }
@@ -685,7 +755,7 @@ public class PuzzleService : IPuzzleService
             islandCount = Math.Max(islandCount, 12); // Minimum 12 îles pour grandes grilles difficiles
         }
 
-        // Placer les îles de manière variée
+        // Placer les îles de manière variée, en s'assurant qu'elles sont alignées
         var positions = new List<(int x, int y)>();
         int attempts = 0;
         int maxAttempts = 1000;
@@ -693,10 +763,45 @@ public class PuzzleService : IPuzzleService
         // Pour les grandes grilles, augmenter la distance minimale entre îles
         int minDistance = (width > 15 || height > 15) ? 3 : 2;
         
+        // Placer la première île aléatoirement
+        if (islandCount > 0)
+        {
+            int firstX = _random.Next(1, width - 1);
+            int firstY = _random.Next(1, height - 1);
+            positions.Add((firstX, firstY));
+            usedPositions.Add((firstX, firstY));
+        }
+        
+        // Placer les autres îles en s'assurant qu'elles sont alignées avec au moins une île existante
         while (positions.Count < islandCount && attempts < maxAttempts)
         {
-            int x = _random.Next(1, width - 1);
-            int y = _random.Next(1, height - 1);
+            int x, y;
+            
+            // Essayer de placer une île alignée avec une île existante
+            if (positions.Count > 0)
+            {
+                var existingIsland = positions[_random.Next(positions.Count)];
+                
+                // 50% de chance d'être sur la même ligne, 50% sur la même colonne
+                if (_random.Next(2) == 0)
+                {
+                    // Même ligne (horizontal)
+                    x = _random.Next(1, width - 1);
+                    y = existingIsland.y;
+                }
+                else
+                {
+                    // Même colonne (vertical)
+                    x = existingIsland.x;
+                    y = _random.Next(1, height - 1);
+                }
+            }
+            else
+            {
+                // Si aucune île n'existe encore, placer aléatoirement
+                x = _random.Next(1, width - 1);
+                y = _random.Next(1, height - 1);
+            }
 
             // Éviter les positions trop proches
             bool tooClose = false;
@@ -718,14 +823,35 @@ public class PuzzleService : IPuzzleService
             attempts++;
         }
         
-        // Si on n'a pas assez d'îles, réduire la distance minimale
+        // Si on n'a pas assez d'îles, réduire la distance minimale mais toujours s'assurer de l'alignement
         if (positions.Count < Math.Max(8, islandCount / 2) && minDistance > 1)
         {
             minDistance = 1;
             while (positions.Count < islandCount && attempts < maxAttempts * 2)
             {
-                int x = _random.Next(1, width - 1);
-                int y = _random.Next(1, height - 1);
+                int x, y;
+                
+                // Toujours s'assurer de l'alignement avec une île existante
+                if (positions.Count > 0)
+                {
+                    var existingIsland = positions[_random.Next(positions.Count)];
+                    
+                    if (_random.Next(2) == 0)
+                    {
+                        x = _random.Next(1, width - 1);
+                        y = existingIsland.y;
+                    }
+                    else
+                    {
+                        x = existingIsland.x;
+                        y = _random.Next(1, height - 1);
+                    }
+                }
+                else
+                {
+                    x = _random.Next(1, width - 1);
+                    y = _random.Next(1, height - 1);
+                }
 
                 if (!usedPositions.Contains((x, y)))
                 {
@@ -872,7 +998,7 @@ public class PuzzleService : IPuzzleService
     /// S'assure que toutes les îles sont connectées dans le réseau
     /// Ajoute des ponts si nécessaire pour connecter les îles isolées
     /// </summary>
-    private void EnsureAllIslandsConnected(List<Island> islands, List<Bridge> bridges)
+    private void EnsureAllIslandsConnected(List<Island> islands, List<Bridge> bridges, int? puzzleId = null)
     {
         if (islands.Count <= 1) return;
 
@@ -946,12 +1072,33 @@ public class PuzzleService : IPuzzleService
                         if (nearest != null)
                         {
                             var direction = nearest.X == island.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal;
-                            bridges.Add(CreateBridge(nearest, island, false, direction));
-                            connectedIslands.Add(island);
-                            adjacency[nearest].Add(island);
-                            adjacency[island].Add(nearest);
-                            addedConnection = true;
-                            break; // Sortir de la boucle pour recommencer le parcours
+                            var newBridge = CreateBridge(nearest, island, false, direction);
+                            
+                            // Vérifier que ce pont ne croise pas un pont existant
+                            bool wouldIntersect = false;
+                            foreach (var existingBridge in bridges)
+                            {
+                                if (DoBridgesIntersect(newBridge, existingBridge, islands))
+                                {
+                                    wouldIntersect = true;
+                                    break;
+                                }
+                            }
+                            
+                            // Si pas de croisement, ajouter le pont
+                            if (!wouldIntersect)
+                            {
+                                if (puzzleId.HasValue)
+                                {
+                                    newBridge.PuzzleId = puzzleId.Value;
+                                }
+                                bridges.Add(newBridge);
+                                connectedIslands.Add(island);
+                                adjacency[nearest].Add(island);
+                                adjacency[island].Add(nearest);
+                                addedConnection = true;
+                                break; // Sortir de la boucle pour recommencer le parcours
+                            }
                         }
                     }
                 }
@@ -998,12 +1145,37 @@ public class PuzzleService : IPuzzleService
                         
                         if (target != null)
                         {
-                            var direction = target.X == isolated.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal;
-                            bridges.Add(CreateBridge(target, isolated, false, direction));
-                            connectedIslands.Add(isolated);
-                            adjacency[target].Add(isolated);
-                            adjacency[isolated].Add(target);
-                            addedConnection = true;
+                            // Vérifier que les îles sont alignées avant de créer le pont
+                            if (target.X == isolated.X || target.Y == isolated.Y)
+                            {
+                                var direction = target.X == isolated.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal;
+                                var newBridge = CreateBridge(target, isolated, false, direction);
+                                
+                                // Vérifier que ce pont ne croise pas un pont existant
+                                bool wouldIntersect = false;
+                                foreach (var existingBridge in bridges)
+                                {
+                                    if (DoBridgesIntersect(newBridge, existingBridge, islands))
+                                    {
+                                        wouldIntersect = true;
+                                        break;
+                                    }
+                                }
+                                
+                                // Si pas de croisement, ajouter le pont
+                                if (!wouldIntersect)
+                                {
+                                    if (puzzleId.HasValue)
+                                    {
+                                        newBridge.PuzzleId = puzzleId.Value;
+                                    }
+                                    bridges.Add(newBridge);
+                                    connectedIslands.Add(isolated);
+                                    adjacency[target].Add(isolated);
+                                    adjacency[isolated].Add(target);
+                                    addedConnection = true;
+                                }
+                            }
                         }
                     }
                 }
@@ -1039,12 +1211,35 @@ public class PuzzleService : IPuzzleService
 
     private Bridge CreateBridge(Island from, Island to, bool isDouble, BridgeDirection direction)
     {
+        // VALIDATION : S'assurer que les îles sont alignées (même ligne ou même colonne)
+        if (from.X != to.X && from.Y != to.Y)
+        {
+            throw new InvalidOperationException($"Impossible de créer un pont diagonal entre ({from.X}, {from.Y}) et ({to.X}, {to.Y}). Les ponts doivent être horizontaux ou verticaux.");
+        }
+        
+        // Corriger la direction si nécessaire
+        BridgeDirection correctDirection;
+        if (from.X == to.X)
+        {
+            correctDirection = BridgeDirection.Vertical;
+        }
+        else if (from.Y == to.Y)
+        {
+            correctDirection = BridgeDirection.Horizontal;
+        }
+        else
+        {
+            throw new InvalidOperationException($"Impossible de déterminer la direction du pont entre ({from.X}, {from.Y}) et ({to.X}, {to.Y})");
+        }
+        
         return new Bridge
         {
+            FromIslandId = from.Id > 0 ? from.Id : 0,
+            ToIslandId = to.Id > 0 ? to.Id : 0,
             FromIsland = from,
             ToIsland = to,
             IsDouble = isDouble,
-            Direction = direction
+            Direction = correctDirection
         };
     }
 
@@ -1059,17 +1254,39 @@ public class PuzzleService : IPuzzleService
             island.RequiredBridges = 0;
         }
 
-        // Compter les ponts pour chaque île
+        // Créer un dictionnaire pour accéder rapidement aux îles par ID
+        var islandsById = islands.ToDictionary(i => i.Id, i => i);
+
+        // Compter les ponts pour chaque île en utilisant les IDs
         foreach (var bridge in bridges)
         {
-            if (bridge.FromIsland != null)
+            // Utiliser FromIslandId et ToIslandId pour trouver les îles dans la liste
+            if (bridge.FromIslandId > 0 && islandsById.TryGetValue(bridge.FromIslandId, out var fromIsland))
             {
-                bridge.FromIsland.RequiredBridges += bridge.IsDouble ? 2 : 1;
+                fromIsland.RequiredBridges += bridge.IsDouble ? 2 : 1;
+            }
+            else if (bridge.FromIsland != null)
+            {
+                // Fallback : utiliser la référence d'objet si l'ID n'est pas disponible
+                var fromIslandByRef = islands.FirstOrDefault(i => i.X == bridge.FromIsland.X && i.Y == bridge.FromIsland.Y);
+                if (fromIslandByRef != null)
+                {
+                    fromIslandByRef.RequiredBridges += bridge.IsDouble ? 2 : 1;
+                }
             }
 
-            if (bridge.ToIsland != null)
+            if (bridge.ToIslandId > 0 && islandsById.TryGetValue(bridge.ToIslandId, out var toIsland))
             {
-                bridge.ToIsland.RequiredBridges += bridge.IsDouble ? 2 : 1;
+                toIsland.RequiredBridges += bridge.IsDouble ? 2 : 1;
+            }
+            else if (bridge.ToIsland != null)
+            {
+                // Fallback : utiliser la référence d'objet si l'ID n'est pas disponible
+                var toIslandByRef = islands.FirstOrDefault(i => i.X == bridge.ToIsland.X && i.Y == bridge.ToIsland.Y);
+                if (toIslandByRef != null)
+                {
+                    toIslandByRef.RequiredBridges += bridge.IsDouble ? 2 : 1;
+                }
             }
         }
 
@@ -1119,12 +1336,69 @@ public class PuzzleService : IPuzzleService
                     
                     if (nearest != null)
                     {
-                        var direction = nearest.X == island.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal;
-                        bridges.Add(CreateBridge(nearest, island, false, direction));
-                        // Recalculer pour cette île
-                        island.RequiredBridges += 1;
-                        nearest.RequiredBridges += 1;
-                        continue; // Passer à l'île suivante
+                        // Vérifier que les îles sont alignées avant de créer le pont
+                        if (nearest.X == island.X || nearest.Y == island.Y)
+                        {
+                            var direction = nearest.X == island.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal;
+                            var newBridge = CreateBridge(nearest, island, false, direction);
+                            
+                            // Vérifier que ce pont ne croise pas un pont existant
+                            bool wouldIntersect = false;
+                            foreach (var existingBridge in bridges)
+                            {
+                                if (DoBridgesIntersect(newBridge, existingBridge, islands))
+                                {
+                                    wouldIntersect = true;
+                                    break;
+                                }
+                            }
+                            
+                            // Si pas de croisement, ajouter le pont
+                            if (!wouldIntersect)
+                            {
+                                // Note: PuzzleId sera défini par l'appelant si nécessaire
+                                bridges.Add(newBridge);
+                                // Recalculer pour cette île (le pont compte pour 1)
+                                island.RequiredBridges += 1;
+                                nearest.RequiredBridges += 1;
+                                continue; // Passer à l'île suivante
+                            }
+                        }
+                        else
+                        {
+                            // Si les îles ne sont pas alignées, chercher une île intermédiaire alignée
+                            var intermediate = connectedIslands
+                                .Where(i => (i.X == island.X || i.Y == island.Y) && 
+                                           (i.X == nearest.X || i.Y == nearest.Y))
+                                .FirstOrDefault();
+                            
+                            if (intermediate != null)
+                            {
+                                // Connecter l'île isolée à l'intermédiaire
+                                var dir1 = intermediate.X == island.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal;
+                                var newBridge1 = CreateBridge(intermediate, island, false, dir1);
+                                
+                                // Vérifier que ce pont ne croise pas un pont existant
+                                bool wouldIntersect1 = false;
+                                foreach (var existingBridge in bridges)
+                                {
+                                    if (DoBridgesIntersect(newBridge1, existingBridge, islands))
+                                    {
+                                        wouldIntersect1 = true;
+                                        break;
+                                    }
+                                }
+                                
+                                // Si pas de croisement, ajouter le pont
+                                if (!wouldIntersect1)
+                                {
+                                    bridges.Add(newBridge1);
+                                    island.RequiredBridges += 1;
+                                    intermediate.RequiredBridges += 1;
+                                    continue; // Passer à l'île suivante
+                                }
+                            }
+                        }
                     }
                 }
                 
@@ -1189,6 +1463,65 @@ public class PuzzleService : IPuzzleService
     /// <summary>
     /// Valide que les RequiredBridges correspondent exactement aux ponts créés
     /// </summary>
+    /// <summary>
+    /// Valide qu'il n'y a pas de croisements illégaux entre les ponts
+    /// Les ponts ne peuvent se croiser que s'ils sont perpendiculaires
+    /// </summary>
+    private void ValidateNoIllegalCrossings(List<Island> islands, List<Bridge> bridges)
+    {
+        for (int i = 0; i < bridges.Count; i++)
+        {
+            for (int j = i + 1; j < bridges.Count; j++)
+            {
+                if (DoBridgesIntersect(bridges[i], bridges[j], islands))
+                {
+                    throw new InvalidOperationException(
+                        $"Croisement illégal détecté entre les ponts ({bridges[i].FromIsland?.X}, {bridges[i].FromIsland?.Y})-({bridges[i].ToIsland?.X}, {bridges[i].ToIsland?.Y}) " +
+                        $"et ({bridges[j].FromIsland?.X}, {bridges[j].FromIsland?.Y})-({bridges[j].ToIsland?.X}, {bridges[j].ToIsland?.Y})");
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Vérifie si deux ponts se croisent (version pour objets Bridge)
+    /// </summary>
+    private bool DoBridgesIntersect(Bridge bridge1, Bridge bridge2, List<Island> islands)
+    {
+        if (bridge1.FromIsland == null || bridge1.ToIsland == null || 
+            bridge2.FromIsland == null || bridge2.ToIsland == null)
+            return false;
+
+        // Déterminer la direction de chaque pont
+        bool bridge1IsHorizontal = bridge1.FromIsland.Y == bridge1.ToIsland.Y;
+        bool bridge2IsHorizontal = bridge2.FromIsland.Y == bridge2.ToIsland.Y;
+
+        // Deux ponts parallèles ne peuvent pas se croiser
+        if (bridge1IsHorizontal == bridge2IsHorizontal)
+            return false;
+
+        // Si le premier pont est horizontal et le second vertical
+        if (bridge1IsHorizontal)
+        {
+            int bridge1MinX = Math.Min(bridge1.FromIsland.X, bridge1.ToIsland.X);
+            int bridge1MaxX = Math.Max(bridge1.FromIsland.X, bridge1.ToIsland.X);
+            int bridge1Y = bridge1.FromIsland.Y;
+
+            int bridge2MinY = Math.Min(bridge2.FromIsland.Y, bridge2.ToIsland.Y);
+            int bridge2MaxY = Math.Max(bridge2.FromIsland.Y, bridge2.ToIsland.Y);
+            int bridge2X = bridge2.FromIsland.X;
+
+            // Vérifier si le pont vertical passe à travers le pont horizontal
+            // Exclure les cas où ils se rencontrent à une île (c'est autorisé)
+            return bridge2X > bridge1MinX && bridge2X < bridge1MaxX && 
+                   bridge1Y > bridge2MinY && bridge1Y < bridge2MaxY;
+        }
+        else // Le premier pont est vertical et le second horizontal
+        {
+            return DoBridgesIntersect(bridge2, bridge1, islands);
+        }
+    }
+
     private void ValidateRequiredBridges(List<Island> islands, List<Bridge> bridges)
     {
         foreach (var island in islands)

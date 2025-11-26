@@ -251,7 +251,7 @@ function handleClick() {
       :x2="line1.x2"
       :y2="line1.y2"
       :stroke="themeConfig.colors.bridgeColor"
-      :stroke-width="15"
+      :stroke-width="7.5"
       fill="none"
       stroke-linecap="round"
       stroke-linejoin="round"
@@ -267,7 +267,7 @@ function handleClick() {
       :x2="line2.x2"
       :y2="line2.y2"
       :stroke="themeConfig.colors.bridgeColor"
-      :stroke-width="15"
+      :stroke-width="7.5"
       fill="none"
       stroke-linecap="round"
       stroke-linejoin="round"
@@ -305,7 +305,7 @@ function handleClick() {
 <style>
 /* Style global pour forcer la visibilité des lignes */
 .bridge line {
-  stroke-width: 15px !important;
+  stroke-width: 7.5px !important;
   opacity: 1 !important;
   fill: none !important;
   visibility: visible !important;
@@ -314,7 +314,7 @@ function handleClick() {
 
 /* Effet au survol */
 .bridge:hover line {
-  stroke-width: 17px !important;
+  stroke-width: 8.5px !important;
   filter: brightness(1.2);
 }
 
