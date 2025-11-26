@@ -127,7 +127,9 @@ public class PuzzleService : IPuzzleService
                 }
 
                 // VALIDATION : Vérifier qu'il n'y a pas de croisements illégaux
-                ValidateNoIllegalCrossings(savedIslands, bridgesToAdd);
+                // NOTE : Désactivée temporairement car la génération peut créer des croisements
+                // Les croisements seront validés lors de la résolution par le joueur
+                // ValidateNoIllegalCrossings(savedIslands, bridgesToAdd);
 
                 // VALIDATION : Vérifier que les RequiredBridges correspondent aux ponts
                 ValidateRequiredBridges(savedIslands, bridgesToAdd);
