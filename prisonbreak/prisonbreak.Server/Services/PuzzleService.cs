@@ -266,7 +266,38 @@ public class PuzzleService : IPuzzleService
                     bridges.Add(CreateBridge(center, island, false, direction));
                 }
             }
+            
+            // S'assurer que toutes les îles sont connectées
+            // Si une île n'est pas alignée avec le centre, la connecter via une autre île
+            var connectedIslands = new HashSet<Island> { center };
+            foreach (var bridge in bridges)
+            {
+                if (bridge.FromIsland != null) connectedIslands.Add(bridge.FromIsland);
+                if (bridge.ToIsland != null) connectedIslands.Add(bridge.ToIsland);
+            }
+            
+            foreach (var island in islands)
+            {
+                if (!connectedIslands.Contains(island))
+                {
+                    // Trouver l'île la plus proche qui est déjà connectée
+                    var nearest = connectedIslands
+                        .Where(i => i.X == island.X || i.Y == island.Y)
+                        .OrderBy(i => Math.Abs(i.X - island.X) + Math.Abs(i.Y - island.Y))
+                        .FirstOrDefault();
+                    
+                    if (nearest != null)
+                    {
+                        var direction = nearest.X == island.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal;
+                        bridges.Add(CreateBridge(nearest, island, false, direction));
+                        connectedIslands.Add(island);
+                    }
+                }
+            }
         }
+
+        // Vérification finale : s'assurer que toutes les îles sont connectées
+        EnsureAllIslandsConnected(islands, bridges);
 
         return (islands, bridges);
     }
@@ -389,6 +420,9 @@ public class PuzzleService : IPuzzleService
             }
         }
 
+        // Vérification finale : s'assurer que toutes les îles sont connectées
+        EnsureAllIslandsConnected(islands, bridges);
+
         return (islands, bridges);
     }
 
@@ -460,6 +494,9 @@ public class PuzzleService : IPuzzleService
         // Ligne y=8 : (3,8) <-> Hub2 (6,8) <-> (9,8)
         // Hub2 (6,8) <-> (6,11)
         // TOUTES CONNECTÉES EN UN SEUL RÉSEAU ✓
+
+        // Vérification finale : s'assurer que toutes les îles sont connectées
+        EnsureAllIslandsConnected(islands, bridges);
 
         return (islands, bridges);
     }
@@ -545,6 +582,9 @@ public class PuzzleService : IPuzzleService
         // Ligne y=8 : (3,8) <-> Hub2 (5,8) <-> Hub3 (9,8) <-> (11,8)
         // Ligne y=12 : (3,12) <-> Hub (7,12) <-> (11,12)
         // TOUTES CONNECTÉES EN UN SEUL RÉSEAU ✓
+
+        // Vérification finale : s'assurer que toutes les îles sont connectées
+        EnsureAllIslandsConnected(islands, bridges);
 
         return (islands, bridges);
     }
@@ -720,12 +760,89 @@ public class PuzzleService : IPuzzleService
             }
         }
 
+        // Vérification finale : s'assurer que toutes les îles sont connectées
+        EnsureAllIslandsConnected(islands, bridges);
+
         return (islands, bridges);
     }
 
     /// <summary>
     /// Crée un pont entre deux îles
     /// </summary>
+    /// <summary>
+    /// S'assure que toutes les îles sont connectées dans le réseau
+    /// Ajoute des ponts si nécessaire pour connecter les îles isolées
+    /// </summary>
+    private void EnsureAllIslandsConnected(List<Island> islands, List<Bridge> bridges)
+    {
+        if (islands.Count <= 1) return;
+
+        // Créer un graphe d'adjacence pour trouver les îles connectées
+        var connectedIslands = new HashSet<Island>();
+        var adjacency = new Dictionary<Island, List<Island>>();
+        
+        foreach (var island in islands)
+        {
+            adjacency[island] = new List<Island>();
+        }
+
+        foreach (var bridge in bridges)
+        {
+            if (bridge.FromIsland != null && bridge.ToIsland != null)
+            {
+                if (!adjacency[bridge.FromIsland].Contains(bridge.ToIsland))
+                    adjacency[bridge.FromIsland].Add(bridge.ToIsland);
+                if (!adjacency[bridge.ToIsland].Contains(bridge.FromIsland))
+                    adjacency[bridge.ToIsland].Add(bridge.FromIsland);
+            }
+        }
+
+        // Parcourir en profondeur pour trouver toutes les îles connectées
+        if (islands.Count > 0)
+        {
+            var visited = new HashSet<Island>();
+            var stack = new Stack<Island>();
+            stack.Push(islands[0]);
+            
+            while (stack.Count > 0)
+            {
+                var current = stack.Pop();
+                if (visited.Contains(current)) continue;
+                
+                visited.Add(current);
+                connectedIslands.Add(current);
+                
+                foreach (var neighbor in adjacency[current])
+                {
+                    if (!visited.Contains(neighbor))
+                        stack.Push(neighbor);
+                }
+            }
+
+            // Connecter les îles isolées
+            foreach (var island in islands)
+            {
+                if (!connectedIslands.Contains(island))
+                {
+                    // Trouver l'île connectée la plus proche qui peut être reliée
+                    var nearest = connectedIslands
+                        .Where(i => (i.X == island.X || i.Y == island.Y))
+                        .OrderBy(i => Math.Abs(i.X - island.X) + Math.Abs(i.Y - island.Y))
+                        .FirstOrDefault();
+                    
+                    if (nearest != null)
+                    {
+                        var direction = nearest.X == island.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal;
+                        bridges.Add(CreateBridge(nearest, island, false, direction));
+                        connectedIslands.Add(island);
+                        adjacency[nearest].Add(island);
+                        adjacency[island].Add(nearest);
+                    }
+                }
+            }
+        }
+    }
+
     private Bridge CreateBridge(Island from, Island to, bool isDouble, BridgeDirection direction)
     {
         return new Bridge
