@@ -85,6 +85,9 @@ public class PuzzleService : IPuzzleService
             }
         }
 
+        // S'assurer que toutes les îles sont connectées AVANT de calculer RequiredBridges
+        EnsureAllIslandsConnected(savedIslands, bridgesToAdd);
+
         // Calculer les RequiredBridges pour chaque île en fonction de la solution
         CalculateRequiredBridges(savedIslands, bridgesToAdd);
 
