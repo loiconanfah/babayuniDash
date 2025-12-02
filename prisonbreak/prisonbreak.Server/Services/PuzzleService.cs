@@ -50,16 +50,16 @@ public class PuzzleService : IPuzzleService
                     await _context.SaveChangesAsync();
                 }
 
-                // Créer le puzzle
-                var puzzle = new Puzzle
-                {
+        // Créer le puzzle
+        var puzzle = new Puzzle
+        {
                     Name = $"{GetThemeName(theme)} - {difficulty} ({width}x{height})",
-                    Width = width,
-                    Height = height,
-                    Difficulty = difficulty,
+            Width = width,
+            Height = height,
+            Difficulty = difficulty,
                     Theme = theme,
-                    CreatedAt = DateTime.UtcNow
-                };
+            CreatedAt = DateTime.UtcNow
+        };
 
                 // Générer les îles et la solution selon la difficulté et le thème
                 // Chaque thème a un pattern unique d'îles
@@ -127,9 +127,7 @@ public class PuzzleService : IPuzzleService
                 }
 
                 // VALIDATION : Vérifier qu'il n'y a pas de croisements illégaux
-                // NOTE : Désactivée temporairement car la génération peut créer des croisements
-                // Les croisements seront validés lors de la résolution par le joueur
-                // ValidateNoIllegalCrossings(savedIslands, bridgesToAdd);
+                ValidateNoIllegalCrossings(savedIslands, bridgesToAdd);
 
                 // VALIDATION : Vérifier que les RequiredBridges correspondent aux ponts
                 ValidateRequiredBridges(savedIslands, bridgesToAdd);
@@ -300,7 +298,7 @@ public class PuzzleService : IPuzzleService
             }
             
             // Si certaines îles ne sont pas connectées, les connecter
-            var usedPositions = new HashSet<(int, int)>();
+        var usedPositions = new HashSet<(int, int)>();
             foreach (var island in islands)
             {
                 usedPositions.Add((island.X, island.Y));
@@ -692,16 +690,16 @@ public class PuzzleService : IPuzzleService
         bridges.Add(CreateBridge(islands[2], islands[5], false, BridgeDirection.Vertical)); // (3,4) -> (3,6) vertical ✓
         bridges.Add(CreateBridge(islands[7], islands[5], false, BridgeDirection.Vertical)); // (3,8) -> (3,6) vertical ✓
         bridges.Add(CreateBridge(islands[7], islands[11], false, BridgeDirection.Vertical)); // (3,8) -> (3,10) vertical ✓
-        bridges.Add(CreateBridge(islands[12], islands[11], false, BridgeDirection.Vertical)); // (3,12) -> (3,10) vertical ✓
-        bridges.Add(CreateBridge(islands[12], islands[15], false, BridgeDirection.Vertical)); // (3,12) -> (3,14) vertical ✓
+        bridges.Add(CreateBridge(islands[13], islands[11], false, BridgeDirection.Vertical)); // (3,12) -> (3,10) vertical ✓
+        bridges.Add(CreateBridge(islands[13], islands[16], false, BridgeDirection.Vertical)); // (3,12) -> (3,14) vertical ✓
 
         // Colonne x=11 : connexions verticales
         bridges.Add(CreateBridge(islands[4], islands[1], false, BridgeDirection.Vertical)); // (11,4) -> (11,2) vertical ✓
         bridges.Add(CreateBridge(islands[4], islands[6], false, BridgeDirection.Vertical)); // (11,4) -> (11,6) vertical ✓
         bridges.Add(CreateBridge(islands[10], islands[6], false, BridgeDirection.Vertical)); // (11,8) -> (11,6) vertical ✓
         bridges.Add(CreateBridge(islands[10], islands[12], false, BridgeDirection.Vertical)); // (11,8) -> (11,10) vertical ✓
-        bridges.Add(CreateBridge(islands[14], islands[12], false, BridgeDirection.Vertical)); // (11,12) -> (11,10) vertical ✓
-        bridges.Add(CreateBridge(islands[14], islands[16], false, BridgeDirection.Vertical)); // (11,12) -> (11,14) vertical ✓
+        bridges.Add(CreateBridge(islands[15], islands[12], false, BridgeDirection.Vertical)); // (11,12) -> (11,10) vertical ✓
+        bridges.Add(CreateBridge(islands[15], islands[17], false, BridgeDirection.Vertical)); // (11,12) -> (11,14) vertical ✓
 
         // Hub principal (7,4) - connexions horizontales à y=4
         bridges.Add(CreateBridge(islands[2], islands[3], false, BridgeDirection.Horizontal)); // (3,4) -> Hub (7,4) horizontal ✓
@@ -713,8 +711,8 @@ public class PuzzleService : IPuzzleService
         bridges.Add(CreateBridge(islands[9], islands[10], false, BridgeDirection.Horizontal)); // Hub3 (9,8) -> (11,8) horizontal ✓
 
         // Connexions horizontales à y=12
-        bridges.Add(CreateBridge(islands[12], islands[13], false, BridgeDirection.Horizontal)); // (3,12) -> Hub (7,12) horizontal ✓
-        bridges.Add(CreateBridge(islands[13], islands[14], false, BridgeDirection.Horizontal)); // Hub (7,12) -> (11,12) horizontal ✓
+        bridges.Add(CreateBridge(islands[13], islands[14], false, BridgeDirection.Horizontal)); // (3,12) -> Hub (7,12) horizontal ✓
+        bridges.Add(CreateBridge(islands[14], islands[15], false, BridgeDirection.Horizontal)); // Hub (7,12) -> (11,12) horizontal ✓
 
         // Vérification : Toutes les 17 îles sont connectées
         // Colonne x=3 : (3,2) <-> (3,4) <-> (3,6) <-> (3,8) <-> (3,10) <-> (3,12) <-> (3,14)
@@ -746,24 +744,33 @@ public class PuzzleService : IPuzzleService
         {
             DifficultyLevel.Easy => Math.Max(4, Math.Min(baseArea / 8, 6)),
             DifficultyLevel.Medium => Math.Max(6, Math.Min(baseArea / 6, 10)),
-            DifficultyLevel.Hard => Math.Max(10, Math.Min(baseArea / 5, 18)), // Plus d'îles pour niveau difficile
+            DifficultyLevel.Hard => Math.Max(14, Math.Min(baseArea / 4, 22)), // Beaucoup plus d'îles pour niveau difficile
             DifficultyLevel.Expert => Math.Max(12, Math.Min(baseArea / 4, 25)),
             _ => 5
         };
         
-        // Pour les grandes grilles (18x11 = 198 cases), s'assurer d'avoir assez d'îles
+        // Pour les grandes grilles difficiles, augmenter significativement le nombre d'îles
         if (baseArea > 150 && difficulty == DifficultyLevel.Hard)
         {
-            islandCount = Math.Max(islandCount, 12); // Minimum 12 îles pour grandes grilles difficiles
+            islandCount = Math.Max(islandCount, 16); // Minimum 16 îles pour grandes grilles difficiles
+        }
+        
+        // Pour les très grandes grilles (18x13+), encore plus d'îles
+        if (baseArea > 200 && difficulty == DifficultyLevel.Hard)
+        {
+            islandCount = Math.Max(islandCount, 18); // Minimum 18 îles pour très grandes grilles
         }
 
         // Placer les îles de manière variée, en s'assurant qu'elles sont alignées
         var positions = new List<(int x, int y)>();
-        int attempts = 0;
+            int attempts = 0;
         int maxAttempts = 1000;
 
         // Pour les grandes grilles, augmenter la distance minimale entre îles
-        int minDistance = (width > 15 || height > 15) ? 3 : 2;
+        // Pour niveau difficile, réduire légèrement la distance pour plus de complexité
+        int minDistance = difficulty == DifficultyLevel.Hard 
+            ? ((width > 15 || height > 15) ? 2 : 2)  // Distance réduite pour plus de densité
+            : ((width > 15 || height > 15) ? 3 : 2);
         
         // Placer la première île aléatoirement
         if (islandCount > 0)
@@ -822,7 +829,7 @@ public class PuzzleService : IPuzzleService
                 positions.Add((x, y));
                 usedPositions.Add((x, y));
             }
-            attempts++;
+                attempts++;
         }
         
         // Si on n'a pas assez d'îles, réduire la distance minimale mais toujours s'assurer de l'alignement
@@ -858,7 +865,7 @@ public class PuzzleService : IPuzzleService
                 if (!usedPositions.Contains((x, y)))
                 {
                     positions.Add((x, y));
-                    usedPositions.Add((x, y));
+            usedPositions.Add((x, y));
                 }
                 attempts++;
             }
@@ -866,7 +873,7 @@ public class PuzzleService : IPuzzleService
 
         // Créer les îles
         foreach (var (x, y) in positions)
-        {
+            {
             islands.Add(new Island
             {
                 Id = 0,
@@ -895,12 +902,22 @@ public class PuzzleService : IPuzzleService
                     
                     if (CanConnectIslands(from, to, usedPositions))
                     {
-                        int distance = Math.Abs(from.X - to.X) + Math.Abs(from.Y - to.Y);
-                        if (distance < bestDistance)
+                        // Vérifier que le pont ne crée pas de croisement
+                        var testBridge = CreateBridge(from, to, false, from.X == to.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal);
+                        bool wouldIntersect = bridges.Any(b => DoBridgesIntersect(testBridge, b, islands));
+                        
+                        if (!wouldIntersect)
                         {
-                            bestDistance = distance;
-                            bool isDouble = _random.Next(100) < 10;
-                            bestConnection = (connectedIdx, unconnectedIdx, isDouble);
+                            int distance = Math.Abs(from.X - to.X) + Math.Abs(from.Y - to.Y);
+                            if (distance < bestDistance)
+                            {
+                                bestDistance = distance;
+                                // Augmenter la probabilité de ponts doubles pour niveau difficile
+                                int doubleBridgeChance = difficulty == DifficultyLevel.Hard ? 25 : 
+                                                         difficulty == DifficultyLevel.Expert ? 30 : 10;
+                                bool isDouble = _random.Next(100) < doubleBridgeChance;
+                                bestConnection = (connectedIdx, unconnectedIdx, isDouble);
+                            }
                         }
                     }
                 }
@@ -931,12 +948,21 @@ public class PuzzleService : IPuzzleService
                         if (CanConnectIslands(from, to, usedPositions))
                         {
                             BridgeDirection direction = from.X == to.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal;
-                            bool isDouble = _random.Next(100) < 15;
-                            bridges.Add(CreateBridge(from, to, isDouble, direction));
-                            unconnectedIslands.Remove(unconnectedIdx);
-                            connectedIslands.Add(unconnectedIdx);
-                            found = true;
-                            break;
+                            var testBridge = CreateBridge(from, to, false, direction);
+                            bool wouldIntersect = bridges.Any(b => DoBridgesIntersect(testBridge, b, islands));
+                            
+                            if (!wouldIntersect)
+                            {
+                                // Augmenter la probabilité de ponts doubles pour niveau difficile
+                                int doubleBridgeChance = difficulty == DifficultyLevel.Hard ? 30 : 
+                                                         difficulty == DifficultyLevel.Expert ? 35 : 15;
+                                bool isDouble = _random.Next(100) < doubleBridgeChance;
+                                bridges.Add(CreateBridge(from, to, isDouble, direction));
+                                unconnectedIslands.Remove(unconnectedIdx);
+                                connectedIslands.Add(unconnectedIdx);
+                                found = true;
+                                break;
+                            }
                         }
                     }
                     if (found) break;
@@ -946,11 +972,12 @@ public class PuzzleService : IPuzzleService
         }
 
         // Ajouter quelques ponts supplémentaires selon la difficulté
+        // Pour le niveau difficile, ajouter beaucoup plus de ponts pour créer de la complexité
         int extraBridges = difficulty switch
         {
             DifficultyLevel.Easy => 0,
             DifficultyLevel.Medium => Math.Min(1, islands.Count / 4),
-            DifficultyLevel.Hard => Math.Min(2, islands.Count / 3),
+            DifficultyLevel.Hard => Math.Min(5, islands.Count / 2), // Beaucoup plus de ponts supplémentaires
             DifficultyLevel.Expert => Math.Min(3, islands.Count / 2),
             _ => 0
         };
@@ -978,12 +1005,34 @@ public class PuzzleService : IPuzzleService
 
             if (candidates.Count > 0)
             {
-                var (fromIdx, toIdx) = candidates[_random.Next(candidates.Count)];
-                var from = islands[fromIdx];
-                var to = islands[toIdx];
-                BridgeDirection direction = from.X == to.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal;
-                bool isDouble = _random.Next(100) < 25;
-                bridges.Add(CreateBridge(from, to, isDouble, direction));
+                // Filtrer les candidats pour éviter les croisements
+                var validCandidates = new List<(int from, int to)>();
+                foreach (var (fromIdx, toIdx) in candidates)
+                {
+                    var from = islands[fromIdx];
+                    var to = islands[toIdx];
+                    BridgeDirection direction = from.X == to.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal;
+                    var testBridge = CreateBridge(from, to, false, direction);
+                    bool wouldIntersect = bridges.Any(b => DoBridgesIntersect(testBridge, b, islands));
+                    
+                    if (!wouldIntersect)
+                    {
+                        validCandidates.Add((fromIdx, toIdx));
+                    }
+                }
+                
+                if (validCandidates.Count > 0)
+                {
+                    var (fromIdx, toIdx) = validCandidates[_random.Next(validCandidates.Count)];
+                    var from = islands[fromIdx];
+                    var to = islands[toIdx];
+                    BridgeDirection direction = from.X == to.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal;
+                    // Augmenter significativement la probabilité de ponts doubles pour niveau difficile
+                    int doubleBridgeChance = difficulty == DifficultyLevel.Hard ? 40 : 
+                                             difficulty == DifficultyLevel.Expert ? 45 : 25;
+                    bool isDouble = _random.Next(100) < doubleBridgeChance;
+                    bridges.Add(CreateBridge(from, to, isDouble, direction));
+                }
             }
         }
 
@@ -1604,6 +1653,26 @@ public class PuzzleService : IPuzzleService
             }
         }
 
+        return true;
+    }
+
+    /// <summary>
+    /// Vérifie si un pont peut être ajouté sans créer de croisement avec les ponts existants
+    /// </summary>
+    private bool CanAddBridgeWithoutIntersection(Island from, Island to, List<Bridge> existingBridges, List<Island> islands)
+    {
+        // Créer un pont temporaire pour vérifier les croisements
+        var testBridge = CreateBridge(from, to, false, from.X == to.X ? BridgeDirection.Vertical : BridgeDirection.Horizontal);
+        
+        // Vérifier si ce pont croise un pont existant
+        foreach (var existingBridge in existingBridges)
+        {
+            if (DoBridgesIntersect(testBridge, existingBridge, islands))
+            {
+                return false;
+            }
+        }
+        
         return true;
     }
 

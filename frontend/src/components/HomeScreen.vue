@@ -1,35 +1,55 @@
 <template>
-  <section class="w-full h-full flex items-center justify-center px-4 lg:px-10 py-8">
-    <div class="w-full max-w-5xl">
+  <section class="w-full h-full flex items-center justify-center px-4 lg:px-10 py-8 relative overflow-hidden">
+    <!-- Effet de particules en arrière-plan -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+      <div 
+        v-for="i in 15" 
+        :key="i" 
+        class="particle"
+        :style="{
+          left: `${Math.random() * 100}%`,
+          animationDelay: `${Math.random() * 5}s`,
+          animationDuration: `${3 + Math.random() * 4}s`
+        }"
+      ></div>
+    </div>
+
+    <div class="w-full max-w-5xl relative z-10">
       <!-- Titre + intro -->
-      <header class="mb-8">
-        <p class="text-sm uppercase tracking-[0.3em] text-orange-300 mb-2">
-          Prison Break
-        </p>
-        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-50 mb-3">
+      <header class="mb-10 animate-fade-in">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="h-1 w-12 bg-gradient-to-r from-orange-500 to-orange-300 rounded-full"></div>
+          <p class="text-sm uppercase tracking-[0.3em] text-orange-300 font-semibold">
+            Prison Break
+          </p>
+        </div>
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold mb-4 bg-gradient-to-r from-slate-50 via-slate-100 to-slate-200 bg-clip-text text-transparent drop-shadow-lg">
           {{ greeting }}
         </h1>
-        <p class="text-sm sm:text-base text-slate-300 max-w-2xl">
+        <p class="text-base sm:text-lg text-slate-300 max-w-2xl leading-relaxed">
           Tu es enfermé dans une prison haute sécurité. Résous les puzzles des verrous pour
-          connecter toutes les clés et t’échapper avant la prochaine inspection&nbsp;!
+          connecter toutes les clés et t'échapper avant la prochaine inspection&nbsp;!
         </p>
       </header>
 
       <!-- Statut du prisonnier -->
-      <section class="mb-6">
-        <h2 class="text-sm font-semibold text-slate-100 mb-1">
-          Statut du prisonnier
-        </h2>
-        <div class="flex items-center gap-3 text-sm">
-          <span class="text-slate-300">
-            {{ isLoggedIn ? 'Identité confirmée' : 'Non enregistré' }}
-          </span>
+      <section class="mb-8 animate-slide-up">
+        <div class="flex items-center gap-4 p-4 rounded-2xl bg-slate-900/60 backdrop-blur-sm border border-slate-800/50 shadow-xl">
+          <div class="flex items-center gap-3 flex-1">
+            <div 
+              class="h-3 w-3 rounded-full animate-pulse"
+              :class="isLoggedIn ? 'bg-green-500 shadow-lg shadow-green-500/50' : 'bg-orange-500 shadow-lg shadow-orange-500/50'"
+            ></div>
+            <span class="text-sm font-medium text-slate-200">
+              {{ isLoggedIn ? 'Identité confirmée' : 'Non enregistré' }}
+            </span>
+          </div>
           <span
-            class="px-3 py-1 rounded-full text-xs font-semibold"
+            class="px-4 py-2 rounded-full text-xs font-bold tracking-wider transition-all duration-300 transform hover:scale-105"
             :class="
               isLoggedIn
-                ? 'bg-green-500/90 text-slate-950'
-                : 'bg-orange-800/90 text-orange-100'
+                ? 'bg-gradient-to-r from-green-500 to-green-400 text-slate-950 shadow-lg shadow-green-500/30'
+                : 'bg-gradient-to-r from-orange-600 to-orange-500 text-orange-100 shadow-lg shadow-orange-500/30'
             "
           >
             {{ isLoggedIn ? 'SESSION ACTIVE' : 'SESSION INVITÉE' }}
@@ -39,42 +59,46 @@
 
       <!-- Cartes visuelles -->
       <section
-        class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8"
+        class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-10"
       >
         <!-- Carte puzzle / verrous -->
         <div
-          class="rounded-3xl bg-slate-900 border border-slate-800 shadow-xl p-4 flex flex-col justify-between"
+          class="group rounded-3xl bg-gradient-to-br from-slate-900/90 to-slate-800/90 border border-slate-700/50 shadow-2xl p-6 flex flex-col justify-between backdrop-blur-sm transition-all duration-500 hover:shadow-orange-500/20 hover:border-orange-500/30 hover:scale-[1.02] animate-slide-up"
+          style="animation-delay: 0.1s"
         >
-          <div class="mb-3">
-            <p class="text-xs uppercase tracking-[0.2em] text-slate-400 mb-1">
-              Plan de la cellule
-            </p>
-            <p class="text-sm text-slate-200">
+          <div class="mb-4">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="h-1 w-8 bg-gradient-to-r from-orange-500 to-orange-300 rounded-full"></div>
+              <p class="text-xs uppercase tracking-[0.2em] text-orange-300 font-semibold">
+                Plan de la cellule
+              </p>
+            </div>
+            <p class="text-sm text-slate-200 leading-relaxed">
               Vue schématique des verrous à relier pour préparer ton évasion.
             </p>
           </div>
 
-          <!-- Faux visuel de puzzle/verrous (à remplacer par une vraie image plus tard si tu veux) -->
+          <!-- Faux visuel de puzzle/verrous amélioré -->
           <div
-            class="mt-2 flex-1 rounded-2xl bg-slate-800/70 border border-slate-700 grid grid-cols-3 grid-rows-3 place-items-center gap-2 px-4 py-3"
+            class="mt-4 flex-1 rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-slate-700/50 grid grid-cols-3 grid-rows-3 place-items-center gap-3 px-5 py-4 shadow-inner group-hover:border-orange-500/30 transition-colors duration-300"
           >
-            <div class="h-9 w-9 rounded-full bg-slate-900 border border-slate-500 flex items-center justify-center text-xs">
+            <div class="h-10 w-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-orange-500/50 flex items-center justify-center text-xs font-bold text-orange-300 shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform">
               1
             </div>
-            <div class="h-9 w-9 rounded-full bg-slate-900 border border-slate-500 flex items-center justify-center text-xs">
+            <div class="h-10 w-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-orange-500/50 flex items-center justify-center text-xs font-bold text-orange-300 shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform">
               2
             </div>
-            <div class="h-9 w-9 rounded-full bg-slate-900 border border-slate-500 flex items-center justify-center text-xs">
+            <div class="h-10 w-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-orange-500/50 flex items-center justify-center text-xs font-bold text-orange-300 shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform">
               2
             </div>
-            <div class="col-span-3 h-1 w-3/4 bg-slate-600 rounded-full"></div>
-            <div class="h-9 w-9 rounded-full bg-slate-900 border border-slate-500 flex items-center justify-center text-xs">
+            <div class="col-span-3 h-1.5 w-4/5 bg-gradient-to-r from-transparent via-orange-500/60 to-transparent rounded-full shadow-lg shadow-orange-500/30"></div>
+            <div class="h-10 w-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-orange-500/50 flex items-center justify-center text-xs font-bold text-orange-300 shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform">
               3
             </div>
-            <div class="h-9 w-9 rounded-full bg-slate-900 border border-slate-500 flex items-center justify-center text-xs">
+            <div class="h-10 w-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-orange-500/50 flex items-center justify-center text-xs font-bold text-orange-300 shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform">
               4
             </div>
-            <div class="h-9 w-9 rounded-full bg-slate-900 border border-slate-500 flex items-center justify-center text-xs">
+            <div class="h-10 w-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-orange-500/50 flex items-center justify-center text-xs font-bold text-orange-300 shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform">
               1
             </div>
           </div>
@@ -82,62 +106,66 @@
 
         <!-- Carte prisonnier / mugshot -->
         <div
-          class="rounded-3xl bg-slate-900 border border-slate-800 shadow-xl p-4 flex flex-col justify-between"
+          class="group rounded-3xl bg-gradient-to-br from-slate-900/90 to-slate-800/90 border border-slate-700/50 shadow-2xl p-6 flex flex-col justify-between backdrop-blur-sm transition-all duration-500 hover:shadow-orange-500/20 hover:border-orange-500/30 hover:scale-[1.02] animate-slide-up"
+          style="animation-delay: 0.2s"
         >
-          <div class="mb-3">
-            <p class="text-xs uppercase tracking-[0.2em] text-slate-400 mb-1">
-              Dossier du prisonnier
-            </p>
-            <p class="text-sm text-slate-200">
-              Numéro d’identification et identité utilisée pour le classement et les statistiques.
+          <div class="mb-4">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="h-1 w-8 bg-gradient-to-r from-orange-500 to-orange-300 rounded-full"></div>
+              <p class="text-xs uppercase tracking-[0.2em] text-orange-300 font-semibold">
+                Dossier du prisonnier
+              </p>
+            </div>
+            <p class="text-sm text-slate-200 leading-relaxed">
+              Numéro d'identification et identité utilisée pour le classement et les statistiques.
             </p>
           </div>
 
           <!-- Contenu différent selon l'état connexion -->
           <div
-            class="mt-2 flex-1 rounded-2xl bg-slate-800/70 border border-slate-700 flex items-center justify-center px-4 py-3"
+            class="mt-4 flex-1 rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-slate-700/50 flex items-center justify-center px-5 py-4 shadow-inner group-hover:border-orange-500/30 transition-colors duration-300"
           >
             <!-- AVANT enregistrement : prisonnier générique fâché -->
             <div
               v-if="!isLoggedIn"
-              class="flex flex-col items-center gap-2 text-xs text-slate-200"
+              class="flex flex-col items-center gap-3 text-xs text-slate-200"
             >
               <div
-                class="h-16 w-16 rounded-full bg-orange-500 flex items-center justify-center text-3xl"
+                class="h-20 w-20 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-4xl shadow-xl shadow-orange-500/30 animate-pulse"
               >
                 😠
               </div>
-              <p class="font-semibold">Prisonnier #000</p>
-              <p class="text-[11px] text-slate-400 text-center">
-                Identité non enregistrée. Utilise “Jouer / S’inscrire” pour créer ton dossier.
+              <p class="font-bold text-sm">Prisonnier #000</p>
+              <p class="text-[11px] text-slate-400 text-center max-w-[200px] leading-relaxed">
+                Identité non enregistrée. Utilise "Jouer / S'inscrire" pour créer ton dossier.
               </p>
             </div>
 
             <!-- APRÈS enregistrement : mugshot -->
             <div
               v-else
-              class="flex items-center gap-4 w-full"
+              class="flex items-center gap-5 w-full"
             >
               <!-- Silhouette du prisonnier -->
               <div
-                class="h-20 w-20 rounded-2xl bg-orange-500 flex items-center justify-center text-3xl text-slate-900"
+                class="h-24 w-24 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-4xl text-slate-900 shadow-xl shadow-orange-500/30 transition-transform group-hover:scale-110"
               >
                 😠
               </div>
               <!-- Ardoise + infos -->
               <div class="flex-1">
                 <div
-                  class="w-full rounded-lg bg-slate-950 border border-slate-600 px-3 py-2 mb-2 flex flex-col items-center"
+                  class="w-full rounded-xl bg-gradient-to-br from-slate-950 to-slate-900 border-2 border-orange-500/30 px-4 py-3 mb-3 flex flex-col items-center shadow-lg"
                 >
-                  <span class="text-xs text-slate-300">
+                  <span class="text-xs font-semibold text-orange-300 uppercase tracking-wider mb-1">
                     {{ userNameLabel }}
                   </span>
-                  <span class="text-sm font-mono text-slate-50">
+                  <span class="text-lg font-mono font-bold text-slate-50 bg-slate-800 px-3 py-1 rounded-lg">
                     #{{ userIdLabel }}
                   </span>
                 </div>
-                <p class="text-[11px] text-slate-400">
-                  Identité utilisée pour suivre tes cellules résolues, tes temps d’évasion et ton classement.
+                <p class="text-[11px] text-slate-400 leading-relaxed text-center">
+                  Identité utilisée pour suivre tes cellules résolues, tes temps d'évasion et ton classement.
                 </p>
               </div>
             </div>
@@ -146,28 +174,43 @@
       </section>
 
       <!-- Boutons principaux -->
-      <section class="flex flex-wrap gap-3">
+      <section class="flex flex-wrap gap-4 animate-slide-up" style="animation-delay: 0.3s">
         <button
           v-if="!isLoggedIn"
-          class="px-6 py-3 rounded-full bg-orange-500 text-slate-900 text-sm font-semibold hover:bg-orange-400 transition-colors"
+          class="group relative px-8 py-4 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 text-slate-900 text-sm font-bold tracking-wide hover:from-orange-400 hover:to-orange-500 transition-all duration-300 shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/40 hover:scale-105 active:scale-95 overflow-hidden"
           @click="onPlayOrRegister"
         >
-          Jouer / S'inscrire
+          <span class="relative z-10 flex items-center gap-2">
+            <span>🎮</span>
+            <span>Jouer / S'inscrire</span>
+            <span class="opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+          </span>
+          <div class="absolute inset-0 bg-gradient-to-r from-orange-400 to-orange-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
         </button>
 
         <button
           v-else
-          class="px-6 py-3 rounded-full bg-green-500 text-slate-900 text-sm font-semibold hover:bg-green-400 transition-colors"
+          class="group relative px-8 py-4 rounded-full bg-gradient-to-r from-green-500 to-green-600 text-slate-900 text-sm font-bold tracking-wide hover:from-green-400 hover:to-green-500 transition-all duration-300 shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 hover:scale-105 active:scale-95 overflow-hidden"
           @click="onPlay"
         >
-          Jouer
+          <span class="relative z-10 flex items-center gap-2">
+            <span>🎮</span>
+            <span>Jouer</span>
+            <span class="opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+          </span>
+          <div class="absolute inset-0 bg-gradient-to-r from-green-400 to-green-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
         </button>
 
         <button
-          class="px-6 py-3 rounded-full bg-slate-800 text-slate-100 text-sm font-semibold hover:bg-slate-700 transition-colors"
+          class="group relative px-8 py-4 rounded-full bg-gradient-to-r from-slate-800 to-slate-900 text-slate-100 text-sm font-bold tracking-wide hover:from-slate-700 hover:to-slate-800 transition-all duration-300 shadow-lg shadow-slate-900/30 hover:shadow-xl hover:shadow-slate-900/40 hover:scale-105 active:scale-95 border border-slate-700 hover:border-slate-600 overflow-hidden"
           @click="onTutorial"
         >
-          Tutoriel
+          <span class="relative z-10 flex items-center gap-2">
+            <span>📖</span>
+            <span>Tutoriel</span>
+            <span class="opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+          </span>
+          <div class="absolute inset-0 bg-gradient-to-r from-slate-700 to-slate-800 opacity-0 group-hover:opacity-100 transition-opacity"></div>
         </button>
       </section>
     </div>
@@ -214,3 +257,62 @@ function onTutorial() {
   uiStore.openTutorialModal();
 }
 </script>
+
+<style scoped>
+/* Particules animées */
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: rgba(251, 146, 60, 0.4);
+  border-radius: 50%;
+  animation: float linear infinite;
+  box-shadow: 0 0 10px rgba(251, 146, 60, 0.5);
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(100vh) translateX(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100px) translateX(100px);
+    opacity: 0;
+  }
+}
+
+/* Animations d'entrée */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.8s ease-out both;
+}
+</style>
