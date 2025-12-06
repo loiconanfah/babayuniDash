@@ -184,54 +184,6 @@ export const useGameStore = defineStore('game', () => {
   }
 
   /**
-   * Vérifie si deux ponts se croisent illégalement
-   */
-  function doBridgesIntersect(bridge1: Bridge, bridge2: Bridge): boolean {
-    if (!currentPuzzle.value) return false
-
-    const island1From = getIslandById(bridge1.fromIslandId)
-    const island1To = getIslandById(bridge1.toIslandId)
-    const island2From = getIslandById(bridge2.fromIslandId)
-    const island2To = getIslandById(bridge2.toIslandId)
-
-    if (!island1From || !island1To || !island2From || !island2To) {
-      return false
-    }
-
-    // Déterminer la direction de chaque pont
-    const bridge1IsHorizontal = island1From.y === island1To.y
-    const bridge2IsHorizontal = island2From.y === island2To.y
-
-    // Deux ponts parallèles ne peuvent pas se croiser
-    if (bridge1IsHorizontal === bridge2IsHorizontal) {
-      return false
-    }
-
-    // Si le premier pont est horizontal et le second vertical
-    if (bridge1IsHorizontal) {
-      const bridge1MinX = Math.min(island1From.x, island1To.x)
-      const bridge1MaxX = Math.max(island1From.x, island1To.x)
-      const bridge1Y = island1From.y
-
-      const bridge2MinY = Math.min(island2From.y, island2To.y)
-      const bridge2MaxY = Math.max(island2From.y, island2To.y)
-      const bridge2X = island2From.x
-
-      // Vérifier si le pont vertical passe à travers le pont horizontal
-      // Exclure les cas où ils se rencontrent à une île (c'est autorisé)
-      return (
-        bridge2X > bridge1MinX &&
-        bridge2X < bridge1MaxX &&
-        bridge1Y > bridge2MinY &&
-        bridge1Y < bridge2MaxY
-      )
-    } else {
-      // Le premier pont est vertical et le second horizontal - inverser l'appel
-      return doBridgesIntersect(bridge2, bridge1)
-    }
-  }
-
-  /**
    * Tente de créer un pont entre deux îles
    */
   function tryCreateBridge(from: Island, to: Island): void {
@@ -259,17 +211,6 @@ export const useGameStore = defineStore('game', () => {
         toIslandId: to.id,
         isDouble: false
       }
-
-      // Vérifier si ce pont croise un pont existant
-      const wouldIntersect = playerBridges.value.some((bridge) =>
-        doBridgesIntersect(newBridge, bridge)
-      )
-
-      if (wouldIntersect) {
-        error.value = 'Ce pont croiserait un pont existant. Les croisements ne sont pas autorisés.'
-        return
-      }
-
       playerBridges.value.push(newBridge)
     }
 

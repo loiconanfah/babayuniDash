@@ -1,5 +1,11 @@
 <template>
   <section class="w-full h-full flex items-center justify-center px-4 lg:px-10 py-8 relative overflow-hidden">
+    <!-- Effet de barreaux en arrière-plan -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none opacity-5">
+      <div class="absolute inset-0" style="background-image: repeating-linear-gradient(90deg, transparent, transparent 60px, rgba(251, 146, 60, 0.2) 60px, rgba(251, 146, 60, 0.2) 62px);"></div>
+      <div class="absolute inset-0" style="background-image: repeating-linear-gradient(0deg, transparent, transparent 60px, rgba(251, 146, 60, 0.2) 60px, rgba(251, 146, 60, 0.2) 62px);"></div>
+    </div>
+
     <!-- Effet de particules en arrière-plan -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
       <div 
@@ -12,6 +18,14 @@
           animationDuration: `${3 + Math.random() * 4}s`
         }"
       ></div>
+    </div>
+
+    <!-- Icônes de barreaux décoratives -->
+    <div class="absolute top-10 right-10 opacity-10 pointer-events-none">
+      <IconBars class="w-32 h-32 text-orange-500" />
+    </div>
+    <div class="absolute bottom-10 left-10 opacity-10 pointer-events-none">
+      <IconBars class="w-24 h-24 text-orange-500" />
     </div>
 
     <div class="w-full max-w-5xl relative z-10">
@@ -34,12 +48,22 @@
 
       <!-- Statut du prisonnier -->
       <section class="mb-8 animate-slide-up">
-        <div class="flex items-center gap-4 p-4 rounded-2xl bg-slate-900/60 backdrop-blur-sm border border-slate-800/50 shadow-xl">
+        <div class="flex items-center gap-4 p-4 rounded-2xl bg-slate-900/60 backdrop-blur-sm border border-slate-800/50 shadow-xl relative overflow-hidden">
+          <!-- Effet de barreaux subtil -->
+          <div class="absolute right-0 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-orange-500/20 to-transparent"></div>
+          
           <div class="flex items-center gap-3 flex-1">
-            <div 
-              class="h-3 w-3 rounded-full animate-pulse"
-              :class="isLoggedIn ? 'bg-green-500 shadow-lg shadow-green-500/50' : 'bg-orange-500 shadow-lg shadow-orange-500/50'"
-            ></div>
+            <div class="relative">
+              <div 
+                class="h-3 w-3 rounded-full animate-pulse"
+                :class="isLoggedIn ? 'bg-green-500 shadow-lg shadow-green-500/50' : 'bg-orange-500 shadow-lg shadow-orange-500/50'"
+              ></div>
+              <div 
+                class="absolute inset-0 rounded-full animate-ping"
+                :class="isLoggedIn ? 'bg-green-500' : 'bg-orange-500'"
+                style="animation-duration: 2s; opacity: 0.3;"
+              ></div>
+            </div>
             <span class="text-sm font-medium text-slate-200">
               {{ isLoggedIn ? 'Identité confirmée' : 'Non enregistré' }}
             </span>
@@ -78,27 +102,33 @@
             </p>
           </div>
 
-          <!-- Faux visuel de puzzle/verrous amélioré -->
+          <!-- Faux visuel de puzzle/verrous amélioré avec barreaux -->
           <div
-            class="mt-4 flex-1 rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-slate-700/50 grid grid-cols-3 grid-rows-3 place-items-center gap-3 px-5 py-4 shadow-inner group-hover:border-orange-500/30 transition-colors duration-300"
+            class="mt-4 flex-1 rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-slate-700/50 grid grid-cols-3 grid-rows-3 place-items-center gap-3 px-5 py-4 shadow-inner group-hover:border-orange-500/30 transition-colors duration-300 relative overflow-hidden"
           >
-            <div class="h-10 w-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-orange-500/50 flex items-center justify-center text-xs font-bold text-orange-300 shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform">
+            <!-- Effet de barreaux en arrière-plan -->
+            <div class="absolute inset-0 opacity-5 pointer-events-none">
+              <div class="absolute inset-0" style="background-image: repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(251, 146, 60, 0.3) 20px, rgba(251, 146, 60, 0.3) 22px), repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(251, 146, 60, 0.3) 20px, rgba(251, 146, 60, 0.3) 22px);"></div>
+            </div>
+            
+            <!-- Verrous/îles -->
+            <div class="relative z-10 h-10 w-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-orange-500/50 flex items-center justify-center text-xs font-bold text-orange-300 shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform">
               1
             </div>
-            <div class="h-10 w-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-orange-500/50 flex items-center justify-center text-xs font-bold text-orange-300 shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform">
+            <div class="relative z-10 h-10 w-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-orange-500/50 flex items-center justify-center text-xs font-bold text-orange-300 shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform">
               2
             </div>
-            <div class="h-10 w-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-orange-500/50 flex items-center justify-center text-xs font-bold text-orange-300 shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform">
+            <div class="relative z-10 h-10 w-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-orange-500/50 flex items-center justify-center text-xs font-bold text-orange-300 shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform">
               2
             </div>
-            <div class="col-span-3 h-1.5 w-4/5 bg-gradient-to-r from-transparent via-orange-500/60 to-transparent rounded-full shadow-lg shadow-orange-500/30"></div>
-            <div class="h-10 w-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-orange-500/50 flex items-center justify-center text-xs font-bold text-orange-300 shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform">
+            <div class="relative z-10 col-span-3 h-1.5 w-4/5 bg-gradient-to-r from-transparent via-orange-500/60 to-transparent rounded-full shadow-lg shadow-orange-500/30"></div>
+            <div class="relative z-10 h-10 w-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-orange-500/50 flex items-center justify-center text-xs font-bold text-orange-300 shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform">
               3
             </div>
-            <div class="h-10 w-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-orange-500/50 flex items-center justify-center text-xs font-bold text-orange-300 shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform">
+            <div class="relative z-10 h-10 w-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-orange-500/50 flex items-center justify-center text-xs font-bold text-orange-300 shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform">
               4
             </div>
-            <div class="h-10 w-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-orange-500/50 flex items-center justify-center text-xs font-bold text-orange-300 shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform">
+            <div class="relative z-10 h-10 w-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-orange-500/50 flex items-center justify-center text-xs font-bold text-orange-300 shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform">
               1
             </div>
           </div>
@@ -130,10 +160,11 @@
               v-if="!isLoggedIn"
               class="flex flex-col items-center gap-3 text-xs text-slate-200"
             >
-              <div
-                class="h-20 w-20 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-4xl shadow-xl shadow-orange-500/30 animate-pulse"
-              >
-                😠
+              <div class="relative">
+                <IconPrisoner class="h-20 w-20 drop-shadow-xl animate-pulse" />
+                <div class="absolute -top-1 -right-1">
+                  <IconBars class="w-6 h-6 text-orange-500/50" />
+                </div>
               </div>
               <p class="font-bold text-sm">Prisonnier #000</p>
               <p class="text-[11px] text-slate-400 text-center max-w-[200px] leading-relaxed">
@@ -147,10 +178,11 @@
               class="flex items-center gap-5 w-full"
             >
               <!-- Silhouette du prisonnier -->
-              <div
-                class="h-24 w-24 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-4xl text-slate-900 shadow-xl shadow-orange-500/30 transition-transform group-hover:scale-110"
-              >
-                😠
+              <div class="relative">
+                <IconPrisoner class="h-24 w-24 drop-shadow-xl transition-transform group-hover:scale-110" />
+                <div class="absolute -top-1 -right-1 opacity-60">
+                  <IconBars class="w-6 h-6 text-orange-500" />
+                </div>
               </div>
               <!-- Ardoise + infos -->
               <div class="flex-1">
@@ -221,6 +253,8 @@
 import { computed } from 'vue';
 import { useUserStore } from '@/stores/user';
 import { useUiStore } from '@/stores/ui';
+import IconPrisoner from '@/components/icons/IconPrisoner.vue';
+import IconBars from '@/components/icons/IconBars.vue';
 
 const userStore = useUserStore();
 const uiStore = useUiStore();
