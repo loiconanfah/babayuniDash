@@ -247,28 +247,61 @@ public class PuzzleService : IPuzzleService
         var islands = new List<Island>();
         var bridges = new List<Bridge>();
 
-        // Patterns différents selon le thème - chaque thème a un arrangement unique
+        // Patterns améliorés et variés selon le thème - designs plus intéressants
         List<(int x, int y)> positions;
         
-        // Utiliser le thème pour générer des patterns variés
-        var themeOffset = ((int)theme % 4); // 0-3 pour varier les patterns
+        // Utiliser le thème pour générer des patterns variés et esthétiques
+        var themeIndex = (int)theme;
         
-        switch (themeOffset)
+        // 15 patterns différents pour plus de variété
+        var patternIndex = themeIndex % 15;
+        
+        switch (patternIndex)
         {
-            case 0: // Classic, Ice, Neon, Magic
-                positions = new List<(int x, int y)> { (1, 0), (3, 0), (1, 2), (3, 2), (1, 4), (3, 4) };
+            case 0: // Colonnes symétriques
+                positions = new List<(int x, int y)> { (1, 0), (1, 2), (1, 4), (3, 0), (3, 2), (3, 4) };
                 break;
-            case 1: // Medieval, Volcano, Steampunk, Western
+            case 1: // Lignes symétriques
                 positions = new List<(int x, int y)> { (0, 1), (2, 1), (4, 1), (0, 3), (2, 3), (4, 3) };
                 break;
-            case 2: // Futuristic, Desert, Pirate, Zombie
-                positions = new List<(int x, int y)> { (0, 0), (2, 0), (4, 0), (2, 2), (0, 4), (4, 4) };
+            case 2: // Croix centrale
+                positions = new List<(int x, int y)> { (2, 0), (0, 2), (2, 2), (4, 2), (2, 4) };
                 break;
-            case 3: // Underwater, Forest, Ninja
-                positions = new List<(int x, int y)> { (1, 1), (3, 1), (0, 2), (2, 2), (4, 2), (1, 3), (3, 3) };
+            case 3: // Forme en L
+                positions = new List<(int x, int y)> { (0, 0), (0, 2), (2, 2), (2, 4), (4, 4) };
                 break;
-            default:
+            case 4: // Hub central avec branches
+                positions = new List<(int x, int y)> { (2, 1), (1, 2), (2, 2), (3, 2), (2, 3) };
+                break;
+            case 5: // Diagonale symétrique
+                positions = new List<(int x, int y)> { (0, 0), (1, 1), (2, 2), (3, 3), (4, 4) };
+                break;
+            case 6: // Rectangle
+                positions = new List<(int x, int y)> { (1, 1), (3, 1), (1, 3), (3, 3) };
+                break;
+            case 7: // Étoile à 5 branches
+                positions = new List<(int x, int y)> { (2, 0), (0, 2), (2, 2), (4, 2), (2, 4) };
+                break;
+            case 8: // Double colonne avec connexion
+                positions = new List<(int x, int y)> { (1, 0), (1, 2), (3, 1), (3, 3), (1, 4), (3, 4) };
+                break;
+            case 9: // Grille 2x3
                 positions = new List<(int x, int y)> { (1, 0), (3, 0), (1, 2), (3, 2), (1, 4), (3, 4) };
+                break;
+            case 10: // Triangle
+                positions = new List<(int x, int y)> { (2, 0), (1, 2), (3, 2), (0, 4), (2, 4), (4, 4) };
+                break;
+            case 11: // Zigzag
+                positions = new List<(int x, int y)> { (0, 0), (2, 1), (0, 2), (2, 3), (4, 4) };
+                break;
+            case 12: // Forme en T
+                positions = new List<(int x, int y)> { (2, 0), (0, 2), (2, 2), (4, 2), (2, 4) };
+                break;
+            case 13: // Double ligne avec hub
+                positions = new List<(int x, int y)> { (1, 1), (3, 1), (2, 2), (1, 3), (3, 3) };
+                break;
+            default: // Pattern aléatoire équilibré
+                positions = new List<(int x, int y)> { (1, 1), (3, 1), (0, 2), (2, 2), (4, 2), (1, 3), (3, 3) };
                 break;
         }
         
@@ -474,28 +507,83 @@ public class PuzzleService : IPuzzleService
         var islands = new List<Island>();
         var bridges = new List<Bridge>();
 
-        // Patterns différents selon le thème - chaque thème a un arrangement unique
-        var themeOffset = ((int)theme % 3);
+        // Patterns améliorés pour niveau moyen - designs plus complexes et variés
+        var themeIndex = (int)theme;
+        var patternIndex = themeIndex % 12;
         List<(int x, int y)> positions;
         
-        switch (themeOffset)
+        switch (patternIndex)
         {
-            case 0: // Pattern en colonnes
+            case 0: // Colonnes doubles avec hubs
                 positions = new List<(int x, int y)>
                 {
-                    (2, 1), (2, 3), (2, 5), (6, 1), (6, 3), (6, 5), (4, 5), (4, 7)
+                    (2, 1), (2, 3), (2, 5), (6, 1), (6, 3), (6, 5), (4, 3), (4, 6)
                 };
                 break;
-            case 1: // Pattern en lignes
+            case 1: // Grille 3x3 avec connexions
                 positions = new List<(int x, int y)>
                 {
-                    (1, 2), (3, 2), (5, 2), (1, 6), (3, 6), (5, 6), (3, 4), (7, 4)
+                    (1, 2), (3, 2), (5, 2), (2, 4), (4, 4), (6, 4), (3, 6), (5, 6)
                 };
                 break;
-            default: // Pattern mixte
+            case 2: // Croix avec branches
                 positions = new List<(int x, int y)>
                 {
-                    (1, 1), (3, 1), (5, 1), (1, 5), (3, 5), (5, 5), (3, 3), (7, 3)
+                    (3, 1), (1, 3), (3, 3), (5, 3), (7, 3), (3, 5), (3, 7)
+                };
+                break;
+            case 3: // Double ligne avec hubs centraux
+                positions = new List<(int x, int y)>
+                {
+                    (1, 1), (3, 1), (5, 1), (4, 3), (1, 5), (3, 5), (5, 5), (7, 5)
+                };
+                break;
+            case 4: // Forme en étoile
+                positions = new List<(int x, int y)>
+                {
+                    (3, 2), (1, 4), (3, 4), (5, 4), (3, 6), (6, 3), (6, 5)
+                };
+                break;
+            case 5: // Rectangle avec diagonales
+                positions = new List<(int x, int y)>
+                {
+                    (2, 2), (5, 2), (2, 5), (5, 5), (3, 3), (4, 3), (3, 4), (4, 4)
+                };
+                break;
+            case 6: // Lignes horizontales connectées
+                positions = new List<(int x, int y)>
+                {
+                    (1, 1), (3, 1), (5, 1), (2, 3), (4, 3), (6, 3), (3, 5), (5, 5)
+                };
+                break;
+            case 7: // Hub central avec 4 branches
+                positions = new List<(int x, int y)>
+                {
+                    (3, 2), (1, 4), (3, 4), (5, 4), (3, 6), (6, 2), (6, 6)
+                };
+                break;
+            case 8: // Zigzag vertical
+                positions = new List<(int x, int y)>
+                {
+                    (2, 1), (4, 2), (2, 3), (4, 4), (2, 5), (4, 6), (6, 7)
+                };
+                break;
+            case 9: // Double colonne asymétrique
+                positions = new List<(int x, int y)>
+                {
+                    (1, 1), (1, 3), (1, 5), (5, 2), (5, 4), (5, 6), (3, 4), (7, 4)
+                };
+                break;
+            case 10: // Forme en H
+                positions = new List<(int x, int y)>
+                {
+                    (2, 1), (2, 3), (2, 5), (4, 3), (6, 1), (6, 3), (6, 5)
+                };
+                break;
+            default: // Pattern complexe avec multiple hubs
+                positions = new List<(int x, int y)>
+                {
+                    (1, 2), (3, 2), (5, 2), (2, 4), (4, 4), (6, 4), (3, 6), (5, 6)
                 };
                 break;
         }
@@ -675,23 +763,84 @@ public class PuzzleService : IPuzzleService
         var islands = new List<Island>();
         var bridges = new List<Bridge>();
 
-        // Pattern 12x12 avec îles alignées correctement - TOUTES les connexions respectent l'alignement
-        // IMPORTANT : RequiredBridges sera calculé après
-        var positions = new List<(int x, int y)>
+        // Patterns améliorés pour niveau difficile - designs complexes et variés
+        var themeIndex = (int)theme;
+        var patternIndex = themeIndex % 10;
+        List<(int x, int y)> positions;
+        
+        switch (patternIndex)
         {
-            (3, 2),   // Colonne x=3
-            (9, 2),   // Colonne x=9
-            (3, 4),   // Colonne x=3, ligne y=4
-            (9, 4),   // Hub - colonne x=9, ligne y=4
-            (3, 6),   // Colonne x=3
-            (9, 6),   // Colonne x=9
-            (3, 8),   // Colonne x=3, ligne y=8
-            (9, 8),   // Colonne x=9, ligne y=8
-            (6, 8),   // Hub secondaire - ligne y=8
-            (3, 10),  // Colonne x=3
-            (9, 10),  // Colonne x=9
-            (6, 11)   // Ligne y=11
-        };
+            case 0: // Double colonne avec hubs multiples
+                positions = new List<(int x, int y)>
+                {
+                    (3, 2), (9, 2), (3, 4), (6, 4), (9, 4), (3, 6), (9, 6),
+                    (3, 8), (6, 8), (9, 8), (3, 10), (9, 10), (6, 11)
+                };
+                break;
+            case 1: // Grille avec connexions croisées
+                positions = new List<(int x, int y)>
+                {
+                    (2, 2), (5, 2), (8, 2), (2, 5), (5, 5), (8, 5),
+                    (2, 8), (5, 8), (8, 8), (5, 10), (2, 11), (8, 11)
+                };
+                break;
+            case 2: // Forme en étoile avec branches
+                positions = new List<(int x, int y)>
+                {
+                    (5, 1), (2, 3), (5, 3), (8, 3), (1, 5), (5, 5), (9, 5),
+                    (2, 7), (5, 7), (8, 7), (5, 9), (3, 11), (7, 11)
+                };
+                break;
+            case 3: // Triple colonne
+                positions = new List<(int x, int y)>
+                {
+                    (2, 2), (6, 2), (10, 2), (2, 4), (6, 4), (10, 4),
+                    (2, 6), (6, 6), (10, 6), (2, 8), (6, 8), (10, 8)
+                };
+                break;
+            case 4: // Hub central avec réseau
+                positions = new List<(int x, int y)>
+                {
+                    (5, 2), (2, 4), (5, 4), (8, 4), (1, 6), (5, 6), (9, 6),
+                    (2, 8), (5, 8), (8, 8), (5, 10), (3, 11), (7, 11)
+                };
+                break;
+            case 5: // Lignes horizontales avec connexions verticales
+                positions = new List<(int x, int y)>
+                {
+                    (1, 2), (4, 2), (7, 2), (10, 2), (3, 4), (6, 4), (9, 4),
+                    (2, 6), (5, 6), (8, 6), (4, 8), (7, 8), (5, 10)
+                };
+                break;
+            case 6: // Rectangle avec diagonales
+                positions = new List<(int x, int y)>
+                {
+                    (2, 2), (6, 2), (10, 2), (2, 5), (6, 5), (10, 5),
+                    (2, 8), (6, 8), (10, 8), (4, 10), (8, 10)
+                };
+                break;
+            case 7: // Zigzag complexe
+                positions = new List<(int x, int y)>
+                {
+                    (3, 1), (7, 2), (2, 4), (6, 4), (10, 4), (4, 6), (8, 6),
+                    (1, 8), (5, 8), (9, 8), (3, 10), (7, 10), (5, 11)
+                };
+                break;
+            case 8: // Forme en H avec extensions
+                positions = new List<(int x, int y)>
+                {
+                    (2, 2), (2, 4), (2, 6), (5, 4), (8, 2), (8, 4), (8, 6),
+                    (2, 8), (5, 8), (8, 8), (3, 10), (7, 10), (5, 11)
+                };
+                break;
+            default: // Pattern complexe équilibré
+                positions = new List<(int x, int y)>
+                {
+                    (3, 2), (9, 2), (3, 4), (6, 4), (9, 4), (3, 6), (9, 6),
+                    (3, 8), (6, 8), (9, 8), (3, 10), (9, 10), (6, 11)
+                };
+                break;
+        }
 
         foreach (var (x, y) in positions)
         {
@@ -704,36 +853,69 @@ public class PuzzleService : IPuzzleService
             });
         }
 
-        // Solution : TOUTES les îles connectées en un seul réseau
-        // Colonne x=3 : connexions verticales
-        bridges.Add(CreateBridge(islands[2], islands[0], false, BridgeDirection.Vertical)); // (3,4) -> (3,2) vertical ✓
-        bridges.Add(CreateBridge(islands[2], islands[4], false, BridgeDirection.Vertical)); // (3,4) -> (3,6) vertical ✓
-        bridges.Add(CreateBridge(islands[6], islands[4], false, BridgeDirection.Vertical)); // (3,8) -> (3,6) vertical ✓
-        bridges.Add(CreateBridge(islands[6], islands[9], false, BridgeDirection.Vertical)); // (3,8) -> (3,10) vertical ✓
+        // Générer une solution dynamique basée sur les positions des îles
+        // Connecter les îles de manière intelligente pour éviter les croisements
+        var usedPositions = new HashSet<(int, int)>();
+        foreach (var island in islands)
+        {
+            usedPositions.Add((island.X, island.Y));
+        }
 
-        // Colonne x=9 : connexions verticales
-        bridges.Add(CreateBridge(islands[3], islands[1], false, BridgeDirection.Vertical)); // Hub (9,4) -> (9,2) vertical ✓
-        bridges.Add(CreateBridge(islands[3], islands[5], false, BridgeDirection.Vertical)); // Hub (9,4) -> (9,6) vertical ✓
-        bridges.Add(CreateBridge(islands[7], islands[5], false, BridgeDirection.Vertical)); // (9,8) -> (9,6) vertical ✓
-        bridges.Add(CreateBridge(islands[7], islands[10], false, BridgeDirection.Vertical)); // (9,8) -> (9,10) vertical ✓
+        // Grouper les îles par colonne et ligne
+        var byColumn = islands.GroupBy(i => i.X).Where(g => g.Count() > 1).ToList();
+        var byRow = islands.GroupBy(i => i.Y).Where(g => g.Count() > 1).ToList();
 
-        // Connexions horizontales à y=4
-        bridges.Add(CreateBridge(islands[2], islands[3], false, BridgeDirection.Horizontal)); // (3,4) -> Hub (9,4) horizontal ✓
+        // Connecter les îles dans chaque colonne verticalement
+        foreach (var col in byColumn)
+        {
+            var colIslands = col.OrderBy(i => i.Y).ToList();
+            for (int i = 0; i < colIslands.Count - 1; i++)
+            {
+                var newBridge = CreateBridge(colIslands[i], colIslands[i + 1], false, BridgeDirection.Vertical);
+                
+                // Vérifier les croisements
+                bool wouldIntersect = false;
+                foreach (var existingBridge in bridges)
+                {
+                    if (DoBridgesIntersect(newBridge, existingBridge, islands))
+                    {
+                        wouldIntersect = true;
+                        break;
+                    }
+                }
+                
+                if (!wouldIntersect)
+                {
+                    bridges.Add(newBridge);
+                }
+            }
+        }
 
-        // Connexions horizontales à y=8
-        bridges.Add(CreateBridge(islands[6], islands[8], false, BridgeDirection.Horizontal)); // (3,8) -> Hub2 (6,8) horizontal ✓
-        bridges.Add(CreateBridge(islands[8], islands[7], false, BridgeDirection.Horizontal)); // Hub2 (6,8) -> (9,8) horizontal ✓
-
-        // Connexion verticale de Hub2
-        bridges.Add(CreateBridge(islands[8], islands[11], false, BridgeDirection.Vertical)); // Hub2 (6,8) -> (6,11) vertical ✓
-
-        // Vérification : Toutes les 12 îles sont connectées
-        // Colonne x=3 : (3,2) <-> (3,4) <-> (3,6) <-> (3,8) <-> (3,10)
-        // Colonne x=9 : (9,2) <-> Hub (9,4) <-> (9,6) <-> (9,8) <-> (9,10)
-        // Ligne y=4 : (3,4) <-> Hub (9,4)
-        // Ligne y=8 : (3,8) <-> Hub2 (6,8) <-> (9,8)
-        // Hub2 (6,8) <-> (6,11)
-        // TOUTES CONNECTÉES EN UN SEUL RÉSEAU ✓
+        // Connecter les îles dans chaque ligne horizontalement
+        foreach (var row in byRow)
+        {
+            var rowIslands = row.OrderBy(i => i.X).ToList();
+            for (int i = 0; i < rowIslands.Count - 1; i++)
+            {
+                var newBridge = CreateBridge(rowIslands[i], rowIslands[i + 1], false, BridgeDirection.Horizontal);
+                
+                // Vérifier les croisements
+                bool wouldIntersect = false;
+                foreach (var existingBridge in bridges)
+                {
+                    if (DoBridgesIntersect(newBridge, existingBridge, islands))
+                    {
+                        wouldIntersect = true;
+                        break;
+                    }
+                }
+                
+                if (!wouldIntersect)
+                {
+                    bridges.Add(newBridge);
+                }
+            }
+        }
 
         // Vérification finale : s'assurer que toutes les îles sont connectées
         EnsureAllIslandsConnected(islands, bridges);
@@ -750,29 +932,110 @@ public class PuzzleService : IPuzzleService
         var islands = new List<Island>();
         var bridges = new List<Bridge>();
 
-        // Pattern 15x15 avec îles alignées correctement - TOUTES les connexions respectent l'alignement
-        // IMPORTANT : RequiredBridges sera calculé après
-        var positions = new List<(int x, int y)>
+        // Patterns améliorés pour niveau expert - designs très complexes et variés
+        var themeIndex = (int)theme;
+        var patternIndex = themeIndex % 12;
+        List<(int x, int y)> positions;
+        
+        switch (patternIndex)
         {
-            (3, 2),   // Colonne x=3
-            (11, 2),  // Colonne x=11
-            (3, 4),   // Colonne x=3, ligne y=4
-            (7, 4),   // Hub principal - ligne y=4
-            (11, 4),  // Colonne x=11, ligne y=4
-            (3, 6),   // Colonne x=3
-            (11, 6),  // Colonne x=11
-            (3, 8),   // Colonne x=3, ligne y=8
-            (5, 8),   // Hub secondaire - ligne y=8
-            (9, 8),   // Hub secondaire - ligne y=8
-            (11, 8),  // Colonne x=11, ligne y=8
-            (3, 10),  // Colonne x=3
-            (11, 10), // Colonne x=11
-            (3, 12),  // Colonne x=3, ligne y=12
-            (7, 12),  // Hub - ligne y=12
-            (11, 12), // Colonne x=11, ligne y=12
-            (3, 14),  // Colonne x=3
-            (11, 14)  // Colonne x=11
-        };
+            case 0: // Double colonne avec hubs multiples
+                positions = new List<(int x, int y)>
+                {
+                    (3, 2), (11, 2), (3, 4), (7, 4), (11, 4), (3, 6), (11, 6),
+                    (3, 8), (5, 8), (9, 8), (11, 8), (3, 10), (11, 10),
+                    (3, 12), (7, 12), (11, 12), (3, 14), (11, 14)
+                };
+                break;
+            case 1: // Grille 3x5 avec connexions
+                positions = new List<(int x, int y)>
+                {
+                    (2, 2), (7, 2), (12, 2), (2, 5), (7, 5), (12, 5),
+                    (2, 8), (7, 8), (12, 8), (2, 11), (7, 11), (12, 11),
+                    (4, 13), (9, 13), (7, 14)
+                };
+                break;
+            case 2: // Étoile complexe avec réseau
+                positions = new List<(int x, int y)>
+                {
+                    (7, 1), (3, 3), (7, 3), (11, 3), (1, 5), (5, 5), (7, 5), (9, 5), (13, 5),
+                    (3, 7), (7, 7), (11, 7), (2, 9), (7, 9), (12, 9),
+                    (5, 11), (7, 11), (9, 11), (7, 13), (4, 14), (10, 14)
+                };
+                break;
+            case 3: // Triple colonne avec hubs
+                positions = new List<(int x, int y)>
+                {
+                    (2, 2), (7, 2), (12, 2), (2, 4), (7, 4), (12, 4),
+                    (2, 6), (7, 6), (12, 6), (2, 8), (7, 8), (12, 8),
+                    (2, 10), (7, 10), (12, 10), (2, 12), (7, 12), (12, 12)
+                };
+                break;
+            case 4: // Hub central avec branches multiples
+                positions = new List<(int x, int y)>
+                {
+                    (7, 2), (3, 4), (7, 4), (11, 4), (1, 6), (5, 6), (7, 6), (9, 6), (13, 6),
+                    (3, 8), (7, 8), (11, 8), (2, 10), (7, 10), (12, 10),
+                    (5, 12), (7, 12), (9, 12), (7, 14), (4, 14), (10, 14)
+                };
+                break;
+            case 5: // Lignes horizontales avec connexions
+                positions = new List<(int x, int y)>
+                {
+                    (1, 2), (5, 2), (9, 2), (13, 2), (3, 4), (7, 4), (11, 4),
+                    (2, 6), (6, 6), (10, 6), (14, 6), (4, 8), (8, 8), (12, 8),
+                    (1, 10), (7, 10), (13, 10), (5, 12), (9, 12), (7, 14)
+                };
+                break;
+            case 6: // Rectangle avec diagonales
+                positions = new List<(int x, int y)>
+                {
+                    (2, 2), (7, 2), (12, 2), (2, 5), (7, 5), (12, 5),
+                    (2, 8), (7, 8), (12, 8), (2, 11), (7, 11), (12, 11),
+                    (4, 13), (9, 13), (7, 14)
+                };
+                break;
+            case 7: // Zigzag complexe
+                positions = new List<(int x, int y)>
+                {
+                    (3, 1), (9, 2), (2, 4), (7, 4), (12, 4), (4, 6), (9, 6),
+                    (1, 8), (6, 8), (11, 8), (3, 10), (8, 10), (13, 10),
+                    (5, 12), (10, 12), (7, 14)
+                };
+                break;
+            case 8: // Forme en H avec extensions
+                positions = new List<(int x, int y)>
+                {
+                    (2, 2), (2, 4), (2, 6), (7, 4), (12, 2), (12, 4), (12, 6),
+                    (2, 8), (7, 8), (12, 8), (2, 10), (7, 10), (12, 10),
+                    (4, 12), (10, 12), (7, 14)
+                };
+                break;
+            case 9: // Réseau complexe
+                positions = new List<(int x, int y)>
+                {
+                    (4, 2), (8, 2), (2, 4), (6, 4), (10, 4), (4, 6), (8, 6), (12, 6),
+                    (3, 8), (7, 8), (11, 8), (5, 10), (9, 10), (2, 12), (7, 12), (12, 12),
+                    (7, 14)
+                };
+                break;
+            case 10: // Symétrie parfaite
+                positions = new List<(int x, int y)>
+                {
+                    (3, 2), (11, 2), (1, 4), (7, 4), (13, 4), (3, 6), (7, 6), (11, 6),
+                    (1, 8), (7, 8), (13, 8), (3, 10), (7, 10), (11, 10),
+                    (1, 12), (7, 12), (13, 12), (3, 14), (11, 14)
+                };
+                break;
+            default: // Pattern complexe équilibré
+                positions = new List<(int x, int y)>
+                {
+                    (3, 2), (11, 2), (3, 4), (7, 4), (11, 4), (3, 6), (11, 6),
+                    (3, 8), (5, 8), (9, 8), (11, 8), (3, 10), (11, 10),
+                    (3, 12), (7, 12), (11, 12), (3, 14), (11, 14)
+                };
+                break;
+        }
 
         foreach (var (x, y) in positions)
         {
@@ -785,43 +1048,71 @@ public class PuzzleService : IPuzzleService
             });
         }
 
-        // Solution : TOUTES les îles connectées en un seul réseau
-        // Colonne x=3 : connexions verticales
-        bridges.Add(CreateBridge(islands[2], islands[0], false, BridgeDirection.Vertical)); // (3,4) -> (3,2) vertical ✓
-        bridges.Add(CreateBridge(islands[2], islands[5], false, BridgeDirection.Vertical)); // (3,4) -> (3,6) vertical ✓
-        bridges.Add(CreateBridge(islands[7], islands[5], false, BridgeDirection.Vertical)); // (3,8) -> (3,6) vertical ✓
-        bridges.Add(CreateBridge(islands[7], islands[11], false, BridgeDirection.Vertical)); // (3,8) -> (3,10) vertical ✓
-        bridges.Add(CreateBridge(islands[13], islands[11], false, BridgeDirection.Vertical)); // (3,12) -> (3,10) vertical ✓
-        bridges.Add(CreateBridge(islands[13], islands[16], false, BridgeDirection.Vertical)); // (3,12) -> (3,14) vertical ✓
+        // Générer une solution dynamique basée sur les positions des îles
+        // Connecter les îles de manière intelligente pour éviter les croisements
+        var usedPositions = new HashSet<(int, int)>();
+        foreach (var island in islands)
+        {
+            usedPositions.Add((island.X, island.Y));
+        }
 
-        // Colonne x=11 : connexions verticales
-        bridges.Add(CreateBridge(islands[4], islands[1], false, BridgeDirection.Vertical)); // (11,4) -> (11,2) vertical ✓
-        bridges.Add(CreateBridge(islands[4], islands[6], false, BridgeDirection.Vertical)); // (11,4) -> (11,6) vertical ✓
-        bridges.Add(CreateBridge(islands[10], islands[6], false, BridgeDirection.Vertical)); // (11,8) -> (11,6) vertical ✓
-        bridges.Add(CreateBridge(islands[10], islands[12], false, BridgeDirection.Vertical)); // (11,8) -> (11,10) vertical ✓
-        bridges.Add(CreateBridge(islands[15], islands[12], false, BridgeDirection.Vertical)); // (11,12) -> (11,10) vertical ✓
-        bridges.Add(CreateBridge(islands[15], islands[17], false, BridgeDirection.Vertical)); // (11,12) -> (11,14) vertical ✓
+        // Grouper les îles par colonne et ligne
+        var byColumn = islands.GroupBy(i => i.X).Where(g => g.Count() > 1).ToList();
+        var byRow = islands.GroupBy(i => i.Y).Where(g => g.Count() > 1).ToList();
 
-        // Hub principal (7,4) - connexions horizontales à y=4
-        bridges.Add(CreateBridge(islands[2], islands[3], false, BridgeDirection.Horizontal)); // (3,4) -> Hub (7,4) horizontal ✓
-        bridges.Add(CreateBridge(islands[3], islands[4], false, BridgeDirection.Horizontal)); // Hub (7,4) -> (11,4) horizontal ✓
+        // Connecter les îles dans chaque colonne verticalement
+        foreach (var col in byColumn)
+        {
+            var colIslands = col.OrderBy(i => i.Y).ToList();
+            for (int i = 0; i < colIslands.Count - 1; i++)
+            {
+                var newBridge = CreateBridge(colIslands[i], colIslands[i + 1], false, BridgeDirection.Vertical);
+                
+                // Vérifier les croisements
+                bool wouldIntersect = false;
+                foreach (var existingBridge in bridges)
+                {
+                    if (DoBridgesIntersect(newBridge, existingBridge, islands))
+                    {
+                        wouldIntersect = true;
+                        break;
+                    }
+                }
+                
+                if (!wouldIntersect)
+                {
+                    bridges.Add(newBridge);
+                }
+            }
+        }
 
-        // Connexions horizontales à y=8
-        bridges.Add(CreateBridge(islands[7], islands[8], false, BridgeDirection.Horizontal)); // (3,8) -> Hub2 (5,8) horizontal ✓
-        bridges.Add(CreateBridge(islands[8], islands[9], true, BridgeDirection.Horizontal)); // Hub2 (5,8) -> Hub3 (9,8) pont double ✓
-        bridges.Add(CreateBridge(islands[9], islands[10], false, BridgeDirection.Horizontal)); // Hub3 (9,8) -> (11,8) horizontal ✓
-
-        // Connexions horizontales à y=12
-        bridges.Add(CreateBridge(islands[13], islands[14], false, BridgeDirection.Horizontal)); // (3,12) -> Hub (7,12) horizontal ✓
-        bridges.Add(CreateBridge(islands[14], islands[15], false, BridgeDirection.Horizontal)); // Hub (7,12) -> (11,12) horizontal ✓
-
-        // Vérification : Toutes les 17 îles sont connectées
-        // Colonne x=3 : (3,2) <-> (3,4) <-> (3,6) <-> (3,8) <-> (3,10) <-> (3,12) <-> (3,14)
-        // Colonne x=11 : (11,2) <-> (11,4) <-> (11,6) <-> (11,8) <-> (11,10) <-> (11,12) <-> (11,14)
-        // Ligne y=4 : (3,4) <-> Hub (7,4) <-> (11,4)
-        // Ligne y=8 : (3,8) <-> Hub2 (5,8) <-> Hub3 (9,8) <-> (11,8)
-        // Ligne y=12 : (3,12) <-> Hub (7,12) <-> (11,12)
-        // TOUTES CONNECTÉES EN UN SEUL RÉSEAU ✓
+        // Connecter les îles dans chaque ligne horizontalement
+        foreach (var row in byRow)
+        {
+            var rowIslands = row.OrderBy(i => i.X).ToList();
+            for (int i = 0; i < rowIslands.Count - 1; i++)
+            {
+                // Parfois utiliser des ponts doubles pour plus de complexité
+                bool isDouble = random.Next(100) < 20; // 20% de chance de pont double
+                var newBridge = CreateBridge(rowIslands[i], rowIslands[i + 1], isDouble, BridgeDirection.Horizontal);
+                
+                // Vérifier les croisements
+                bool wouldIntersect = false;
+                foreach (var existingBridge in bridges)
+                {
+                    if (DoBridgesIntersect(newBridge, existingBridge, islands))
+                    {
+                        wouldIntersect = true;
+                        break;
+                    }
+                }
+                
+                if (!wouldIntersect)
+                {
+                    bridges.Add(newBridge);
+                }
+            }
+        }
 
         // Vérification finale : s'assurer que toutes les îles sont connectées
         EnsureAllIslandsConnected(islands, bridges);
