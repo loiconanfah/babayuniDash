@@ -65,6 +65,21 @@ namespace prisonbreak.Server.Data
         public DbSet<TicTacToeGame> TicTacToeGames => Set<TicTacToeGame>();
 
         /// <summary>
+        /// Table des parties de Connect Four (Puissance 4).
+        /// </summary>
+        public DbSet<ConnectFourGame> ConnectFourGames => Set<ConnectFourGame>();
+
+        /// <summary>
+        /// Table des parties de Rock Paper Scissors (Pierre-Papier-Ciseaux).
+        /// </summary>
+        public DbSet<RockPaperScissorsGame> RockPaperScissorsGames => Set<RockPaperScissorsGame>();
+
+        /// <summary>
+        /// Table des parties d'aventure (jeu d'énigmes et d'exploration).
+        /// </summary>
+        public DbSet<AdventureGame> AdventureGames => Set<AdventureGame>();
+
+        /// <summary>
         /// Configuration fine du modèle : contraintes, index, relations.
         /// Tout ce qui touche à la structure SQL est centralisé ici.
         /// </summary>
@@ -79,6 +94,9 @@ namespace prisonbreak.Server.Data
             ConfigureIsland(modelBuilder);
             ConfigureBridge(modelBuilder);
             ConfigureTicTacToeGame(modelBuilder);
+            ConfigureConnectFourGame(modelBuilder);
+            ConfigureRockPaperScissorsGame(modelBuilder);
+            ConfigureAdventureGame(modelBuilder);
         }
 
         // ============================
@@ -412,6 +430,136 @@ namespace prisonbreak.Server.Data
                   .WithMany()
                   .HasForeignKey(g => g.Player2SessionId)
                   .OnDelete(DeleteBehavior.SetNull);
+        }
+
+        // ============================
+        // Configuration ConnectFourGame
+        // ============================
+
+        /// <summary>
+        /// Configure la table ConnectFourGames :
+        /// - Lien obligatoire vers Session pour le joueur 1
+        /// - Lien optionnel vers Session pour le joueur 2
+        /// - Statut requis
+        /// - Index sur les sessions pour les requêtes
+        /// </summary>
+        private static void ConfigureConnectFourGame(ModelBuilder modelBuilder)
+        {
+            var entity = modelBuilder.Entity<ConnectFourGame>();
+
+            entity.ToTable("ConnectFourGames");
+
+            entity.HasKey(g => g.Id);
+
+            // Statut de la partie
+            entity.Property(g => g.Status)
+                  .IsRequired();
+
+            // Grille sérialisée en JSON (7 colonnes x 6 lignes)
+            entity.Property(g => g.BoardJson)
+                  .IsRequired()
+                  .HasDefaultValue("[[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0]]");
+
+            // Joueur actuel
+            entity.Property(g => g.CurrentPlayer)
+                  .IsRequired()
+                  .HasDefaultValue(1);
+
+            // Mode de jeu
+            entity.Property(g => g.GameMode)
+                  .IsRequired()
+                  .HasDefaultValue(ConnectFourGameMode.Player);
+
+            // Date de création
+            entity.Property(g => g.CreatedAt)
+                  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            // Index pour les requêtes
+            entity.HasIndex(g => g.Player1SessionId);
+            entity.HasIndex(g => g.Player2SessionId);
+            entity.HasIndex(g => g.Status);
+
+            // Relation ConnectFourGame -> Session (Joueur 1)
+            entity.HasOne(g => g.Player1Session)
+                  .WithMany()
+                  .HasForeignKey(g => g.Player1SessionId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            // Relation ConnectFourGame -> Session (Joueur 2)
+            entity.HasOne(g => g.Player2Session)
+                  .WithMany()
+                  .HasForeignKey(g => g.Player2SessionId)
+                  .OnDelete(DeleteBehavior.SetNull);
+        }
+
+        // ============================
+        // Configuration RockPaperScissorsGame
+        // ============================
+
+        /// <summary>
+        /// Configure la table RockPaperScissorsGames
+        /// </summary>
+        private static void ConfigureRockPaperScissorsGame(ModelBuilder modelBuilder)
+        {
+            var entity = modelBuilder.Entity<RockPaperScissorsGame>();
+
+            entity.ToTable("RockPaperScissorsGames");
+
+            entity.HasKey(g => g.Id);
+
+            entity.Property(g => g.Status).IsRequired();
+            entity.Property(g => g.GameMode).IsRequired().HasDefaultValue(RPSGameMode.Player);
+            entity.Property(g => g.RoundNumber).IsRequired().HasDefaultValue(1);
+            entity.Property(g => g.Player1Score).IsRequired().HasDefaultValue(0);
+            entity.Property(g => g.Player2Score).IsRequired().HasDefaultValue(0);
+            entity.Property(g => g.RoundsToWin).IsRequired().HasDefaultValue(3);
+            entity.Property(g => g.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.HasIndex(g => g.Player1SessionId);
+            entity.HasIndex(g => g.Player2SessionId);
+            entity.HasIndex(g => g.Status);
+
+            entity.HasOne(g => g.Player1Session)
+                  .WithMany()
+                  .HasForeignKey(g => g.Player1SessionId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(g => g.Player2Session)
+                  .WithMany()
+                  .HasForeignKey(g => g.Player2SessionId)
+                  .OnDelete(DeleteBehavior.SetNull);
+        }
+
+        // ============================
+        // Configuration AdventureGame
+        // ============================
+
+        /// <summary>
+        /// Configure la table AdventureGames
+        /// </summary>
+        private static void ConfigureAdventureGame(ModelBuilder modelBuilder)
+        {
+            var entity = modelBuilder.Entity<AdventureGame>();
+
+            entity.ToTable("AdventureGames");
+
+            entity.HasKey(g => g.Id);
+
+            entity.Property(g => g.Status).IsRequired();
+            entity.Property(g => g.CurrentRoom).IsRequired().HasDefaultValue(1);
+            entity.Property(g => g.CollectedItemsJson).IsRequired().HasDefaultValue("[]");
+            entity.Property(g => g.SolvedPuzzlesJson).IsRequired().HasDefaultValue("[]");
+            entity.Property(g => g.Score).IsRequired().HasDefaultValue(0);
+            entity.Property(g => g.PuzzlesSolved).IsRequired().HasDefaultValue(0);
+            entity.Property(g => g.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.HasIndex(g => g.PlayerSessionId);
+            entity.HasIndex(g => g.Status);
+
+            entity.HasOne(g => g.PlayerSession)
+                  .WithMany()
+                  .HasForeignKey(g => g.PlayerSessionId)
+                  .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

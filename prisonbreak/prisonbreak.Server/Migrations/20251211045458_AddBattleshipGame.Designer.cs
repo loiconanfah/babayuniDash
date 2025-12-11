@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using prisonbreak.Server.Data;
 
@@ -10,24 +11,20 @@ using prisonbreak.Server.Data;
 namespace prisonbreak.Server.Migrations
 {
     [DbContext(typeof(HashiDbContext))]
-    partial class HashiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251211045458_AddBattleshipGame")]
+    partial class AddBattleshipGame
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.0");
 
-            modelBuilder.Entity("prisonbreak.Server.Models.AdventureGame", b =>
+            modelBuilder.Entity("prisonbreak.Server.Models.BattleshipGame", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
-
-                    b.Property<string>("CollectedItemsJson")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValue("[]");
 
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("TEXT");
@@ -37,7 +34,7 @@ namespace prisonbreak.Server.Migrations
                         .HasColumnType("TEXT")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("CurrentRoom")
+                    b.Property<int>("CurrentPlayer")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")
                         .HasDefaultValue(1);
@@ -45,20 +42,61 @@ namespace prisonbreak.Server.Migrations
                     b.Property<int>("ElapsedSeconds")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("PlayerSessionId")
+                    b.Property<int>("GameMode")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
+                    b.Property<int>("MoveCount")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("PuzzlesSolved")
+                    b.Property<string>("Player1BoardJson")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("[]");
+
+                    b.Property<bool>("Player1Ready")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")
-                        .HasDefaultValue(0);
+                        .HasDefaultValue(false);
 
-                    b.Property<int>("Score")
+                    b.Property<int>("Player1SessionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Player1ShipsJson")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("[]");
+
+                    b.Property<string>("Player1ShotsJson")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("[]");
+
+                    b.Property<string>("Player2BoardJson")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("[]");
+
+                    b.Property<bool>("Player2Ready")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")
-                        .HasDefaultValue(0);
+                        .HasDefaultValue(false);
 
-                    b.Property<string>("SolvedPuzzlesJson")
+                    b.Property<int?>("Player2SessionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Player2ShipsJson")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("[]");
+
+                    b.Property<string>("Player2ShotsJson")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT")
@@ -70,13 +108,18 @@ namespace prisonbreak.Server.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("WinnerPlayerId")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("PlayerSessionId");
+                    b.HasIndex("Player1SessionId");
+
+                    b.HasIndex("Player2SessionId");
 
                     b.HasIndex("Status");
 
-                    b.ToTable("AdventureGames", (string)null);
+                    b.ToTable("BattleshipGames", (string)null);
                 });
 
             modelBuilder.Entity("prisonbreak.Server.Models.Bridge", b =>
@@ -281,83 +324,6 @@ namespace prisonbreak.Server.Migrations
                     b.ToTable("Puzzles", (string)null);
                 });
 
-            modelBuilder.Entity("prisonbreak.Server.Models.RockPaperScissorsGame", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<int>("ElapsedSeconds")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("GameMode")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(1);
-
-                    b.Property<int?>("Player1Choice")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Player1Score")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0);
-
-                    b.Property<int>("Player1SessionId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("Player2Choice")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Player2Score")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0);
-
-                    b.Property<int?>("Player2SessionId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("RoundNumber")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(1);
-
-                    b.Property<int?>("RoundWinner")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("RoundsToWin")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(3);
-
-                    b.Property<DateTime?>("StartedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("WinnerPlayerId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Player1SessionId");
-
-                    b.HasIndex("Player2SessionId");
-
-                    b.HasIndex("Status");
-
-                    b.ToTable("RockPaperScissorsGames", (string)null);
-                });
-
             modelBuilder.Entity("prisonbreak.Server.Models.Session", b =>
                 {
                     b.Property<int>("Id")
@@ -501,15 +467,22 @@ namespace prisonbreak.Server.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
-            modelBuilder.Entity("prisonbreak.Server.Models.AdventureGame", b =>
+            modelBuilder.Entity("prisonbreak.Server.Models.BattleshipGame", b =>
                 {
-                    b.HasOne("prisonbreak.Server.Models.Session", "PlayerSession")
+                    b.HasOne("prisonbreak.Server.Models.Session", "Player1Session")
                         .WithMany()
-                        .HasForeignKey("PlayerSessionId")
+                        .HasForeignKey("Player1SessionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("PlayerSession");
+                    b.HasOne("prisonbreak.Server.Models.Session", "Player2Session")
+                        .WithMany()
+                        .HasForeignKey("Player2SessionId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Player1Session");
+
+                    b.Navigation("Player2Session");
                 });
 
             modelBuilder.Entity("prisonbreak.Server.Models.Bridge", b =>
@@ -585,24 +558,6 @@ namespace prisonbreak.Server.Migrations
                         .IsRequired();
 
                     b.Navigation("Puzzle");
-                });
-
-            modelBuilder.Entity("prisonbreak.Server.Models.RockPaperScissorsGame", b =>
-                {
-                    b.HasOne("prisonbreak.Server.Models.Session", "Player1Session")
-                        .WithMany()
-                        .HasForeignKey("Player1SessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("prisonbreak.Server.Models.Session", "Player2Session")
-                        .WithMany()
-                        .HasForeignKey("Player2SessionId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Player1Session");
-
-                    b.Navigation("Player2Session");
                 });
 
             modelBuilder.Entity("prisonbreak.Server.Models.Session", b =>

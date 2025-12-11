@@ -35,6 +35,9 @@ builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddScoped<IValidationService, ValidationService>();
 builder.Services.AddScoped<IStatsService, StatsService>();
 builder.Services.AddScoped<ITicTacToeService, TicTacToeService>();
+builder.Services.AddScoped<IConnectFourService, ConnectFourService>();
+builder.Services.AddScoped<IRockPaperScissorsService, RockPaperScissorsService>();
+builder.Services.AddScoped<IAdventureService, AdventureService>();
 
 // Configuration des contrôleurs API
 builder.Services.AddControllers();

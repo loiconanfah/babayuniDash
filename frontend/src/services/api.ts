@@ -17,6 +17,20 @@ import type {
   CreateTicTacToeGameRequest,
   JoinTicTacToeGameRequest,
   PlayMoveRequest,
+  ConnectFourGame,
+  CreateConnectFourGameRequest,
+  JoinConnectFourGameRequest,
+  PlayConnectFourMoveRequest,
+  RockPaperScissorsGame,
+  CreateRPSGameRequest,
+  JoinRPSGameRequest,
+  PlayRPSChoiceRequest,
+  AdventureGame,
+  CreateAdventureGameRequest,
+  MoveToRoomRequest,
+  CollectItemRequest,
+  SolvePuzzleRequest,
+  PuzzleInfoDto,
   SessionDto
 } from '@/types'
 
@@ -319,6 +333,292 @@ export const ticTacToeApi = {
       body: JSON.stringify({ gameId, sessionId })
     })
     return handleResponse<TicTacToeGame>(response)
+  }
+}
+
+/**
+ * Service de gestion des parties de Connect Four
+ */
+export const connectFourApi = {
+  /**
+   * Crée une nouvelle partie de Connect Four
+   */
+  async create(request: CreateConnectFourGameRequest): Promise<ConnectFourGame> {
+    const response = await fetch(`${API_BASE_URL}/ConnectFour`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(request)
+    })
+    return handleResponse<ConnectFourGame>(response)
+  },
+
+  /**
+   * Récupère une partie par son ID
+   */
+  async getById(id: number): Promise<ConnectFourGame> {
+    const response = await fetch(`${API_BASE_URL}/ConnectFour/${id}`)
+    return handleResponse<ConnectFourGame>(response)
+  },
+
+  /**
+   * Récupère les parties en attente d'un deuxième joueur
+   */
+  async getAvailableGames(): Promise<ConnectFourGame[]> {
+    const response = await fetch(`${API_BASE_URL}/ConnectFour/available`)
+    return handleResponse<ConnectFourGame[]>(response)
+  },
+
+  /**
+   * Récupère les parties où le joueur est invité
+   */
+  async getInvitations(sessionId: number): Promise<ConnectFourGame[]> {
+    const response = await fetch(`${API_BASE_URL}/ConnectFour/invitations/${sessionId}`)
+    return handleResponse<ConnectFourGame[]>(response)
+  },
+
+  /**
+   * Rejoint une partie existante
+   */
+  async joinGame(gameId: number, sessionId: number): Promise<ConnectFourGame> {
+    const response = await fetch(`${API_BASE_URL}/ConnectFour/${gameId}/join`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ gameId, sessionId })
+    })
+    return handleResponse<ConnectFourGame>(response)
+  },
+
+  /**
+   * Joue un coup dans la partie (laisse tomber une pièce dans une colonne)
+   */
+  async playMove(gameId: number, request: PlayConnectFourMoveRequest): Promise<ConnectFourGame> {
+    const response = await fetch(`${API_BASE_URL}/ConnectFour/${gameId}/move`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(request)
+    })
+    return handleResponse<ConnectFourGame>(response)
+  },
+
+  /**
+   * Abandonne une partie
+   */
+  async abandon(gameId: number, sessionId: number): Promise<ConnectFourGame> {
+    const response = await fetch(`${API_BASE_URL}/ConnectFour/${gameId}/abandon`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ gameId, sessionId })
+    })
+    return handleResponse<ConnectFourGame>(response)
+  }
+}
+
+/**
+ * Service de gestion des parties de Rock Paper Scissors (Pierre-Papier-Ciseaux)
+ */
+export const rpsApi = {
+  /**
+   * Crée une nouvelle partie de Rock Paper Scissors
+   */
+  async create(request: CreateRPSGameRequest): Promise<RockPaperScissorsGame> {
+    const response = await fetch(`${API_BASE_URL}/RockPaperScissors`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(request)
+    })
+    return handleResponse<RockPaperScissorsGame>(response)
+  },
+
+  /**
+   * Récupère une partie par son ID
+   */
+  async getById(id: number, sessionId?: number): Promise<RockPaperScissorsGame> {
+    const url = sessionId 
+      ? `${API_BASE_URL}/RockPaperScissors/${id}?sessionId=${sessionId}`
+      : `${API_BASE_URL}/RockPaperScissors/${id}`
+    const response = await fetch(url)
+    return handleResponse<RockPaperScissorsGame>(response)
+  },
+
+  /**
+   * Récupère les parties en attente d'un deuxième joueur
+   */
+  async getAvailableGames(): Promise<RockPaperScissorsGame[]> {
+    const response = await fetch(`${API_BASE_URL}/RockPaperScissors/available`)
+    return handleResponse<RockPaperScissorsGame[]>(response)
+  },
+
+  /**
+   * Récupère les parties où le joueur est invité
+   */
+  async getInvitations(sessionId: number): Promise<RockPaperScissorsGame[]> {
+    const response = await fetch(`${API_BASE_URL}/RockPaperScissors/invitations/${sessionId}`)
+    return handleResponse<RockPaperScissorsGame[]>(response)
+  },
+
+  /**
+   * Rejoint une partie existante
+   */
+  async joinGame(gameId: number, sessionId: number): Promise<RockPaperScissorsGame> {
+    const response = await fetch(`${API_BASE_URL}/RockPaperScissors/${gameId}/join`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ gameId, sessionId })
+    })
+    return handleResponse<RockPaperScissorsGame>(response)
+  },
+
+  /**
+   * Joue un choix (Rock, Paper, ou Scissors)
+   */
+  async playChoice(gameId: number, request: PlayRPSChoiceRequest): Promise<RockPaperScissorsGame> {
+    const response = await fetch(`${API_BASE_URL}/RockPaperScissors/${gameId}/choice`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(request)
+    })
+    return handleResponse<RockPaperScissorsGame>(response)
+  },
+
+  /**
+   * Passe au round suivant
+   */
+  async nextRound(gameId: number, sessionId: number): Promise<RockPaperScissorsGame> {
+    const response = await fetch(`${API_BASE_URL}/RockPaperScissors/${gameId}/next-round`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ gameId, sessionId })
+    })
+    return handleResponse<RockPaperScissorsGame>(response)
+  },
+
+  /**
+   * Abandonne une partie
+   */
+  async abandon(gameId: number, sessionId: number): Promise<RockPaperScissorsGame> {
+    const response = await fetch(`${API_BASE_URL}/RockPaperScissors/${gameId}/abandon`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ gameId, sessionId })
+    })
+    return handleResponse<RockPaperScissorsGame>(response)
+  }
+}
+
+/**
+ * Service de gestion des parties d'aventure
+ */
+export const adventureApi = {
+  /**
+   * Crée une nouvelle partie d'aventure
+   */
+  async create(request: CreateAdventureGameRequest): Promise<AdventureGame> {
+    const response = await fetch(`${API_BASE_URL}/Adventure`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(request)
+    })
+    return handleResponse<AdventureGame>(response)
+  },
+
+  /**
+   * Récupère une partie par son ID
+   */
+  async getById(id: number): Promise<AdventureGame> {
+    const response = await fetch(`${API_BASE_URL}/Adventure/${id}`)
+    return handleResponse<AdventureGame>(response)
+  },
+
+  /**
+   * Récupère les parties d'un joueur
+   */
+  async getGamesBySession(sessionId: number): Promise<AdventureGame[]> {
+    const response = await fetch(`${API_BASE_URL}/Adventure/session/${sessionId}`)
+    return handleResponse<AdventureGame[]>(response)
+  },
+
+  /**
+   * Se déplace vers une salle
+   */
+  async moveToRoom(gameId: number, request: MoveToRoomRequest): Promise<AdventureGame> {
+    const response = await fetch(`${API_BASE_URL}/Adventure/${gameId}/move`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(request)
+    })
+    return handleResponse<AdventureGame>(response)
+  },
+
+  /**
+   * Collecte un objet
+   */
+  async collectItem(gameId: number, request: CollectItemRequest): Promise<AdventureGame> {
+    const response = await fetch(`${API_BASE_URL}/Adventure/${gameId}/collect`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(request)
+    })
+    return handleResponse<AdventureGame>(response)
+  },
+
+  /**
+   * Résout une énigme
+   */
+  async solvePuzzle(gameId: number, request: SolvePuzzleRequest): Promise<AdventureGame> {
+    const response = await fetch(`${API_BASE_URL}/Adventure/${gameId}/solve`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(request)
+    })
+    return handleResponse<AdventureGame>(response)
+  },
+
+  /**
+   * Récupère les informations d'une énigme
+   */
+  async getPuzzleInfo(puzzleId: number): Promise<PuzzleInfoDto> {
+    const response = await fetch(`${API_BASE_URL}/Adventure/puzzle/${puzzleId}`)
+    return handleResponse<PuzzleInfoDto>(response)
+  },
+
+  /**
+   * Abandonne une partie
+   */
+  async abandon(gameId: number, sessionId: number): Promise<AdventureGame> {
+    const response = await fetch(`${API_BASE_URL}/Adventure/${gameId}/abandon`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ sessionId })
+    })
+    return handleResponse<AdventureGame>(response)
   }
 }
 

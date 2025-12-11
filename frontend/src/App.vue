@@ -197,6 +197,9 @@ import GameScreen from '@/components/GameScreen.vue';
 import StatsScreen from '@/components/StatsScreen.vue';
 import GamesScreen from '@/components/GamesScreen.vue';
 import TicTacToeScreen from '@/components/TicTacToeScreen.vue';
+import ConnectFourScreen from '@/components/ConnectFourScreen.vue';
+import RockPaperScissorsScreen from '@/components/RockPaperScissorsScreen.vue';
+import AdventureScreen from '@/components/AdventureScreen.vue';
 import UserRegisterModal from '@/components/UserRegisterModal.vue';
 import TutorialModal from '@/components/TutorialModal.vue';
 
@@ -261,6 +264,9 @@ const currentComponent = computed(() => {
     case 'stats': return StatsScreen;
     case 'games': return GamesScreen;
     case 'ticTacToe': return TicTacToeScreen;
+    case 'connectFour': return ConnectFourScreen;
+    case 'rockPaperScissors': return RockPaperScissorsScreen;
+    case 'adventure': return AdventureScreen;
     case 'leaderboard': return HomeScreen; // temporaire
     default: return HomeScreen;
   }

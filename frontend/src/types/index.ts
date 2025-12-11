@@ -350,3 +350,311 @@ export interface PlayMoveRequest {
   sessionId: number
 }
 
+/**
+ * Statut d'une partie de Connect Four
+ */
+export enum ConnectFourGameStatus {
+  /** En attente d'un deuxième joueur */
+  WaitingForPlayer = 1,
+  /** Partie en cours */
+  InProgress = 2,
+  /** Partie terminée avec un gagnant */
+  Completed = 3,
+  /** Match nul */
+  Draw = 4,
+  /** Partie abandonnée */
+  Abandoned = 5
+}
+
+/**
+ * Mode de jeu pour Connect Four
+ */
+export enum ConnectFourGameMode {
+  /** Partie contre un autre joueur (multijoueur) */
+  Player = 1,
+  /** Partie contre l'ordinateur (IA) */
+  AI = 2
+}
+
+/**
+ * Représente une partie de Connect Four
+ */
+export interface ConnectFourGame {
+  /** Identifiant unique de la partie */
+  id: number
+  /** ID de la session du joueur 1 (Rouge) */
+  player1SessionId: number
+  /** Nom du joueur 1 */
+  player1Name?: string
+  /** ID de la session du joueur 2 (Jaune) */
+  player2SessionId?: number
+  /** Nom du joueur 2 */
+  player2Name?: string
+  /** État de la grille 7x6 (7 colonnes, 6 lignes) */
+  board: number[][]
+  /** Tour actuel : 1 = joueur 1 (Rouge), 2 = joueur 2 (Jaune) */
+  currentPlayer: number
+  /** Statut de la partie */
+  status: ConnectFourGameStatus
+  /** ID du joueur gagnant (1 ou 2), null si match nul ou en cours */
+  winnerPlayerId?: number
+  /** Date de création */
+  createdAt: Date
+  /** Date de début */
+  startedAt?: Date
+  /** Date de fin */
+  completedAt?: Date
+  /** Temps écoulé en secondes */
+  elapsedSeconds: number
+  /** Nombre de coups joués */
+  moveCount: number
+  /** Mode de jeu : 1 = contre un joueur, 2 = contre l'IA */
+  gameMode: ConnectFourGameMode
+}
+
+/**
+ * Requête pour créer une partie de Connect Four
+ */
+export interface CreateConnectFourGameRequest {
+  /** ID de la session du joueur */
+  sessionId: number
+  /** Mode de jeu : 1 = contre un joueur, 2 = contre l'IA */
+  gameMode: ConnectFourGameMode
+  /** ID de la session du joueur 2 (optionnel, pour inviter un joueur spécifique) */
+  player2SessionId?: number
+}
+
+/**
+ * Requête pour rejoindre une partie de Connect Four
+ */
+export interface JoinConnectFourGameRequest {
+  /** ID de la partie */
+  gameId: number
+  /** ID de la session du joueur */
+  sessionId: number
+}
+
+/**
+ * Requête pour jouer un coup dans Connect Four
+ */
+export interface PlayConnectFourMoveRequest {
+  /** Numéro de la colonne (0-6) */
+  column: number
+  /** ID de la session du joueur */
+  sessionId: number
+}
+
+/**
+ * Statut d'une partie de Rock Paper Scissors (Pierre-Papier-Ciseaux)
+ */
+export enum RPSGameStatus {
+  /** En attente d'un deuxième joueur */
+  WaitingForPlayer = 1,
+  /** En attente des choix des joueurs */
+  WaitingForChoices = 2,
+  /** Round terminé, affichage du résultat */
+  RoundCompleted = 3,
+  /** Partie terminée avec un gagnant */
+  Completed = 4,
+  /** Partie abandonnée */
+  Abandoned = 5
+}
+
+/**
+ * Mode de jeu pour Rock Paper Scissors
+ */
+export enum RPSGameMode {
+  /** Partie contre un autre joueur (multijoueur) */
+  Player = 1,
+  /** Partie contre l'ordinateur (IA) */
+  AI = 2
+}
+
+/**
+ * Choix possibles dans Rock Paper Scissors
+ */
+export enum RPSChoice {
+  /** Pierre (Rock) */
+  Rock = 1,
+  /** Papier (Paper) */
+  Paper = 2,
+  /** Ciseaux (Scissors) */
+  Scissors = 3
+}
+
+/**
+ * Représente une partie de Rock Paper Scissors
+ */
+export interface RockPaperScissorsGame {
+  /** Identifiant unique de la partie */
+  id: number
+  /** ID de la session du joueur 1 */
+  player1SessionId: number
+  /** Nom du joueur 1 */
+  player1Name?: string
+  /** ID de la session du joueur 2 */
+  player2SessionId?: number
+  /** Nom du joueur 2 */
+  player2Name?: string
+  /** Coup du joueur 1 : 1=Rock, 2=Paper, 3=Scissors, null si pas encore joué */
+  player1Choice?: number
+  /** Coup du joueur 2 : 1=Rock, 2=Paper, 3=Scissors, null si pas encore joué */
+  player2Choice?: number
+  /** Numéro du round actuel */
+  roundNumber: number
+  /** Score du joueur 1 (nombre de rounds gagnés) */
+  player1Score: number
+  /** Score du joueur 2 (nombre de rounds gagnés) */
+  player2Score: number
+  /** Nombre de rounds requis pour gagner */
+  roundsToWin: number
+  /** Statut de la partie */
+  status: RPSGameStatus
+  /** ID du joueur gagnant du round actuel (1 ou 2), null si égalité */
+  roundWinner?: number
+  /** ID du joueur gagnant de la partie (1 ou 2), null si en cours */
+  winnerPlayerId?: number
+  /** Date de création */
+  createdAt: Date
+  /** Date de début */
+  startedAt?: Date
+  /** Date de fin */
+  completedAt?: Date
+  /** Temps écoulé en secondes */
+  elapsedSeconds: number
+  /** Mode de jeu : 1 = contre un joueur, 2 = contre l'IA */
+  gameMode: RPSGameMode
+}
+
+/**
+ * Requête pour créer une nouvelle partie de Rock Paper Scissors
+ */
+export interface CreateRPSGameRequest {
+  /** ID de la session du joueur */
+  sessionId: number
+  /** Mode de jeu : 1 = contre un joueur, 2 = contre l'IA */
+  gameMode: RPSGameMode
+  /** ID de la session du joueur 2 (optionnel, pour inviter un joueur spécifique) */
+  player2SessionId?: number
+}
+
+/**
+ * Requête pour rejoindre une partie de Rock Paper Scissors
+ */
+export interface JoinRPSGameRequest {
+  /** ID de la partie */
+  gameId: number
+  /** ID de la session du joueur */
+  sessionId: number
+}
+
+/**
+ * Requête pour jouer un choix dans Rock Paper Scissors
+ */
+export interface PlayRPSChoiceRequest {
+  /** ID de la session du joueur */
+  sessionId: number
+  /** Choix : 1=Rock, 2=Paper, 3=Scissors */
+  choice: RPSChoice
+}
+
+/**
+ * Statut d'une partie d'aventure
+ */
+export enum AdventureGameStatus {
+  /** Partie en cours */
+  InProgress = 1,
+  /** Partie terminée (toutes les énigmes résolues) */
+  Completed = 2,
+  /** Partie abandonnée */
+  Abandoned = 3
+}
+
+/**
+ * Représente une partie d'aventure
+ */
+export interface AdventureGame {
+  /** Identifiant unique de la partie */
+  id: number
+  /** ID de la session du joueur */
+  playerSessionId: number
+  /** Nom du joueur */
+  playerName?: string
+  /** Salle actuelle où se trouve le joueur (1-10) */
+  currentRoom: number
+  /** Objets collectés */
+  collectedItems: string[]
+  /** Énigmes résolues (IDs) */
+  solvedPuzzles: number[]
+  /** Score du joueur */
+  score: number
+  /** Temps écoulé en secondes */
+  elapsedSeconds: number
+  /** Nombre d'énigmes résolues */
+  puzzlesSolved: number
+  /** Statut de la partie */
+  status: AdventureGameStatus
+  /** Date de création */
+  createdAt: Date
+  /** Date de début */
+  startedAt?: Date
+  /** Date de fin */
+  completedAt?: Date
+}
+
+/**
+ * Requête pour créer une nouvelle partie d'aventure
+ */
+export interface CreateAdventureGameRequest {
+  /** ID de la session du joueur */
+  sessionId: number
+}
+
+/**
+ * Requête pour se déplacer vers une salle
+ */
+export interface MoveToRoomRequest {
+  /** ID de la session du joueur */
+  sessionId: number
+  /** Numéro de la salle (1-10) */
+  roomNumber: number
+}
+
+/**
+ * Requête pour collecter un objet
+ */
+export interface CollectItemRequest {
+  /** ID de la session du joueur */
+  sessionId: number
+  /** Nom de l'objet */
+  itemName: string
+}
+
+/**
+ * Requête pour résoudre une énigme
+ */
+export interface SolvePuzzleRequest {
+  /** ID de la session du joueur */
+  sessionId: number
+  /** ID de l'énigme */
+  puzzleId: number
+  /** Réponse à l'énigme */
+  answer: string
+}
+
+/**
+ * Informations sur une énigme
+ */
+export interface PuzzleInfoDto {
+  /** ID de l'énigme */
+  id: number
+  /** Question de l'énigme */
+  question: string
+  /** Type de mini-jeu (optionnel) */
+  miniGameType?: string
+  /** Indices pour l'énigme */
+  hints: string[]
+  /** Points gagnés en résolvant l'énigme */
+  points: number
+}
+
