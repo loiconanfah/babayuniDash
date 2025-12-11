@@ -76,6 +76,13 @@ public interface ISessionRepository
     Task<bool> DeleteAsync(int id);
 
     /// <summary>
+    /// Récupère toutes les sessions actives (utilisateurs en ligne)
+    /// </summary>
+    /// <param name="excludeSessionId">ID de session à exclure (pour ne pas s'inclure soi-même)</param>
+    /// <returns>Liste des sessions actives</returns>
+    Task<IEnumerable<Session>> GetActiveSessionsAsync(int? excludeSessionId = null);
+
+    /// <summary>
     /// Sauvegarde les changements dans la base de données
     /// </summary>
     /// <returns>Le nombre d'entités modifiées</returns>

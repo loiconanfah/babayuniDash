@@ -236,3 +236,117 @@ export interface LeaderboardEntry {
   bestScore: number
 }
 
+/**
+ * Statut d'une partie de Tic-Tac-Toe
+ */
+export enum TicTacToeGameStatus {
+  /** En attente d'un deuxième joueur */
+  WaitingForPlayer = 1,
+  /** Partie en cours */
+  InProgress = 2,
+  /** Partie terminée avec un gagnant */
+  Completed = 3,
+  /** Match nul */
+  Draw = 4,
+  /** Partie abandonnée */
+  Abandoned = 5
+}
+
+/**
+ * Mode de jeu pour Tic-Tac-Toe
+ */
+export enum TicTacToeGameMode {
+  /** Partie contre un autre joueur (multijoueur) */
+  Player = 1,
+  /** Partie contre l'ordinateur (IA) */
+  AI = 2
+}
+
+/**
+ * Représente une partie de Tic-Tac-Toe
+ */
+export interface TicTacToeGame {
+  /** Identifiant unique de la partie */
+  id: number
+  /** ID de la session du joueur 1 (X) */
+  player1SessionId: number
+  /** Nom du joueur 1 */
+  player1Name?: string
+  /** ID de la session du joueur 2 (O) */
+  player2SessionId?: number
+  /** Nom du joueur 2 */
+  player2Name?: string
+  /** État de la grille 3x3 (9 éléments) */
+  board: string[]
+  /** Tour actuel : 1 = joueur 1 (X), 2 = joueur 2 (O) */
+  currentPlayer: number
+  /** Statut de la partie */
+  status: TicTacToeGameStatus
+  /** ID du joueur gagnant (1 ou 2), null si match nul ou en cours */
+  winnerPlayerId?: number
+  /** Date de création */
+  createdAt: Date
+  /** Date de début */
+  startedAt?: Date
+  /** Date de fin */
+  completedAt?: Date
+  /** Temps écoulé en secondes */
+  elapsedSeconds: number
+  /** Nombre de coups joués */
+  moveCount: number
+  /** Mode de jeu : 1 = contre un joueur, 2 = contre l'IA */
+  gameMode: TicTacToeGameMode
+}
+
+/**
+ * DTO pour une session
+ */
+export interface SessionDto {
+  id: number
+  userId: number
+  user?: {
+    id: number
+    name: string
+    email: string
+  }
+  sessionToken: string
+  createdAt: string
+  expiresAt: string
+  lastActivityAt: string
+  isActive: boolean
+  isExpired: boolean
+  gameCount: number
+}
+
+/**
+ * Requête pour créer une nouvelle partie de Tic-Tac-Toe
+ */
+export interface CreateTicTacToeGameRequest {
+  /** ID de la session du joueur */
+  sessionId: number
+  /** Mode de jeu : 1 = contre un joueur, 2 = contre l'IA */
+  gameMode: TicTacToeGameMode
+  /** ID de la session du joueur 2 (optionnel, pour inviter un joueur spécifique) */
+  player2SessionId?: number
+}
+
+/**
+ * Requête pour rejoindre une partie
+ */
+export interface JoinTicTacToeGameRequest {
+  /** ID de la partie */
+  gameId: number
+  /** ID de la session du joueur */
+  sessionId: number
+}
+
+/**
+ * Requête pour jouer un coup
+ */
+export interface PlayMoveRequest {
+  /** Position dans la grille (0-8) */
+  position: number
+  /** ID de la session du joueur */
+  sessionId: number
+}
+

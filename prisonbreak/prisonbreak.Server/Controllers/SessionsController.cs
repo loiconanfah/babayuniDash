@@ -253,5 +253,26 @@ public class SessionsController : ControllerBase
             return StatusCode(500, "Erreur interne du serveur");
         }
     }
+
+    /// <summary>
+    /// GET api/sessions/active
+    /// Récupère toutes les sessions actives (utilisateurs en ligne)
+    /// </summary>
+    /// <param name="excludeSessionId">ID de session à exclure (optionnel)</param>
+    /// <returns>Liste des sessions actives</returns>
+    [HttpGet("active")]
+    public async Task<ActionResult<IEnumerable<SessionDto>>> GetActiveSessions([FromQuery] int? excludeSessionId = null)
+    {
+        try
+        {
+            var sessions = await _sessionService.GetActiveSessionsAsync(excludeSessionId);
+            return Ok(sessions);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération des sessions actives");
+            return StatusCode(500, "Erreur interne du serveur");
+        }
+    }
 }
 

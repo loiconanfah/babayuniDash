@@ -1,0 +1,151 @@
+namespace prisonbreak.Server.Models;
+
+/// <summary>
+/// Représente une partie de Tic-Tac-Toe (Morpion) multijoueur
+/// Stocke l'état de la grille 3x3 et les informations des joueurs
+/// </summary>
+public class TicTacToeGame
+{
+    /// <summary>
+    /// Identifiant unique de la partie
+    /// </summary>
+    public int Id { get; set; }
+
+    /// <summary>
+    /// Identifiant de la session du joueur 1 (X)
+    /// </summary>
+    public int Player1SessionId { get; set; }
+
+    /// <summary>
+    /// Navigation vers la session du joueur 1
+    /// </summary>
+    public Session? Player1Session { get; set; }
+
+    /// <summary>
+    /// Identifiant de la session du joueur 2 (O)
+    /// Null si la partie attend un deuxième joueur ou si c'est une partie contre l'IA
+    /// </summary>
+    public int? Player2SessionId { get; set; }
+
+    /// <summary>
+    /// Mode de jeu : contre un joueur (Player) ou contre l'ordinateur (AI)
+    /// </summary>
+    public TicTacToeGameMode GameMode { get; set; } = TicTacToeGameMode.Player;
+
+    /// <summary>
+    /// Navigation vers la session du joueur 2
+    /// </summary>
+    public Session? Player2Session { get; set; }
+
+    /// <summary>
+    /// État de la grille 3x3 sérialisé en JSON
+    /// Format: ["X","O","", "","X","", "","","O"]
+    /// "" = case vide, "X" = joueur 1, "O" = joueur 2
+    /// </summary>
+    public string BoardJson { get; set; } = "[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"]";
+
+    /// <summary>
+    /// Tour actuel : 1 = joueur 1 (X), 2 = joueur 2 (O)
+    /// </summary>
+    public int CurrentPlayer { get; set; } = 1;
+
+    /// <summary>
+    /// Statut de la partie
+    /// </summary>
+    public TicTacToeGameStatus Status { get; set; } = TicTacToeGameStatus.WaitingForPlayer;
+
+    /// <summary>
+    /// Identifiant du joueur gagnant (1 ou 2), null si match nul ou en cours
+    /// </summary>
+    public int? WinnerPlayerId { get; set; }
+
+    /// <summary>
+    /// Date et heure de création de la partie
+    /// </summary>
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// Date et heure de début de la partie (quand le 2e joueur rejoint)
+    /// </summary>
+    public DateTime? StartedAt { get; set; }
+
+    /// <summary>
+    /// Date et heure de fin de la partie
+    /// </summary>
+    public DateTime? CompletedAt { get; set; }
+
+    /// <summary>
+    /// Temps écoulé en secondes depuis le début
+    /// </summary>
+    public int ElapsedSeconds { get; set; }
+
+    /// <summary>
+    /// Nombre de coups joués
+    /// </summary>
+    public int MoveCount { get; set; }
+
+    /// <summary>
+    /// Vérifie si la partie est terminée
+    /// </summary>
+    public bool IsCompleted() => Status == TicTacToeGameStatus.Completed || 
+                                 Status == TicTacToeGameStatus.Draw || 
+                                 Status == TicTacToeGameStatus.Abandoned;
+
+    /// <summary>
+    /// Vérifie si la partie attend un deuxième joueur
+    /// </summary>
+    public bool IsWaitingForPlayer() => Status == TicTacToeGameStatus.WaitingForPlayer && GameMode == TicTacToeGameMode.Player;
+
+    /// <summary>
+    /// Vérifie si c'est une partie contre l'IA
+    /// </summary>
+    public bool IsAgainstAI() => GameMode == TicTacToeGameMode.AI;
+}
+
+/// <summary>
+/// Mode de jeu pour Tic-Tac-Toe
+/// </summary>
+public enum TicTacToeGameMode
+{
+    /// <summary>
+    /// Partie contre un autre joueur (multijoueur)
+    /// </summary>
+    Player = 1,
+
+    /// <summary>
+    /// Partie contre l'ordinateur (IA)
+    /// </summary>
+    AI = 2
+}
+
+/// <summary>
+/// Statut d'une partie de Tic-Tac-Toe
+/// </summary>
+public enum TicTacToeGameStatus
+{
+    /// <summary>
+    /// En attente d'un deuxième joueur
+    /// </summary>
+    WaitingForPlayer = 1,
+
+    /// <summary>
+    /// Partie en cours
+    /// </summary>
+    InProgress = 2,
+
+    /// <summary>
+    /// Partie terminée avec un gagnant
+    /// </summary>
+    Completed = 3,
+
+    /// <summary>
+    /// Match nul
+    /// </summary>
+    Draw = 4,
+
+    /// <summary>
+    /// Partie abandonnée
+    /// </summary>
+    Abandoned = 5
+}
+

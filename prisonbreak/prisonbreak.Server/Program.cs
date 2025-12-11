@@ -34,6 +34,7 @@ builder.Services.AddScoped<IPuzzleService, PuzzleService>();
 builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddScoped<IValidationService, ValidationService>();
 builder.Services.AddScoped<IStatsService, StatsService>();
+builder.Services.AddScoped<ITicTacToeService, TicTacToeService>();
 
 // Configuration des contrôleurs API
 builder.Services.AddControllers();
@@ -52,7 +53,7 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // Configuration CORS pour permettre au frontend Vue.js de communiquer avec l'API
-// En développement, on autorise le port par défaut de Vite (5173) et le proxy SPA
+// En développement, on autorise les ports de Vite (5173 et 5174 pour le multijoueur) et le proxy SPA
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowVueFrontend", policy =>
@@ -60,6 +61,8 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(
                 "http://localhost:5173",
                 "https://localhost:5173",
+                "http://localhost:5174",
+                "https://localhost:5174",
                 "http://localhost:5000",
                 "https://localhost:5001"
               )
@@ -74,6 +77,46 @@ builder.Services.AddCors(options =>
 // permettent à Visual Studio de lancer automatiquement le client Vue.js
 
 var app = builder.Build();
+
+// ====================================================
+// LANCEMENT DES INSTANCES FRONTEND (Mode Debug uniquement)
+// ====================================================
+if (app.Environment.IsDevelopment())
+{
+    // Lancer les instances frontend en arrière-plan après un court délai
+    // Utiliser le répertoire du projet source (où se trouve le .csproj)
+    var projectDir = Directory.GetCurrentDirectory();
+    var scriptPath = Path.Combine(projectDir, "launch-frontend-after-backend.ps1");
+    
+    if (File.Exists(scriptPath))
+    {
+        // Lancer le script en arrière-plan sans bloquer
+        Task.Run(async () =>
+        {
+            // Attendre que le serveur soit complètement démarré
+            await Task.Delay(3000);
+            
+            try
+            {
+                var processStartInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "powershell.exe",
+                    Arguments = $"-ExecutionPolicy Bypass -NoProfile -File \"{scriptPath}\"",
+                    UseShellExecute = true,
+                    CreateNoWindow = false,
+                    WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden,
+                    WorkingDirectory = projectDir
+                };
+                System.Diagnostics.Process.Start(processStartInfo);
+            }
+            catch (Exception ex)
+            {
+                var logger = app.Services.GetRequiredService<ILogger<Program>>();
+                logger.LogWarning(ex, "Impossible de lancer les instances frontend automatiquement");
+            }
+        });
+    }
+}
 
 // ====================================================
 // INITIALISATION DE LA BASE DE DONNÉES

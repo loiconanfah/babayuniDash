@@ -3,7 +3,7 @@
 
 import { defineStore } from 'pinia';
 
-export type Screen = 'home' | 'levels' | 'game' | 'leaderboard' | 'stats';
+export type Screen = 'home' | 'levels' | 'game' | 'leaderboard' | 'stats' | 'games' | 'ticTacToe';
 export type Difficulty = 'easy' | 'medium' | 'hard' | null;
 
 interface UiState {
@@ -39,6 +39,12 @@ export const useUiStore = defineStore('ui', {
     },
     goToStats() {
       this.currentScreen = 'stats';
+    },
+    goToGames() {
+      this.currentScreen = 'games';
+    },
+    goToTicTacToe() {
+      this.currentScreen = 'ticTacToe';
     },
 
     // Modale utilisateur

@@ -10,6 +10,22 @@
     <SpaProxyWorkingDirectory>$(MSBuildProjectDirectory)..\..\frontend</SpaProxyWorkingDirectory>
   </PropertyGroup>
 
+  <!-- Lance automatiquement les deux instances du frontend au démarrage en mode Debug -->
+  <!-- Utiliser un Target qui s'exécute après le build ET après le Run pour garantir le lancement -->
+  <!-- Le script attend que le serveur backend soit prêt avant de lancer les instances Vue -->
+  <Target Name="StartFrontendMulti" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug' AND '$(BuildingInsideVisualStudio)' == 'true'">
+    <Message Text="Lancement des instances frontend en arriere-plan (apres le build)..." Importance="high" />
+    <!-- Lancer le script PowerShell qui attend le serveur backend puis lance les instances Vue -->
+    <Exec Command="powershell -ExecutionPolicy Bypass -NoProfile -File &quot;$(MSBuildProjectDirectory)\launch-frontend-after-backend.ps1&quot;" ContinueOnError="true" IgnoreExitCode="true" WorkingDirectory="$(MSBuildProjectDirectory)" />
+  </Target>
+  
+  <!-- Target alternatif qui s'exécute après le Run pour les cas où on relance sans rebuild -->
+  <Target Name="StartFrontendMultiAfterRun" AfterTargets="Run" Condition="'$(Configuration)' == 'Debug' AND '$(BuildingInsideVisualStudio)' == 'true'">
+    <Message Text="Lancement des instances frontend en arriere-plan (apres le Run)..." Importance="high" />
+    <!-- Attendre un peu pour que le serveur démarre, puis lancer le script -->
+    <Exec Command="powershell -ExecutionPolicy Bypass -NoProfile -Command &quot;Start-Sleep -Seconds 2; &amp; '$(MSBuildProjectDirectory)\launch-frontend-after-backend.ps1'&quot;" ContinueOnError="true" IgnoreExitCode="true" WorkingDirectory="$(MSBuildProjectDirectory)" />
+  </Target>
+
   <ItemGroup>
     <!-- Entity Framework Core pour la gestion de la base de données -->
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />

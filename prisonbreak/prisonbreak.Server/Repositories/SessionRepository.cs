@@ -155,6 +155,23 @@ public class SessionRepository : ISessionRepository
     }
 
     /// <inheritdoc/>
+    public async Task<IEnumerable<Session>> GetActiveSessionsAsync(int? excludeSessionId = null)
+    {
+        var query = _context.Sessions
+            .Include(s => s.User)
+            .Where(s => s.IsActive && s.ExpiresAt > DateTime.UtcNow);
+
+        if (excludeSessionId.HasValue)
+        {
+            query = query.Where(s => s.Id != excludeSessionId.Value);
+        }
+
+        return await query
+            .OrderByDescending(s => s.LastActivityAt)
+            .ToListAsync();
+    }
+
+    /// <inheritdoc/>
     public async Task<int> SaveChangesAsync()
     {
         return await _context.SaveChangesAsync();

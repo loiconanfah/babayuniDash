@@ -92,6 +92,23 @@
           <div v-if="ui.currentScreen === 'stats'" class="absolute right-2 w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div>
         </button>
 
+        <!-- Jeux -->
+        <button
+          class="nav-item group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-300 ease-out"
+          :class="ui.currentScreen === 'games'
+            ? 'bg-gradient-to-r from-cyan-500 to-cyan-600 text-white shadow-lg shadow-cyan-500/30 scale-[1.02]'
+            : 'text-slate-300 hover:bg-slate-800/80 hover:text-slate-50 hover:translate-x-1'"
+          @click="ui.goToGames()"
+        >
+          <div class="nav-icon-wrapper" :class="ui.currentScreen === 'games' ? 'nav-icon-active' : ''">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M14.751 9.75l3.501 3.75m0 0l3.499-3.75M18.252 13.5H21m-2.25 0v6.75m-9-9.75H5.25A2.25 2.25 0 003 12.75v6.75A2.25 2.25 0 005.25 22h13.5A2.25 2.25 0 0021 19.5v-6.75a2.25 2.25 0 00-2.25-2.25h-4.752m-9 0H3m2.25 0h4.752M9.75 3v3m0 0v3m0-3h3m-3 0H6.75" />
+            </svg>
+          </div>
+          <span class="font-medium">Jeux</span>
+          <div v-if="ui.currentScreen === 'games'" class="absolute right-2 w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div>
+        </button>
+
       </nav>
 
       <!-- Pied de page -->
@@ -178,6 +195,8 @@ import HomeScreen from '@/components/HomeScreen.vue';
 import LevelSelectScreen from '@/components/LevelSelectScreen.vue';
 import GameScreen from '@/components/GameScreen.vue';
 import StatsScreen from '@/components/StatsScreen.vue';
+import GamesScreen from '@/components/GamesScreen.vue';
+import TicTacToeScreen from '@/components/TicTacToeScreen.vue';
 import UserRegisterModal from '@/components/UserRegisterModal.vue';
 import TutorialModal from '@/components/TutorialModal.vue';
 
@@ -240,6 +259,8 @@ const currentComponent = computed(() => {
     case 'levels': return LevelSelectScreen;
     case 'game': return GameScreen;
     case 'stats': return StatsScreen;
+    case 'games': return GamesScreen;
+    case 'ticTacToe': return TicTacToeScreen;
     case 'leaderboard': return HomeScreen; // temporaire
     default: return HomeScreen;
   }

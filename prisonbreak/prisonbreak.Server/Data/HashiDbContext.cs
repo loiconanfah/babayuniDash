@@ -55,9 +55,14 @@ namespace prisonbreak.Server.Data
         public DbSet<Island> Islands => Set<Island>();
 
         /// <summary>
-        /// Table des ponts de solution d’un puzzle (Bridge).
+        /// Table des ponts de solution d'un puzzle (Bridge).
         /// </summary>
         public DbSet<Bridge> Bridges => Set<Bridge>();
+
+        /// <summary>
+        /// Table des parties de Tic-Tac-Toe (Morpion).
+        /// </summary>
+        public DbSet<TicTacToeGame> TicTacToeGames => Set<TicTacToeGame>();
 
         /// <summary>
         /// Configuration fine du modèle : contraintes, index, relations.
@@ -73,6 +78,7 @@ namespace prisonbreak.Server.Data
             ConfigurePuzzle(modelBuilder);
             ConfigureIsland(modelBuilder);
             ConfigureBridge(modelBuilder);
+            ConfigureTicTacToeGame(modelBuilder);
         }
 
         // ============================
@@ -346,6 +352,66 @@ namespace prisonbreak.Server.Data
                   .WithMany(i => i.BridgesTo)
                   .HasForeignKey(b => b.ToIslandId)
                   .OnDelete(DeleteBehavior.Restrict);
+        }
+
+        // ============================
+        // Configuration TicTacToeGame
+        // ============================
+
+        /// <summary>
+        /// Configure la table TicTacToeGames :
+        /// - Lien obligatoire vers Session pour le joueur 1
+        /// - Lien optionnel vers Session pour le joueur 2
+        /// - Statut requis
+        /// - Index sur les sessions pour les requêtes
+        /// </summary>
+        private static void ConfigureTicTacToeGame(ModelBuilder modelBuilder)
+        {
+            var entity = modelBuilder.Entity<TicTacToeGame>();
+
+            entity.ToTable("TicTacToeGames");
+
+            entity.HasKey(g => g.Id);
+
+            // Statut de la partie
+            entity.Property(g => g.Status)
+                  .IsRequired();
+
+            // Grille sérialisée en JSON
+            entity.Property(g => g.BoardJson)
+                  .IsRequired()
+                  .HasDefaultValue("[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"]");
+
+            // Joueur actuel
+            entity.Property(g => g.CurrentPlayer)
+                  .IsRequired()
+                  .HasDefaultValue(1);
+
+            // Mode de jeu
+            entity.Property(g => g.GameMode)
+                  .IsRequired()
+                  .HasDefaultValue(TicTacToeGameMode.Player);
+
+            // Date de création
+            entity.Property(g => g.CreatedAt)
+                  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            // Index pour les requêtes
+            entity.HasIndex(g => g.Player1SessionId);
+            entity.HasIndex(g => g.Player2SessionId);
+            entity.HasIndex(g => g.Status);
+
+            // Relation TicTacToeGame -> Session (Joueur 1)
+            entity.HasOne(g => g.Player1Session)
+                  .WithMany()
+                  .HasForeignKey(g => g.Player1SessionId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            // Relation TicTacToeGame -> Session (Joueur 2)
+            entity.HasOne(g => g.Player2Session)
+                  .WithMany()
+                  .HasForeignKey(g => g.Player2SessionId)
+                  .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

@@ -12,7 +12,12 @@ import type {
   CreateGameRequest,
   DifficultyLevel,
   UserStats,
-  LeaderboardEntry
+  LeaderboardEntry,
+  TicTacToeGame,
+  CreateTicTacToeGameRequest,
+  JoinTicTacToeGameRequest,
+  PlayMoveRequest,
+  SessionDto
 } from '@/types'
 
 // URL de base de l'API
@@ -213,6 +218,107 @@ export const statsApi = {
   async getLeaderboard(limit: number = 10): Promise<LeaderboardEntry[]> {
     const response = await fetch(`${API_BASE_URL}/Stats/leaderboard?limit=${limit}`)
     return handleResponse<LeaderboardEntry[]>(response)
+  }
+}
+
+/**
+ * Service de gestion des sessions
+ */
+export const sessionsApi = {
+  /**
+   * Récupère toutes les sessions actives (utilisateurs en ligne)
+   */
+  async getActiveSessions(excludeSessionId?: number): Promise<SessionDto[]> {
+    const url = excludeSessionId 
+      ? `${API_BASE_URL}/Sessions/active?excludeSessionId=${excludeSessionId}`
+      : `${API_BASE_URL}/Sessions/active`
+    const response = await fetch(url)
+    return handleResponse<SessionDto[]>(response)
+  }
+}
+
+/**
+ * Service de gestion des parties de Tic-Tac-Toe
+ */
+export const ticTacToeApi = {
+  /**
+   * Crée une nouvelle partie de Tic-Tac-Toe
+   */
+  async create(request: CreateTicTacToeGameRequest): Promise<TicTacToeGame> {
+    const response = await fetch(`${API_BASE_URL}/TicTacToe`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(request)
+    })
+    return handleResponse<TicTacToeGame>(response)
+  },
+
+  /**
+   * Récupère une partie par son ID
+   */
+  async getById(id: number): Promise<TicTacToeGame> {
+    const response = await fetch(`${API_BASE_URL}/TicTacToe/${id}`)
+    return handleResponse<TicTacToeGame>(response)
+  },
+
+  /**
+   * Récupère les parties en attente d'un deuxième joueur
+   */
+  async getAvailableGames(): Promise<TicTacToeGame[]> {
+    const response = await fetch(`${API_BASE_URL}/TicTacToe/available`)
+    return handleResponse<TicTacToeGame[]>(response)
+  },
+
+  /**
+   * Récupère les parties où le joueur est invité
+   */
+  async getInvitations(sessionId: number): Promise<TicTacToeGame[]> {
+    const response = await fetch(`${API_BASE_URL}/TicTacToe/invitations/${sessionId}`)
+    return handleResponse<TicTacToeGame[]>(response)
+  },
+
+  /**
+   * Rejoint une partie existante
+   */
+  async joinGame(gameId: number, sessionId: number): Promise<TicTacToeGame> {
+    const response = await fetch(`${API_BASE_URL}/TicTacToe/${gameId}/join`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ gameId, sessionId })
+    })
+    return handleResponse<TicTacToeGame>(response)
+  },
+
+  /**
+   * Joue un coup dans la partie
+   */
+  async playMove(gameId: number, request: PlayMoveRequest): Promise<TicTacToeGame> {
+    const response = await fetch(`${API_BASE_URL}/TicTacToe/${gameId}/move`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(request)
+    })
+    return handleResponse<TicTacToeGame>(response)
+  },
+
+  /**
+   * Abandonne une partie
+   */
+  async abandon(gameId: number, sessionId: number): Promise<TicTacToeGame> {
+    const response = await fetch(`${API_BASE_URL}/TicTacToe/${gameId}/abandon`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ gameId, sessionId })
+    })
+    return handleResponse<TicTacToeGame>(response)
   }
 }
 
