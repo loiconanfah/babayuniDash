@@ -16,24 +16,38 @@ function Test-Port {
     return $null -ne $connection
 }
 
-# Attendre que le serveur backend soit pret (port 5000)
+# Attendre que le serveur backend soit pret (ports 5000 ou 5001)
 Write-Host "En attente du serveur backend..." -ForegroundColor Yellow
-$maxWait = 30 # secondes
+$maxWait = 60 # secondes (augmente pour permettre les migrations)
 $waited = 0
-while (-not (Test-Port -Port 5000) -and $waited -lt $maxWait) {
+$backendReady = $false
+
+while (-not $backendReady -and $waited -lt $maxWait) {
+    $port5000 = Test-Port -Port 5000
+    $port5001 = Test-Port -Port 5001
+    
+    if ($port5000 -or $port5001) {
+        $backendReady = $true
+        $portUsed = if ($port5000) { "5000" } else { "5001" }
+        "Serveur backend detecte sur le port $portUsed apres $waited secondes" | Out-File -FilePath $logFile -Append
+        Write-Host "Serveur backend pret sur le port $portUsed apres $waited secondes!" -ForegroundColor Green
+        break
+    }
+    
     Start-Sleep -Seconds 1
     $waited++
     if ($waited % 5 -eq 0) {
         Write-Host "  En attente... ($waited/$maxWait secondes)" -ForegroundColor Gray
+        "En attente du serveur backend... $waited/$maxWait secondes" | Out-File -FilePath $logFile -Append
     }
 }
 
-if (Test-Port -Port 5000) {
-    "Serveur backend detecte sur le port 5000 apres $waited secondes" | Out-File -FilePath $logFile -Append
-    Write-Host "Serveur backend pret apres $waited secondes!" -ForegroundColor Green
-} else {
+if (-not $backendReady) {
     "ATTENTION: Le serveur backend n'est pas pret apres $maxWait secondes" | Out-File -FilePath $logFile -Append
     Write-Host "ATTENTION: Le serveur backend n'est pas pret apres $maxWait secondes" -ForegroundColor Yellow
+    Write-Host "Verification des ports 5000 et 5001..." -ForegroundColor Yellow
+    Write-Host "  Port 5000: $(if (Test-Port -Port 5000) { 'OUI' } else { 'NON' })" -ForegroundColor Gray
+    Write-Host "  Port 5001: $(if (Test-Port -Port 5001) { 'OUI' } else { 'NON' })" -ForegroundColor Gray
     Write-Host "Lancement des instances frontend quand meme..." -ForegroundColor Yellow
 }
 

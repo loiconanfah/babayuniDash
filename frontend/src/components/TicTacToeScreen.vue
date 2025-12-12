@@ -201,12 +201,12 @@
         </div>
 
         <!-- Message pour les invitations -->
-        <div v-if="notificationsStore.unreadInvitations.filter(i => i.invitation.gameType === 'TicTacToe').length > 0 && !currentGame" class="mb-6 p-4 rounded-xl bg-gradient-to-r from-green-900/30 to-blue-900/30 border border-green-500/30">
+        <div v-if="notificationsStore.unreadInvitations.filter(i => i.invitation.gameType === 'TicTacToe').length > 0 && !currentGame" class="mb-6 p-4 rounded-xl bg-gradient-to-r from-indigo-900/30 to-purple-900/30 border border-indigo-500/30">
           <div class="flex items-center gap-3">
-            <div class="text-2xl">📬</div>
+            <IconNotification class="h-6 w-6 text-indigo-400 flex-shrink-0" />
             <div class="flex-1">
-              <p class="text-sm font-medium text-green-300">Vous avez {{ notificationsStore.unreadInvitations.filter(i => i.invitation.gameType === 'TicTacToe').length }} invitation(s) en attente</p>
-              <p class="text-xs text-green-400 mt-1">Consultez vos notifications pour les accepter</p>
+              <p class="text-sm font-medium text-indigo-300">Tu as {{ notificationsStore.unreadInvitations.filter(i => i.invitation.gameType === 'TicTacToe').length }} invitation(s) en attente</p>
+              <p class="text-xs text-indigo-400 mt-1">Consulte tes notifications pour les accepter</p>
             </div>
           </div>
         </div>
@@ -265,7 +265,10 @@
       <div class="relative w-full max-w-md rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
         <div class="p-4 sm:p-6 lg:p-8">
           <div class="flex items-center justify-between mb-6">
-            <h3 class="text-2xl font-bold text-slate-50">💎 Miser des coins</h3>
+            <div class="flex items-center gap-3">
+              <IconDiamond class="h-6 w-6 text-indigo-400" />
+              <h3 class="text-2xl font-bold text-slate-50">Miser des coins</h3>
+            </div>
             <button
               @click="closeWagerModal"
               class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition-all flex items-center justify-center"
@@ -278,11 +281,11 @@
 
           <div class="mb-6">
             <p class="text-slate-300 mb-4">
-              {{ pendingAction?.type === 'join' ? 'Rejoindre cette partie avec une mise' : 'Créer une partie avec une mise' }}
+              {{ pendingAction?.type === 'join' ? 'Rejoins cette partie en misant' : 'Crée une partie en misant' }}
             </p>
-            <div v-if="pendingAction?.type === 'join' && requiredWager > 0" class="mb-4 p-3 rounded-xl bg-blue-500/20 border border-blue-500/30">
-              <p class="text-sm text-blue-300">Le joueur 1 a misé <span class="font-bold">{{ requiredWager }} coins</span></p>
-              <p class="text-xs text-blue-400 mt-1">Vous devez miser exactement la même somme pour rejoindre</p>
+            <div v-if="pendingAction?.type === 'join' && requiredWager > 0" class="mb-4 p-3 rounded-xl bg-indigo-500/20 border border-indigo-500/30">
+              <p class="text-sm text-indigo-300">Le joueur 1 a misé <span class="font-bold">{{ requiredWager }} coins</span></p>
+              <p class="text-xs text-indigo-400 mt-1">Tu dois miser exactement la même somme pour rejoindre</p>
             </div>
             
             <label class="block text-sm font-medium text-slate-300 mb-2">
@@ -322,7 +325,7 @@
             <button
               @click="confirmWager"
               :disabled="wagerAmount < 0 || wagerAmount > userStore.coins"
-              class="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 text-slate-900 text-sm sm:text-base font-bold hover:from-yellow-400 hover:to-orange-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              class="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm sm:text-base font-bold hover:from-indigo-500 hover:to-purple-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
@@ -399,19 +402,6 @@ onMounted(async () => {
     if (currentGame.value.gameMode === GameMode.Player) {
       startRefreshInterval();
     }
-  }
-  
-  // Vérifier s'il y a une invitation en attente depuis les notifications
-  const pendingInvitation = notificationsStore.unreadInvitations.find(
-    i => i.invitation.gameType === 'TicTacToe'
-  );
-  if (pendingInvitation && !currentGame.value) {
-    // Ouvrir automatiquement le modal de mise pour cette invitation
-    openWagerModal(
-      { type: 'join', gameId: pendingInvitation.invitation.gameId },
-      pendingInvitation.invitation.wager
-    );
-    notificationsStore.markAsRead(pendingInvitation.id);
   }
   
   // Vérifier s'il y a une invitation en attente depuis les notifications

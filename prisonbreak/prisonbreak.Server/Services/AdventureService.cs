@@ -394,7 +394,7 @@ public class AdventureService : IAdventureService
         return game;
     }
 
-    public async Task<PuzzleInfoDto> GetPuzzleInfoAsync(int puzzleId)
+    public Task<PuzzleInfoDto> GetPuzzleInfoAsync(int puzzleId)
     {
         if (!Puzzles.ContainsKey(puzzleId))
         {
@@ -402,7 +402,7 @@ public class AdventureService : IAdventureService
         }
 
         var puzzle = Puzzles[puzzleId];
-        return new PuzzleInfoDto
+        var result = new PuzzleInfoDto
         {
             Id = puzzleId,
             Question = puzzle.Question,
@@ -410,6 +410,7 @@ public class AdventureService : IAdventureService
             Hints = puzzle.Hints,
             Points = puzzle.Points
         };
+        return Task.FromResult(result);
     }
 
     public AdventureGameDto ConvertToDto(AdventureGame game)

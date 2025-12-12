@@ -84,44 +84,11 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // ====================================================
-// LANCEMENT DES INSTANCES FRONTEND (Mode Debug uniquement)
+// NOTE: Le frontend est lancé automatiquement par le SPA Proxy de Visual Studio
 // ====================================================
-if (app.Environment.IsDevelopment())
-{
-    // Lancer les instances frontend en arrière-plan après un court délai
-    // Utiliser le répertoire du projet source (où se trouve le .csproj)
-    var projectDir = Directory.GetCurrentDirectory();
-    var scriptPath = Path.Combine(projectDir, "launch-frontend-after-backend.ps1");
-    
-    if (File.Exists(scriptPath))
-    {
-        // Lancer le script en arrière-plan sans bloquer
-        Task.Run(async () =>
-        {
-            // Attendre que le serveur soit complètement démarré
-            await Task.Delay(3000);
-            
-            try
-            {
-                var processStartInfo = new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = "powershell.exe",
-                    Arguments = $"-ExecutionPolicy Bypass -NoProfile -File \"{scriptPath}\"",
-                    UseShellExecute = true,
-                    CreateNoWindow = false,
-                    WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden,
-                    WorkingDirectory = projectDir
-                };
-                System.Diagnostics.Process.Start(processStartInfo);
-            }
-            catch (Exception ex)
-            {
-                var logger = app.Services.GetRequiredService<ILogger<Program>>();
-                logger.LogWarning(ex, "Impossible de lancer les instances frontend automatiquement");
-            }
-        });
-    }
-}
+// Le SPA Proxy (Microsoft.AspNetCore.SpaProxy) lance automatiquement
+// le frontend via la configuration dans .csproj et launchSettings.json
+// Pas besoin de script PowerShell supplémentaire
 
 // ====================================================
 // INITIALISATION DE LA BASE DE DONNÉES
@@ -153,8 +120,8 @@ using (var scope = app.Services.CreateScope())
     }
     catch (Exception ex)
     {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Erreur lors de l'application des migrations de base de données");
+        var errorLogger = services.GetRequiredService<ILogger<Program>>();
+        errorLogger.LogError(ex, "Erreur lors de l'application des migrations de base de données");
     }
 }
 
@@ -201,5 +168,14 @@ if (!app.Environment.IsDevelopment())
 {
     app.MapFallbackToFile("/index.html");
 }
+
+// Log pour indiquer que le serveur est prêt
+var startupLogger = app.Services.GetRequiredService<ILogger<Program>>();
+startupLogger.LogInformation("========================================");
+startupLogger.LogInformation("Serveur backend demarre sur:");
+startupLogger.LogInformation("  HTTP:  http://localhost:5000");
+startupLogger.LogInformation("  HTTPS: https://localhost:5001");
+startupLogger.LogInformation("  Swagger: https://localhost:5001/swagger");
+startupLogger.LogInformation("========================================");
 
 app.Run();

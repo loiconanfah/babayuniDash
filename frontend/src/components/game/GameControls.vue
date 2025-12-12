@@ -7,6 +7,11 @@
 import { computed } from 'vue'
 import { useGameStore } from '@/stores/game'
 import { useUiStore } from '@/stores/ui'
+import IconCheck from '@/components/icons/IconCheck.vue'
+import IconUnlock from '@/components/icons/IconUnlock.vue'
+import IconRefresh from '@/components/icons/IconRefresh.vue'
+import IconHelp from '@/components/icons/IconHelp.vue'
+import IconClose from '@/components/icons/IconClose.vue'
 
 // ====================================================
 // STORE
@@ -128,24 +133,29 @@ function handleHelp() {
 
     <!-- Boutons d'action -->
     <div class="game-controls__actions">
-      <button class="btn btn--primary" @click="handleValidate">
-        ✓ Valider la solution
+      <button class="btn btn--primary flex items-center gap-2" @click="handleValidate">
+        <IconCheck class="h-4 w-4" />
+        Valider la solution
       </button>
       
-      <button class="btn btn--solve" @click="handleSolve" :disabled="gameStore.isLoading">
-        🔓 Résoudre
+      <button class="btn btn--solve flex items-center gap-2" @click="handleSolve" :disabled="gameStore.isLoading">
+        <IconUnlock class="h-4 w-4" />
+        Résoudre
       </button>
       
-      <button class="btn btn--secondary" @click="handleReset">
-        ↺ Réinitialiser
+      <button class="btn btn--secondary flex items-center gap-2" @click="handleReset">
+        <IconRefresh class="h-4 w-4" />
+        Réinitialiser
       </button>
       
-      <button class="btn btn--help" @click="handleHelp" title="Aide et tutoriel">
-        ❓ Aide
+      <button class="btn btn--help flex items-center gap-2" @click="handleHelp" title="Aide et tutoriel">
+        <IconHelp class="h-4 w-4" />
+        Aide
       </button>
       
-      <button class="btn btn--danger" @click="handleAbandon">
-        × Abandonner
+      <button class="btn btn--danger flex items-center gap-2" @click="handleAbandon">
+        <IconClose class="h-4 w-4" />
+        Abandonner
       </button>
     </div>
 

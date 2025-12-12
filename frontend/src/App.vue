@@ -1,5 +1,5 @@
 <template>
-  <div class="h-screen w-full bg-slate-950 text-slate-50 flex overflow-hidden">
+  <div class="h-screen w-full bg-zinc-950 text-zinc-50 flex overflow-hidden">
     <!-- Overlay pour mobile -->
     <div
       v-if="ui.isMobileMenuOpen"
@@ -10,8 +10,8 @@
     <!-- Sidebar verticale - Fixe sur desktop, drawer sur mobile -->
     <aside
       :class="[
-        'bg-slate-900 border-r border-slate-800 flex flex-col py-6 px-4 lg:px-6 overflow-y-auto transition-transform duration-300 ease-in-out z-50',
-        'fixed lg:static inset-y-0 left-0',
+        'bg-zinc-900/95 border-r border-zinc-800/50 flex flex-col py-6 px-4 lg:px-6 overflow-y-auto transition-transform duration-300 ease-in-out backdrop-blur-xl',
+        'fixed lg:static inset-y-0 left-0 z-40',
         ui.isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
         'w-64 lg:w-56 xl:w-64'
       ]"
@@ -19,15 +19,15 @@
       <!-- Logo / icône prisonnier -->
       <div class="flex items-center gap-3 mb-8 group cursor-pointer" @click="ui.goToHome()">
         <div
-          class="h-12 w-12 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-orange-500/30 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-xl group-hover:shadow-orange-500/40"
+          class="h-12 w-12 rounded-2xl bg-gradient-to-br from-cyan-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-cyan-500/40 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-xl group-hover:shadow-cyan-500/60"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
           </svg>
         </div>
         <div class="flex flex-col">
-          <span class="text-sm font-semibold text-slate-50 group-hover:text-orange-400 transition-colors duration-300">Prison Break</span>
-          <span class="text-[11px] text-slate-400 group-hover:text-slate-300 transition-colors duration-300">Évasion de cellule</span>
+          <span class="text-sm font-semibold text-zinc-50 group-hover:text-cyan-400 transition-colors duration-300">Prison Break</span>
+          <span class="text-[11px] text-zinc-400 group-hover:text-zinc-300 transition-colors duration-300">Évasion de cellule</span>
         </div>
       </div>
 
@@ -40,8 +40,8 @@
         <button
           class="nav-item group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-300 ease-out"
           :class="ui.currentScreen === 'home'
-            ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30 scale-[1.02]'
-            : 'text-slate-300 hover:bg-slate-800/80 hover:text-slate-50 hover:translate-x-1'"
+            ? 'bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 text-white shadow-lg shadow-cyan-500/40 scale-[1.02]'
+            : 'text-zinc-300 hover:bg-zinc-800/80 hover:text-zinc-50 hover:translate-x-1'"
           @click="ui.goToHome(); ui.closeMobileMenu()"
         >
           <div class="nav-icon-wrapper" :class="ui.currentScreen === 'home' ? 'nav-icon-active' : ''">
@@ -57,33 +57,8 @@
         <button
           class="nav-item group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-300 ease-out"
           :class="ui.currentScreen === 'levels'
-            ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 scale-[1.02]'
-            : 'text-slate-300 hover:bg-slate-800/80 hover:text-slate-50 hover:translate-x-1'"
-          @click="ui.goToLevels()"
-        >
-          <div class="nav-icon-wrapper" :class="ui.currentScreen === 'levels' ? 'nav-icon-active' : ''">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-            </svg>
-          </div>
-          <span class="font-medium hidden sm:inline">Accueil</span>
-          <div v-if="ui.currentScreen === 'home'" class="absolute right-2 w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div>
-        </button>
-        
-        <!-- Bouton pour fermer le menu sur mobile -->
-        <button
-          @click="ui.closeMobileMenu()"
-          class="lg:hidden mb-4 px-3 py-2 rounded-xl bg-slate-800/50 text-slate-300 hover:bg-slate-700 transition-colors text-sm font-medium"
-        >
-          Fermer
-        </button>
-
-        <!-- Niveaux -->
-        <button
-          class="nav-item group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-300 ease-out"
-          :class="ui.currentScreen === 'levels'
-            ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 scale-[1.02]'
-            : 'text-slate-300 hover:bg-slate-800/80 hover:text-slate-50 hover:translate-x-1'"
+            ? 'bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 text-white shadow-lg shadow-cyan-500/40 scale-[1.02]'
+            : 'text-zinc-300 hover:bg-zinc-800/80 hover:text-zinc-50 hover:translate-x-1'"
           @click="ui.goToLevels(); ui.closeMobileMenu()"
         >
           <div class="nav-icon-wrapper" :class="ui.currentScreen === 'levels' ? 'nav-icon-active' : ''">
@@ -99,8 +74,8 @@
         <button
           class="nav-item group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-300 ease-out"
           :class="ui.currentScreen === 'leaderboard'
-            ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/30 scale-[1.02]'
-            : 'text-slate-300 hover:bg-slate-800/80 hover:text-slate-50 hover:translate-x-1'"
+            ? 'bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 text-white shadow-lg shadow-cyan-500/40 scale-[1.02]'
+            : 'text-zinc-300 hover:bg-zinc-800/80 hover:text-zinc-50 hover:translate-x-1'"
           @click="ui.goToStats(); ui.closeMobileMenu()"
         >
           <div class="nav-icon-wrapper" :class="ui.currentScreen === 'leaderboard' ? 'nav-icon-active' : ''">
@@ -116,8 +91,8 @@
         <button
           class="nav-item group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-300 ease-out"
           :class="ui.currentScreen === 'stats'
-            ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30 scale-[1.02]'
-            : 'text-slate-300 hover:bg-slate-800/80 hover:text-slate-50 hover:translate-x-1'"
+            ? 'bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 text-white shadow-lg shadow-cyan-500/40 scale-[1.02]'
+            : 'text-zinc-300 hover:bg-zinc-800/80 hover:text-zinc-50 hover:translate-x-1'"
           @click="ui.goToStats(); ui.closeMobileMenu()"
         >
           <div class="nav-icon-wrapper" :class="ui.currentScreen === 'stats' ? 'nav-icon-active' : ''">
@@ -134,7 +109,7 @@
           class="nav-item group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-300 ease-out"
           :class="ui.currentScreen === 'games'
             ? 'bg-gradient-to-r from-cyan-500 to-cyan-600 text-white shadow-lg shadow-cyan-500/30 scale-[1.02]'
-            : 'text-slate-300 hover:bg-slate-800/80 hover:text-slate-50 hover:translate-x-1'"
+            : 'text-zinc-300 hover:bg-zinc-800/80 hover:text-zinc-50 hover:translate-x-1'"
           @click="ui.goToGames(); ui.closeMobileMenu()"
         >
           <div class="nav-icon-wrapper" :class="ui.currentScreen === 'games' ? 'nav-icon-active' : ''">
@@ -150,8 +125,8 @@
         <button
           class="nav-item group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-300 ease-out"
           :class="ui.currentScreen === 'shop'
-            ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-lg shadow-yellow-500/30 scale-[1.02]'
-            : 'text-slate-300 hover:bg-slate-800/80 hover:text-slate-50 hover:translate-x-1'"
+            ? 'bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 text-white shadow-lg shadow-cyan-500/40 scale-[1.02]'
+            : 'text-zinc-300 hover:bg-zinc-800/80 hover:text-zinc-50 hover:translate-x-1'"
           @click="ui.goToShop(); ui.closeMobileMenu()"
         >
           <div class="nav-icon-wrapper" :class="ui.currentScreen === 'shop' ? 'nav-icon-active' : ''">
@@ -167,8 +142,8 @@
         <button
           class="nav-item group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-300 ease-out"
           :class="ui.currentScreen === 'collection'
-            ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/30 scale-[1.02]'
-            : 'text-slate-300 hover:bg-slate-800/80 hover:text-slate-50 hover:translate-x-1'"
+            ? 'bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 text-white shadow-lg shadow-cyan-500/40 scale-[1.02]'
+            : 'text-zinc-300 hover:bg-zinc-800/80 hover:text-zinc-50 hover:translate-x-1'"
           @click="ui.goToCollection(); ui.closeMobileMenu()"
         >
           <div class="nav-icon-wrapper" :class="ui.currentScreen === 'collection' ? 'nav-icon-active' : ''">
@@ -184,8 +159,8 @@
         <button
           class="nav-item group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-300 ease-out"
           :class="ui.currentScreen === 'matches'
-            ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/30 scale-[1.02]'
-            : 'text-slate-300 hover:bg-slate-800/80 hover:text-slate-50 hover:translate-x-1'"
+            ? 'bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 text-white shadow-lg shadow-cyan-500/40 scale-[1.02]'
+            : 'text-zinc-300 hover:bg-zinc-800/80 hover:text-zinc-50 hover:translate-x-1'"
           @click="ui.goToMatches(); ui.closeMobileMenu()"
         >
           <div class="nav-icon-wrapper" :class="ui.currentScreen === 'matches' ? 'nav-icon-active' : ''">
@@ -202,8 +177,8 @@
           v-if="userStore.isLoggedIn"
           class="nav-item group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-300 ease-out"
           :class="ui.currentScreen === 'profile'
-            ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-lg shadow-purple-500/30 scale-[1.02]'
-            : 'text-slate-300 hover:bg-slate-800/80 hover:text-slate-50 hover:translate-x-1'"
+            ? 'bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 text-white shadow-lg shadow-cyan-500/40 scale-[1.02]'
+            : 'text-zinc-300 hover:bg-zinc-800/80 hover:text-zinc-50 hover:translate-x-1'"
           @click="ui.goToProfile(); ui.closeMobileMenu()"
         >
           <div class="nav-icon-wrapper" :class="ui.currentScreen === 'profile' ? 'nav-icon-active' : ''">
@@ -218,8 +193,8 @@
       </nav>
 
       <!-- Section Récemment joué -->
-      <div class="mt-auto pt-6 border-t border-slate-800/50">
-        <h3 class="text-xs uppercase tracking-wider text-slate-400 font-semibold mb-3 px-3">
+      <div class="mt-auto pt-6 border-t border-zinc-800/50">
+        <h3 class="text-xs uppercase tracking-wider text-zinc-400 font-semibold mb-3 px-3">
           Récemment joué
         </h3>
         <div class="space-y-2">
@@ -227,18 +202,19 @@
             v-for="game in recentlyPlayedGames"
             :key="game.id"
             @click="navigateToGame(game.type)"
-            class="group flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-slate-800/60 transition-all duration-200 cursor-pointer"
+            class="group flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-zinc-800/60 transition-all duration-200 cursor-pointer"
           >
-            <div class="h-10 w-10 rounded-lg bg-gradient-to-br from-orange-500/20 to-slate-800 flex items-center justify-center text-xl">
-              {{ game.icon }}
+              <div class="h-10 w-10 rounded-lg bg-gradient-to-br from-cyan-500/20 to-zinc-800 flex items-center justify-center">
+              <IconBridge v-if="game.name === 'Hashi'" class="h-6 w-6 text-cyan-400" />
+              <span v-else class="text-xl">{{ game.icon }}</span>
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-slate-200 truncate">{{ game.name }}</p>
+              <p class="text-sm font-medium text-zinc-200 truncate">{{ game.name }}</p>
               <div class="flex items-center gap-1 mt-0.5">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-cyan-400" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>
-                <span class="text-[10px] text-slate-400">{{ game.rating }}</span>
+                <span class="text-[10px] text-zinc-400">{{ game.rating }}</span>
               </div>
             </div>
           </div>
@@ -246,7 +222,7 @@
       </div>
 
       <!-- Pied de page -->
-      <div class="mt-6 text-[11px] text-slate-500">
+      <div class="mt-6 text-[11px] text-zinc-500">
         <p>Session Hashi Prison Break</p>
       </div>
     </aside>
@@ -257,13 +233,13 @@
     <div class="flex-1 flex flex-col overflow-hidden">
 
       <!-- Header - Fixe -->
-      <header class="h-16 border-b border-slate-800/50 bg-gradient-to-r from-slate-950/95 via-slate-900/95 to-slate-950/95 backdrop-blur-md px-3 sm:px-4 lg:px-8 flex items-center justify-between shadow-lg flex-shrink-0">
+      <header class="h-16 border-b border-zinc-800/50 bg-gradient-to-r from-zinc-950/98 via-zinc-900/95 to-zinc-950/98 backdrop-blur-xl px-3 sm:px-4 lg:px-8 flex items-center justify-between shadow-2xl flex-shrink-0 z-50 relative">
         <!-- Bouton menu hamburger pour mobile -->
         <button
           @click="ui.toggleMobileMenu()"
-          class="lg:hidden p-2 rounded-lg hover:bg-slate-800/60 transition-colors duration-200 mr-2"
+          class="lg:hidden p-2 rounded-xl hover:bg-zinc-800/60 transition-colors duration-200 mr-2"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
@@ -272,36 +248,36 @@
         <div class="flex-1 max-w-2xl mx-2 sm:mx-4 hidden md:block">
           <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
             <input
               type="text"
               placeholder="Rechercher des jeux..."
-              class="w-full pl-12 pr-4 py-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all duration-200"
+              class="w-full pl-12 pr-4 py-2.5 rounded-xl bg-zinc-800/80 border border-zinc-700/50 text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-200 backdrop-blur-sm"
             />
           </div>
         </div>
 
         <!-- Status et actions -->
         <div class="flex items-center gap-2 sm:gap-4">
-          <div class="flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-lg bg-slate-800/40 border border-slate-700/30">
-            <div class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-lg shadow-emerald-500/50"></div>
-            <span class="text-xs text-slate-300 font-medium hidden xl:inline">En ligne</span>
+          <div class="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-zinc-800/60 border border-zinc-700/50 backdrop-blur-sm">
+            <div class="h-2.5 w-2.5 rounded-full bg-gradient-to-r from-cyan-400 to-purple-500 animate-pulse shadow-lg shadow-cyan-500/50"></div>
+            <span class="text-xs text-zinc-200 font-medium hidden xl:inline">En ligne</span>
           </div>
           <!-- Notifications -->
-          <div class="relative">
+          <div class="relative z-[60]">
             <button 
               @click="notificationsStore.toggleNotificationsPanel()"
-              class="relative p-2 rounded-lg hover:bg-slate-800/60 transition-colors duration-200 group"
+              class="relative p-2.5 rounded-xl hover:bg-zinc-800/60 transition-all duration-200 group border border-transparent hover:border-cyan-500/30"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400 group-hover:text-orange-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-zinc-300 group-hover:text-cyan-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
               <span 
                 v-if="notificationsStore.unreadCount > 0"
-                class="absolute top-1 right-1 h-5 w-5 bg-orange-500 rounded-full border-2 border-slate-900 flex items-center justify-center text-[10px] font-bold text-white"
+                class="absolute -top-1 -right-1 h-5 w-5 bg-gradient-to-r from-cyan-500 to-pink-500 rounded-full border-2 border-zinc-900 flex items-center justify-center text-[10px] font-bold text-white shadow-lg shadow-cyan-500/50"
               >
                 {{ notificationsStore.unreadCount > 9 ? '9+' : notificationsStore.unreadCount }}
               </span>
@@ -311,13 +287,13 @@
             <div
               v-if="notificationsStore.showNotificationsPanel"
               @click.stop
-              class="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-96 max-w-[calc(100vw-2rem)] sm:max-w-none bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-slate-700/50 overflow-hidden z-50 max-h-[calc(100vh-6rem)] flex flex-col"
+              class="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-96 max-w-[calc(100vw-2rem)] sm:max-w-none bg-gradient-to-br from-zinc-800 to-zinc-900 rounded-2xl shadow-2xl border border-zinc-700/50 overflow-hidden z-[70] max-h-[calc(100vh-6rem)] flex flex-col backdrop-blur-xl"
             >
-              <div class="px-5 py-4 border-b border-slate-700/50 bg-gradient-to-r from-orange-500/10 to-transparent flex items-center justify-between">
-                <h3 class="text-lg font-bold text-slate-50">Notifications</h3>
+              <div class="px-5 py-4 border-b border-zinc-700/50 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 flex items-center justify-between">
+                <h3 class="text-lg font-bold text-zinc-50">Notifications</h3>
                 <button
                   @click="notificationsStore.markAllAsRead()"
-                  class="text-xs text-orange-400 hover:text-orange-300 transition-colors"
+                  class="text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
                   v-if="notificationsStore.unreadCount > 0"
                 >
                   Tout marquer comme lu
@@ -325,28 +301,28 @@
               </div>
               
               <div class="overflow-y-auto flex-1">
-                <div v-if="notificationsStore.notifications.length === 0" class="px-5 py-8 text-center text-slate-400">
+                <div v-if="notificationsStore.notifications.length === 0" class="px-5 py-8 text-center text-zinc-400">
                   <p class="text-sm">Aucune notification</p>
                 </div>
-                <div v-else class="divide-y divide-slate-700/50">
+                <div v-else class="divide-y divide-zinc-700/50">
                   <div
                     v-for="notification in notificationsStore.notifications"
                     :key="notification.id"
                     @click="handleNotificationClick(notification)"
-                    class="px-5 py-4 hover:bg-slate-700/30 transition-colors cursor-pointer"
-                    :class="{ 'bg-slate-700/20': !notification.read }"
+                    class="px-5 py-4 hover:bg-zinc-700/30 transition-colors cursor-pointer"
+                    :class="{ 'bg-zinc-700/20': !notification.read }"
                   >
                     <div class="flex items-start gap-3">
                       <div class="flex-1">
-                        <p class="text-sm font-semibold text-slate-50 mb-1">{{ notification.title }}</p>
-                        <p class="text-xs text-slate-300">{{ notification.message }}</p>
-                        <p class="text-[10px] text-slate-500 mt-1">
+                        <p class="text-sm font-semibold text-zinc-50 mb-1">{{ notification.title }}</p>
+                        <p class="text-xs text-zinc-300">{{ notification.message }}</p>
+                        <p class="text-[10px] text-zinc-500 mt-1">
                           {{ formatTime(notification.createdAt) }}
                         </p>
                       </div>
                       <button
                         @click.stop="notificationsStore.removeNotification(notification.id)"
-                        class="text-slate-500 hover:text-red-400 transition-colors"
+                        class="text-zinc-500 hover:text-red-400 transition-colors"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -360,16 +336,16 @@
           </div>
 
           <!-- Menu utilisateur si connecté -->
-          <div v-if="userStore.isLoggedIn" class="relative">
-            <div class="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2 rounded-xl hover:bg-slate-800/60 transition-all duration-200 cursor-pointer border border-slate-700/30 hover:border-orange-500/30" @click="toggleUserMenu">
-              <div class="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 flex items-center justify-center text-white font-bold text-xs sm:text-sm shadow-lg shadow-orange-500/30 ring-2 ring-slate-800">
+          <div v-if="userStore.isLoggedIn" class="relative z-[60]">
+            <div class="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2 rounded-xl hover:bg-zinc-800/60 transition-all duration-200 cursor-pointer border border-zinc-700/30 hover:border-cyan-500/30" @click="toggleUserMenu">
+              <div class="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gradient-to-br from-cyan-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xs sm:text-sm shadow-lg shadow-cyan-500/40 ring-2 ring-zinc-800">
                 {{ userStore.user?.name?.charAt(0).toUpperCase() || 'U' }}
               </div>
               <div class="hidden md:flex flex-col items-start">
-                <span class="text-xs sm:text-sm text-slate-100 font-semibold leading-tight truncate max-w-[120px]">{{ userStore.user?.name }}</span>
+                <span class="text-xs sm:text-sm text-zinc-100 font-semibold leading-tight truncate max-w-[120px]">{{ userStore.user?.name }}</span>
                 <div class="flex items-center gap-2">
-                  <span class="text-[10px] sm:text-xs text-orange-400 font-medium">Premium</span>
-                  <span class="text-[10px] sm:text-xs text-yellow-400 font-bold flex items-center gap-1">
+                  <span class="text-[10px] sm:text-xs text-cyan-400 font-medium">Premium</span>
+                  <span class="text-[10px] sm:text-xs text-cyan-400 font-bold flex items-center gap-1">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
                       <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd" />
@@ -378,26 +354,26 @@
                   </span>
                 </div>
               </div>
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400 transition-transform duration-200 hidden md:block" :class="{ 'rotate-180': isUserMenuOpen }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-zinc-400 transition-transform duration-200 hidden md:block" :class="{ 'rotate-180': isUserMenuOpen }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
               </svg>
             </div>
             
             <!-- Menu déroulant amélioré -->
-            <div v-if="isUserMenuOpen" class="absolute right-0 mt-2 w-[calc(100vw-4rem)] sm:w-72 max-w-[calc(100vw-4rem)] sm:max-w-none bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-slate-700/50 overflow-hidden z-50 animate-fadeIn backdrop-blur-xl">
-              <div class="px-5 py-4 border-b border-slate-700/50 bg-gradient-to-r from-orange-500/10 to-transparent">
-                <p class="text-sm font-bold text-slate-50">{{ userStore.user?.name }}</p>
-                <p class="text-xs text-slate-400 mt-1">{{ userStore.user?.email }}</p>
+            <div v-if="isUserMenuOpen" class="absolute right-0 mt-2 w-[calc(100vw-4rem)] sm:w-72 max-w-[calc(100vw-4rem)] sm:max-w-none bg-gradient-to-br from-zinc-800 to-zinc-900 rounded-2xl shadow-2xl border border-zinc-700/50 overflow-hidden z-[70] animate-fadeIn backdrop-blur-xl">
+              <div class="px-5 py-4 border-b border-zinc-700/50 bg-gradient-to-r from-cyan-500/10 to-purple-500/10">
+                <p class="text-sm font-bold text-zinc-50">{{ userStore.user?.name }}</p>
+                <p class="text-xs text-zinc-400 mt-1">{{ userStore.user?.email }}</p>
                 <div class="mt-2 flex items-center gap-2">
-                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-orange-500 to-orange-600 text-white">PREMIUM</span>
-                  <span class="text-xs text-slate-500">Membre actif</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-cyan-500/30">PREMIUM</span>
+                  <span class="text-xs text-zinc-500">Membre actif</span>
                 </div>
               </div>
               
               <div class="py-2">
                 <button
                   @click="ui.goToProfile(); isUserMenuOpen = false"
-                  class="w-full flex items-center gap-3 px-5 py-3 text-sm text-slate-300 hover:bg-slate-700/50 hover:text-purple-400 transition-all duration-200 group"
+                  class="w-full flex items-center gap-3 px-5 py-3 text-sm text-zinc-300 hover:bg-zinc-700/50 hover:text-cyan-400 transition-all duration-200 group"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -406,7 +382,7 @@
                 </button>
                 <button
                   @click="ui.goToStats()"
-                  class="w-full flex items-center gap-3 px-5 py-3 text-sm text-slate-300 hover:bg-slate-700/50 hover:text-orange-400 transition-all duration-200 group"
+                  class="w-full flex items-center gap-3 px-5 py-3 text-sm text-zinc-300 hover:bg-zinc-700/50 hover:text-cyan-400 transition-all duration-200 group"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -427,8 +403,8 @@
           </div>
           
           <!-- Bouton paramètres si non connecté -->
-          <button v-else class="p-2 rounded-lg hover:bg-slate-800/60 transition-colors duration-200 group" @click="ui.openUserModal">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400 group-hover:text-slate-200 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <button v-else class="p-2 rounded-lg hover:bg-zinc-800/60 transition-colors duration-200 group" @click="ui.openUserModal">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-zinc-400 group-hover:text-zinc-200 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
@@ -437,7 +413,7 @@
       </header>
 
       <!-- Main - Scrollable -->
-      <main class="flex-1 overflow-y-auto overflow-x-hidden">
+      <main class="flex-1 overflow-y-auto overflow-x-hidden relative z-10">
         <transition name="fade" mode="out-in">
           <component :is="currentComponent" :key="ui.currentScreen" />
         </transition>
@@ -473,6 +449,8 @@ import MatchesScreen from '@/components/MatchesScreen.vue';
 import ProfileScreen from '@/components/ProfileScreen.vue';
 import UserRegisterModal from '@/components/UserRegisterModal.vue';
 import TutorialModal from '@/components/TutorialModal.vue';
+import IconNotification from '@/components/icons/IconNotification.vue';
+import IconBridge from '@/components/icons/IconBridge.vue';
 
 const ui = useUiStore();
 const userStore = useUserStore();
