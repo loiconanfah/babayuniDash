@@ -49,6 +49,12 @@ namespace prisonbreak.Server.Services
             }
         }
 
+        public async Task<List<UserDto>> SearchUsersByEmailAsync(string emailQuery, int limit = 10)
+        {
+            var users = await _userRepository.SearchByEmailAsync(emailQuery, limit);
+            return users.Select(u => MapToDto(u, 0)).ToList();
+        }
+
         /// <summary>
         /// Mappe un modèle User vers un UserDto complet.
         /// </summary>

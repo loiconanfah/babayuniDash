@@ -457,23 +457,110 @@
           <div class="absolute inset-0 bg-gradient-to-r from-slate-700 to-slate-800 opacity-0 group-hover:opacity-100 transition-opacity"></div>
         </button>
       </section>
+
+      <!-- Section Amis et Aperçu Communauté -->
+      <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10 animate-slide-up" style="animation-delay: 0.4s">
+        <!-- Liste d'amis -->
+        <div class="rounded-3xl bg-gradient-to-br from-zinc-900/90 to-zinc-800/90 border border-zinc-700/50 shadow-2xl p-6 backdrop-blur-sm">
+          <FriendsList />
+        </div>
+
+        <!-- Aperçu Communauté -->
+        <div class="rounded-3xl bg-gradient-to-br from-zinc-900/90 to-zinc-800/90 border border-zinc-700/50 shadow-2xl p-6 backdrop-blur-sm">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold text-zinc-50">Communauté</h3>
+            <button
+              @click="uiStore.goToCommunity()"
+              class="text-sm text-cyan-400 hover:text-cyan-300 font-medium transition-colors flex items-center gap-1"
+            >
+              Voir tout
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+          
+          <!-- Stats rapides -->
+          <div class="grid grid-cols-3 gap-3 mb-4">
+            <div class="p-3 rounded-xl bg-zinc-800/50 border border-zinc-700/30 text-center">
+              <p class="text-xl font-bold text-cyan-400">{{ communityStats.posts }}</p>
+              <p class="text-xs text-zinc-400">Posts</p>
+            </div>
+            <div class="p-3 rounded-xl bg-zinc-800/50 border border-zinc-700/30 text-center">
+              <p class="text-xl font-bold text-purple-400">{{ communityStats.likes }}</p>
+              <p class="text-xs text-zinc-400">Likes</p>
+            </div>
+            <div class="p-3 rounded-xl bg-zinc-800/50 border border-zinc-700/30 text-center">
+              <p class="text-xl font-bold text-pink-400">{{ communityStats.comments }}</p>
+              <p class="text-xs text-zinc-400">Commentaires</p>
+            </div>
+          </div>
+
+          <!-- Derniers posts -->
+          <div v-if="communityStore.isLoading" class="text-center py-8 text-zinc-400 text-sm">
+            Chargement...
+          </div>
+          <div v-else-if="recentPosts.length === 0" class="text-center py-8 text-zinc-400 text-sm">
+            Aucun post pour le moment
+          </div>
+          <div v-else class="space-y-3 max-h-64 overflow-y-auto">
+            <div
+              v-for="post in recentPosts"
+              :key="post.id"
+              @click="uiStore.goToCommunity()"
+              class="p-3 rounded-xl bg-zinc-800/50 border border-zinc-700/30 hover:border-cyan-500/30 cursor-pointer transition-all duration-200"
+            >
+              <div class="flex items-center gap-2 mb-2">
+                <div class="h-8 w-8 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center text-white font-bold text-xs">
+                  {{ post.authorName.charAt(0).toUpperCase() }}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs font-semibold text-zinc-50 truncate">{{ post.authorName }}</p>
+                  <p class="text-[10px] text-zinc-500">{{ formatTime(post.createdAt) }}</p>
+                </div>
+              </div>
+              <h4 class="text-sm font-bold text-zinc-50 mb-1 line-clamp-1">{{ post.title }}</h4>
+              <p class="text-xs text-zinc-400 line-clamp-2">{{ post.content }}</p>
+              <div class="flex items-center gap-3 mt-2 text-xs text-zinc-500">
+                <span class="flex items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
+                  </svg>
+                  {{ post.likesCount }}
+                </span>
+                <span class="flex items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  {{ post.commentsCount }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { useUserStore } from '@/stores/user';
 import { useUiStore } from '@/stores/ui';
+import { useStatsStore } from '@/stores/stats';
+import { useCommunityStore } from '@/stores/community';
 import IconPrisoner from '@/components/icons/IconPrisoner.vue';
 import IconBars from '@/components/icons/IconBars.vue';
 import IconBridge from '@/components/icons/IconBridge.vue';
 import IconTicTacToe from '@/components/icons/IconTicTacToe.vue';
 import IconConnectFour from '@/components/icons/IconConnectFour.vue';
 import IconKey from '@/components/icons/IconKey.vue';
+import FriendsList from '@/components/FriendsList.vue';
 
 const userStore = useUserStore();
 const uiStore = useUiStore();
+const statsStore = useStatsStore();
+const communityStore = useCommunityStore();
 
 const isLoggedIn = computed(() => userStore.isLoggedIn);
 const selectedCategory = ref<string>('Tous les jeux');
@@ -527,6 +614,34 @@ function onPlay() {
 function onTutorial() {
   uiStore.openTutorialModal();
 }
+
+const recentPosts = computed(() => communityStore.posts.slice(0, 3));
+const communityStats = computed(() => ({
+  posts: communityStore.posts.length,
+  likes: communityStore.posts.reduce((sum, p) => sum + p.likesCount, 0),
+  comments: communityStore.posts.reduce((sum, p) => sum + p.commentsCount, 0),
+}));
+
+function formatTime(dateString: string) {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  const minutes = Math.floor(diff / 60000);
+  
+  if (minutes < 1) return 'À l\'instant';
+  if (minutes < 60) return `Il y a ${minutes} min`;
+  if (minutes < 1440) return `Il y a ${Math.floor(minutes / 60)} h`;
+  return date.toLocaleDateString('fr-FR');
+}
+
+onMounted(async () => {
+  // Charger les stats si connecté
+  if (userStore.isLoggedIn && userStore.userId) {
+    await statsStore.loadUserStats(userStore.userId);
+  }
+  // Charger les derniers posts de la communauté
+  await communityStore.fetchPosts(3);
+});
 </script>
 
 <style scoped>

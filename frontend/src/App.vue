@@ -172,6 +172,23 @@
           <div v-if="ui.currentScreen === 'matches'" class="absolute right-2 w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div>
         </button>
 
+        <!-- Communauté -->
+        <button
+          class="nav-item group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-300 ease-out"
+          :class="ui.currentScreen === 'community'
+            ? 'bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 text-white shadow-lg shadow-cyan-500/40 scale-[1.02]'
+            : 'text-zinc-300 hover:bg-zinc-800/80 hover:text-zinc-50 hover:translate-x-1'"
+          @click="ui.goToCommunity(); ui.closeMobileMenu()"
+        >
+          <div class="nav-icon-wrapper" :class="ui.currentScreen === 'community' ? 'nav-icon-active' : ''">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </div>
+          <span class="font-medium hidden sm:inline">Communauté</span>
+          <div v-if="ui.currentScreen === 'community'" class="absolute right-2 w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div>
+        </button>
+
         <!-- Profil -->
         <button
           v-if="userStore.isLoggedIn"
@@ -423,6 +440,8 @@
       <UserRegisterModal v-if="ui.isUserModalOpen" />
       <TutorialModal v-if="ui.isTutorialModalOpen" />
 
+      <!-- Chat Panel -->
+      <ChatPanel />
     </div>
   </div>
 </template>
@@ -447,8 +466,10 @@ import ShopScreen from '@/components/ShopScreen.vue';
 import CollectionScreen from '@/components/CollectionScreen.vue';
 import MatchesScreen from '@/components/MatchesScreen.vue';
 import ProfileScreen from '@/components/ProfileScreen.vue';
+import CommunityScreen from '@/components/CommunityScreen.vue';
 import UserRegisterModal from '@/components/UserRegisterModal.vue';
 import TutorialModal from '@/components/TutorialModal.vue';
+import ChatPanel from '@/components/ChatPanel.vue';
 import IconNotification from '@/components/icons/IconNotification.vue';
 import IconBridge from '@/components/icons/IconBridge.vue';
 
@@ -584,6 +605,7 @@ const currentComponent = computed(() => {
     case 'collection': return CollectionScreen;
     case 'matches': return MatchesScreen;
     case 'profile': return ProfileScreen;
+    case 'community': return CommunityScreen;
     case 'leaderboard': return HomeScreen; // temporaire
     default: return HomeScreen;
   }

@@ -32,6 +32,24 @@ namespace prisonbreak.Server.Controllers
 
             return Ok(result);
         }
+
+        [HttpGet("search")]
+        public async Task<ActionResult<List<UserDto>>> SearchUsers([FromQuery] string email, [FromQuery] int limit = 10)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(email))
+                    return Ok(new List<UserDto>());
+
+                var users = await _userService.SearchUsersByEmailAsync(email, limit);
+                return Ok(users);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erreur lors de la recherche d'utilisateurs");
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }
 

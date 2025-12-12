@@ -90,6 +90,36 @@ namespace prisonbreak.Server.Data
         public DbSet<UserItem> UserItems => Set<UserItem>();
 
         /// <summary>
+        /// Table des relations d'amitié entre utilisateurs.
+        /// </summary>
+        public DbSet<Friendship> Friendships => Set<Friendship>();
+
+        /// <summary>
+        /// Table des demandes d'amitié.
+        /// </summary>
+        public DbSet<FriendRequest> FriendRequests => Set<FriendRequest>();
+
+        /// <summary>
+        /// Table des messages de chat.
+        /// </summary>
+        public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+
+        /// <summary>
+        /// Table des posts de la communauté.
+        /// </summary>
+        public DbSet<CommunityPost> CommunityPosts => Set<CommunityPost>();
+
+        /// <summary>
+        /// Table des likes sur les posts de la communauté.
+        /// </summary>
+        public DbSet<CommunityPostLike> CommunityPostLikes => Set<CommunityPostLike>();
+
+        /// <summary>
+        /// Table des commentaires sur les posts de la communauté.
+        /// </summary>
+        public DbSet<CommunityPostComment> CommunityPostComments => Set<CommunityPostComment>();
+
+        /// <summary>
         /// Configuration fine du modèle : contraintes, index, relations.
         /// Tout ce qui touche à la structure SQL est centralisé ici.
         /// </summary>
@@ -109,6 +139,12 @@ namespace prisonbreak.Server.Data
             ConfigureAdventureGame(modelBuilder);
             ConfigureItem(modelBuilder);
             ConfigureUserItem(modelBuilder);
+            ConfigureFriendship(modelBuilder);
+            ConfigureFriendRequest(modelBuilder);
+            ConfigureChatMessage(modelBuilder);
+            ConfigureCommunityPost(modelBuilder);
+            ConfigureCommunityPostLike(modelBuilder);
+            ConfigureCommunityPostComment(modelBuilder);
         }
 
         // ============================
@@ -658,6 +694,227 @@ namespace prisonbreak.Server.Data
                   .WithMany(i => i.UserItems)
                   .HasForeignKey(ui => ui.ItemId)
                   .OnDelete(DeleteBehavior.Restrict);
+        }
+
+        // ============================
+        // Configuration Friendship
+        // ============================
+
+        private static void ConfigureFriendship(ModelBuilder modelBuilder)
+        {
+            var entity = modelBuilder.Entity<Friendship>();
+
+            entity.ToTable("Friendships");
+
+            entity.HasKey(f => f.Id);
+
+            entity.HasIndex(f => new { f.UserId, f.FriendId }).IsUnique();
+            entity.HasIndex(f => f.UserId);
+            entity.HasIndex(f => f.FriendId);
+
+            entity.HasOne(f => f.User)
+                  .WithMany()
+                  .HasForeignKey(f => f.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(f => f.Friend)
+                  .WithMany()
+                  .HasForeignKey(f => f.FriendId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(f => f.CreatedAt)
+                  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(f => f.Status)
+                  .HasDefaultValue(FriendshipStatus.Active);
+        }
+
+        // ============================
+        // Configuration FriendRequest
+        // ============================
+
+        private static void ConfigureFriendRequest(ModelBuilder modelBuilder)
+        {
+            var entity = modelBuilder.Entity<FriendRequest>();
+
+            entity.ToTable("FriendRequests");
+
+            entity.HasKey(fr => fr.Id);
+
+            entity.HasIndex(fr => new { fr.RequesterId, fr.ReceiverId }).IsUnique();
+            entity.HasIndex(fr => fr.RequesterId);
+            entity.HasIndex(fr => fr.ReceiverId);
+            entity.HasIndex(fr => fr.Status);
+
+            entity.HasOne(fr => fr.Requester)
+                  .WithMany()
+                  .HasForeignKey(fr => fr.RequesterId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(fr => fr.Receiver)
+                  .WithMany()
+                  .HasForeignKey(fr => fr.ReceiverId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(fr => fr.CreatedAt)
+                  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(fr => fr.Status)
+                  .HasDefaultValue(FriendRequestStatus.Pending);
+        }
+
+        // ============================
+        // Configuration ChatMessage
+        // ============================
+
+        private static void ConfigureChatMessage(ModelBuilder modelBuilder)
+        {
+            var entity = modelBuilder.Entity<ChatMessage>();
+
+            entity.ToTable("ChatMessages");
+
+            entity.HasKey(cm => cm.Id);
+
+            entity.HasIndex(cm => new { cm.SenderId, cm.ReceiverId });
+            entity.HasIndex(cm => cm.SenderId);
+            entity.HasIndex(cm => cm.ReceiverId);
+            entity.HasIndex(cm => cm.SentAt);
+
+            entity.HasOne(cm => cm.Sender)
+                  .WithMany()
+                  .HasForeignKey(cm => cm.SenderId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(cm => cm.Receiver)
+                  .WithMany()
+                  .HasForeignKey(cm => cm.ReceiverId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(cm => cm.SentAt)
+                  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(cm => cm.IsRead)
+                  .HasDefaultValue(false);
+
+            entity.Property(cm => cm.Content)
+                  .IsRequired()
+                  .HasMaxLength(1000);
+        }
+
+        // ============================
+        // Configuration CommunityPost
+        // ============================
+
+        private static void ConfigureCommunityPost(ModelBuilder modelBuilder)
+        {
+            var entity = modelBuilder.Entity<CommunityPost>();
+
+            entity.ToTable("CommunityPosts");
+
+            entity.HasKey(cp => cp.Id);
+
+            entity.HasIndex(cp => cp.AuthorId);
+            entity.HasIndex(cp => cp.PostType);
+            entity.HasIndex(cp => cp.CreatedAt);
+            entity.HasIndex(cp => cp.IsActive);
+
+            entity.HasOne(cp => cp.Author)
+                  .WithMany()
+                  .HasForeignKey(cp => cp.AuthorId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(cp => cp.CreatedAt)
+                  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(cp => cp.PostType)
+                  .HasDefaultValue(CommunityPostType.Discussion);
+
+            entity.Property(cp => cp.LikesCount)
+                  .HasDefaultValue(0);
+
+            entity.Property(cp => cp.CommentsCount)
+                  .HasDefaultValue(0);
+
+            entity.Property(cp => cp.IsActive)
+                  .HasDefaultValue(true);
+
+            entity.Property(cp => cp.Title)
+                  .IsRequired()
+                  .HasMaxLength(200);
+
+            entity.Property(cp => cp.Content)
+                  .IsRequired()
+                  .HasMaxLength(5000);
+
+            entity.Property(cp => cp.ImageUrl)
+                  .HasMaxLength(500);
+        }
+
+        // ============================
+        // Configuration CommunityPostLike
+        // ============================
+
+        private static void ConfigureCommunityPostLike(ModelBuilder modelBuilder)
+        {
+            var entity = modelBuilder.Entity<CommunityPostLike>();
+
+            entity.ToTable("CommunityPostLikes");
+
+            entity.HasKey(cpl => cpl.Id);
+
+            entity.HasIndex(cpl => new { cpl.PostId, cpl.UserId }).IsUnique();
+            entity.HasIndex(cpl => cpl.PostId);
+            entity.HasIndex(cpl => cpl.UserId);
+
+            entity.HasOne(cpl => cpl.Post)
+                  .WithMany(cp => cp.Likes)
+                  .HasForeignKey(cpl => cpl.PostId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(cpl => cpl.User)
+                  .WithMany()
+                  .HasForeignKey(cpl => cpl.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(cpl => cpl.CreatedAt)
+                  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+        }
+
+        // ============================
+        // Configuration CommunityPostComment
+        // ============================
+
+        private static void ConfigureCommunityPostComment(ModelBuilder modelBuilder)
+        {
+            var entity = modelBuilder.Entity<CommunityPostComment>();
+
+            entity.ToTable("CommunityPostComments");
+
+            entity.HasKey(cpc => cpc.Id);
+
+            entity.HasIndex(cpc => cpc.PostId);
+            entity.HasIndex(cpc => cpc.AuthorId);
+            entity.HasIndex(cpc => cpc.CreatedAt);
+
+            entity.HasOne(cpc => cpc.Post)
+                  .WithMany(cp => cp.Comments)
+                  .HasForeignKey(cpc => cpc.PostId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(cpc => cpc.Author)
+                  .WithMany()
+                  .HasForeignKey(cpc => cpc.AuthorId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(cpc => cpc.CreatedAt)
+                  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(cpc => cpc.IsActive)
+                  .HasDefaultValue(true);
+
+            entity.Property(cpc => cpc.Content)
+                  .IsRequired()
+                  .HasMaxLength(1000);
         }
     }
 }

@@ -31,5 +31,10 @@ namespace prisonbreak.Server.Repositories
         /// Sauvegarde les modifications en attente.
         /// </summary>
         Task SaveChangesAsync();
+
+        /// <summary>
+        /// Recherche des utilisateurs par email (pour autocomplétion).
+        /// </summary>
+        Task<List<User>> SearchByEmailAsync(string emailQuery, int limit = 10);
     }
 }

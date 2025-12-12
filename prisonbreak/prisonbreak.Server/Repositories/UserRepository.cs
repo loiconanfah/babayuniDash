@@ -50,5 +50,15 @@ namespace prisonbreak.Server.Repositories
         {
             await _context.SaveChangesAsync();
         }
+
+        /// <inheritdoc />
+        public async Task<List<User>> SearchByEmailAsync(string emailQuery, int limit = 10)
+        {
+            return await _context.Users
+                .Where(u => u.Email.Contains(emailQuery) && u.IsActive)
+                .OrderBy(u => u.Email)
+                .Take(limit)
+                .ToListAsync();
+        }
     }
 }

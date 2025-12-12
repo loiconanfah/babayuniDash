@@ -8,5 +8,6 @@ namespace prisonbreak.Server.Services
     public interface IUserService
     {
         Task<UserDto> CreateOrLoginAsync(string name, string email);
+        Task<List<UserDto>> SearchUsersByEmailAsync(string emailQuery, int limit = 10);
     }
 }

@@ -40,6 +40,9 @@ builder.Services.AddScoped<IConnectFourService, ConnectFourService>();
 builder.Services.AddScoped<IRockPaperScissorsService, RockPaperScissorsService>();
 builder.Services.AddScoped<IAdventureService, AdventureService>();
 builder.Services.AddScoped<IItemService, ItemService>();
+builder.Services.AddScoped<IFriendshipService, FriendshipService>();
+builder.Services.AddScoped<IChatService, ChatService>();
+builder.Services.AddScoped<ICommunityService, CommunityService>();
 
 // Configuration des contrôleurs API
 builder.Services.AddControllers();
@@ -80,6 +83,12 @@ builder.Services.AddCors(options =>
 // Note: Le SPA Proxy est configuré automatiquement via le .csproj
 // Les propriétés SpaRoot, SpaProxyServerUrl et SpaProxyLaunchCommand
 // permettent à Visual Studio de lancer automatiquement le client Vue.js
+
+// Configuration pour servir les fichiers statiques (images uploadées)
+builder.Services.Configure<IISServerOptions>(options =>
+{
+    options.AutomaticAuthentication = false;
+});
 
 var app = builder.Build();
 
@@ -146,13 +155,13 @@ app.UseHttpsRedirection();
 // Activer CORS pour le frontend (après UseRouting si utilisé, avant UseEndpoints)
 app.UseCors("AllowVueFrontend");
 
-// En développement avec SPA Proxy, ne pas servir les fichiers statiques
-// Le proxy redirige vers Vite qui sert les fichiers
-// En production, servir les fichiers statiques compilés
+// Servir les fichiers statiques (nécessaire pour les uploads d'images même en développement)
+app.UseStaticFiles();
+
+// En production, servir aussi les fichiers par défaut (index.html)
 if (!app.Environment.IsDevelopment())
 {
     app.UseDefaultFiles();
-    app.UseStaticFiles();
 }
 
 // Utiliser les contrôleurs API

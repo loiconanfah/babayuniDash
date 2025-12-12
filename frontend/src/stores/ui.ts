@@ -3,7 +3,7 @@
 
 import { defineStore } from 'pinia';
 
-export type Screen = 'home' | 'levels' | 'game' | 'leaderboard' | 'stats' | 'games' | 'ticTacToe' | 'connectFour' | 'rockPaperScissors' | 'adventure' | 'shop' | 'collection' | 'matches' | 'profile';
+export type Screen = 'home' | 'levels' | 'game' | 'leaderboard' | 'stats' | 'games' | 'ticTacToe' | 'connectFour' | 'rockPaperScissors' | 'adventure' | 'shop' | 'collection' | 'matches' | 'profile' | 'community';
 export type Difficulty = 'easy' | 'medium' | 'hard' | null;
 
 interface UiState {
@@ -13,6 +13,8 @@ interface UiState {
   isVictoryModalOpen: boolean;
   selectedDifficulty: Difficulty;
   isMobileMenuOpen: boolean;
+  isChatOpen: boolean;
+  showCommunity: boolean;
 }
 
 export const useUiStore = defineStore('ui', {
@@ -22,7 +24,9 @@ export const useUiStore = defineStore('ui', {
     isTutorialModalOpen: false,
     isVictoryModalOpen: false,
     selectedDifficulty: null,
-    isMobileMenuOpen: false
+    isMobileMenuOpen: false,
+    isChatOpen: false,
+    showCommunity: false
   }),
 
   actions: {
@@ -69,6 +73,9 @@ export const useUiStore = defineStore('ui', {
     goToProfile() {
       this.currentScreen = 'profile';
     },
+    goToCommunity() {
+      this.currentScreen = 'community';
+    },
 
     // Modale utilisateur
     openUserModal() {
@@ -105,6 +112,22 @@ export const useUiStore = defineStore('ui', {
           },
           closeMobileMenu() {
             this.isMobileMenuOpen = false;
+          },
+
+          // Chat
+          openChat() {
+            this.isChatOpen = true;
+          },
+          closeChat() {
+            this.isChatOpen = false;
+          },
+
+          // Communauté
+          toggleCommunity() {
+            this.showCommunity = !this.showCommunity;
+          },
+          closeCommunity() {
+            this.showCommunity = false;
           }
         }
       });
