@@ -31,5 +31,10 @@ namespace prisonbreak.Server.DTOs
         /// Utilisé par certains services (ex: SessionService) pour les statistiques.
         /// </summary>
         public int ActiveSessionCount { get; set; }
+
+        /// <summary>
+        /// Nombre de coins possédés par l'utilisateur
+        /// </summary>
+        public int Coins { get; set; }
     }
 }

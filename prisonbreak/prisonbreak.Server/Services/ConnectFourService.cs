@@ -33,13 +33,32 @@ public class ConnectFourService : IConnectFourService
     /// <summary>
     /// Crée une nouvelle partie de Connect Four
     /// </summary>
-    public async Task<ConnectFourGame> CreateGameAsync(int sessionId, ConnectFourGameMode gameMode = ConnectFourGameMode.Player, int? player2SessionId = null)
+    public async Task<ConnectFourGame> CreateGameAsync(int sessionId, int wager, ConnectFourGameMode gameMode = ConnectFourGameMode.Player, int? player2SessionId = null)
     {
         // Vérifier que la session existe et est valide
         var session = await _sessionRepository.GetByIdAsync(sessionId);
         if (session == null || !session.IsValid())
         {
             throw new ArgumentException($"La session avec l'ID {sessionId} n'existe pas ou n'est pas valide", nameof(sessionId));
+        }
+
+        // Gérer la mise si c'est une partie multijoueur
+        if (wager > 0 && gameMode == ConnectFourGameMode.Player)
+        {
+            var user = await _context.Users.FindAsync(session.UserId);
+            if (user == null)
+            {
+                throw new ArgumentException("L'utilisateur associé à la session n'existe pas", nameof(sessionId));
+            }
+
+            if (user.Coins < wager)
+            {
+                throw new InvalidOperationException($"Vous n'avez pas assez de coins. Vous avez {user.Coins} coins, mais vous essayez de miser {wager} coins.");
+            }
+
+            // Déduire les coins du joueur 1
+            user.Coins -= wager;
+            _context.Users.Update(user);
         }
 
         // Si un joueur 2 est spécifié, vérifier qu'il existe et est valide
@@ -72,13 +91,15 @@ public class ConnectFourService : IConnectFourService
             CurrentPlayer = 1,
             Status = gameMode == ConnectFourGameMode.AI 
                 ? ConnectFourGameStatus.InProgress 
-                : (player2SessionId.HasValue ? ConnectFourGameStatus.InProgress : ConnectFourGameStatus.WaitingForPlayer),
+                : ConnectFourGameStatus.WaitingForPlayer, // Toujours en attente pour les parties multijoueurs, même avec player2SessionId
             GameMode = gameMode,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            Player1Wager = wager
         };
 
-        // Si c'est contre l'IA ou si un joueur 2 est déjà assigné, démarrer immédiatement
-        if (gameMode == ConnectFourGameMode.AI || player2SessionId.HasValue)
+        // Si c'est contre l'IA, démarrer immédiatement
+        // Pour les parties multijoueurs, on attend que le joueur 2 accepte et entre sa mise
+        if (gameMode == ConnectFourGameMode.AI)
         {
             game.StartedAt = DateTime.UtcNow;
         }
@@ -137,7 +158,7 @@ public class ConnectFourService : IConnectFourService
     /// <summary>
     /// Rejoint une partie existante
     /// </summary>
-    public async Task<ConnectFourGame> JoinGameAsync(int gameId, int sessionId)
+    public async Task<ConnectFourGame> JoinGameAsync(int gameId, int sessionId, int wager = 0)
     {
         var game = await GetGameByIdAsync(gameId);
         if (game == null)
@@ -162,7 +183,37 @@ public class ConnectFourService : IConnectFourService
             throw new ArgumentException($"La session avec l'ID {sessionId} n'existe pas ou n'est pas valide", nameof(sessionId));
         }
 
+        // Gérer la mise si nécessaire
+        if (game.Player1Wager > 0)
+        {
+            if (wager != game.Player1Wager)
+            {
+                throw new InvalidOperationException($"Vous devez miser exactement {game.Player1Wager} coins pour rejoindre cette partie");
+            }
+
+            var user = await _context.Users.FindAsync(session.UserId);
+            if (user == null)
+            {
+                throw new ArgumentException("L'utilisateur associé à la session n'existe pas", nameof(sessionId));
+            }
+
+            if (user.Coins < wager)
+            {
+                throw new InvalidOperationException($"Vous n'avez pas assez de coins. Vous avez {user.Coins} coins, mais vous essayez de miser {wager} coins.");
+            }
+
+            // Déduire les coins du joueur 2
+            user.Coins -= wager;
+            _context.Users.Update(user);
+        }
+        else if (wager > 0)
+        {
+            // Si le joueur 1 n'a pas misé mais le joueur 2 veut miser, ce n'est pas autorisé
+            throw new InvalidOperationException("Le joueur 1 n'a pas misé de coins, vous ne pouvez pas miser");
+        }
+
         game.Player2SessionId = sessionId;
+        game.Player2Wager = wager;
         game.Status = ConnectFourGameStatus.InProgress;
         game.StartedAt = DateTime.UtcNow;
         game.CurrentPlayer = 1; // Le joueur 1 commence
@@ -254,12 +305,53 @@ public class ConnectFourService : IConnectFourService
             game.Status = ConnectFourGameStatus.Completed;
             game.WinnerPlayerId = winner;
             game.CompletedAt = DateTime.UtcNow;
+
+            // Distribuer les gains si il y a des paris
+            if (game.Player1Wager + game.Player2Wager > 0)
+            {
+                var winnerSession = winner == 1 ? game.Player1Session : game.Player2Session;
+                if (winnerSession != null)
+                {
+                    var winnerUser = await _context.Users.FindAsync(winnerSession.UserId);
+                    if (winnerUser != null)
+                    {
+                        var totalWager = game.Player1Wager + game.Player2Wager;
+                        winnerUser.Coins += totalWager;
+                        _context.Users.Update(winnerUser);
+                    }
+                }
+            }
         }
         else if (IsBoardFull(board))
         {
-            // Match nul
+            // Match nul - rembourser les mises
             game.Status = ConnectFourGameStatus.Draw;
             game.CompletedAt = DateTime.UtcNow;
+
+            if (game.Player1Wager + game.Player2Wager > 0)
+            {
+                // Rembourser le joueur 1
+                if (game.Player1Session != null)
+                {
+                    var player1User = await _context.Users.FindAsync(game.Player1Session.UserId);
+                    if (player1User != null && game.Player1Wager > 0)
+                    {
+                        player1User.Coins += game.Player1Wager;
+                        _context.Users.Update(player1User);
+                    }
+                }
+
+                // Rembourser le joueur 2
+                if (game.Player2Session != null)
+                {
+                    var player2User = await _context.Users.FindAsync(game.Player2Session.UserId);
+                    if (player2User != null && game.Player2Wager > 0)
+                    {
+                        player2User.Coins += game.Player2Wager;
+                        _context.Users.Update(player2User);
+                    }
+                }
+            }
         }
         else
         {
@@ -344,6 +436,22 @@ public class ConnectFourService : IConnectFourService
         game.CompletedAt = DateTime.UtcNow;
         game.ElapsedSeconds = (int)(DateTime.UtcNow - (game.StartedAt ?? game.CreatedAt)).TotalSeconds;
 
+        // Distribuer les gains si il y a des paris
+        if (game.Player1Wager + game.Player2Wager > 0)
+        {
+            var winnerSession = game.WinnerPlayerId == 1 ? game.Player1Session : game.Player2Session;
+            if (winnerSession != null)
+            {
+                var winnerUser = await _context.Users.FindAsync(winnerSession.UserId);
+                if (winnerUser != null)
+                {
+                    var totalWager = game.Player1Wager + game.Player2Wager;
+                    winnerUser.Coins += totalWager;
+                    _context.Users.Update(winnerUser);
+                }
+            }
+        }
+
         await _context.SaveChangesAsync();
 
         _logger?.LogInformation("Partie abandonnée : GameId={GameId}, Player={Player}", gameId, playerNumber);
@@ -374,7 +482,9 @@ public class ConnectFourService : IConnectFourService
             CompletedAt = game.CompletedAt,
             ElapsedSeconds = game.ElapsedSeconds,
             MoveCount = game.MoveCount,
-            GameMode = (int)game.GameMode
+            GameMode = (int)game.GameMode,
+            Player1Wager = game.Player1Wager,
+            Player2Wager = game.Player2Wager
         };
     }
 

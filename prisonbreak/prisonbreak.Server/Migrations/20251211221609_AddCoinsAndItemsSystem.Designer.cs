@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using prisonbreak.Server.Data;
 
@@ -10,9 +11,11 @@ using prisonbreak.Server.Data;
 namespace prisonbreak.Server.Migrations
 {
     [DbContext(typeof(HashiDbContext))]
-    partial class HashiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251211221609_AddCoinsAndItemsSystem")]
+    partial class AddCoinsAndItemsSystem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.0");
@@ -150,13 +153,7 @@ namespace prisonbreak.Server.Migrations
                     b.Property<int>("Player1SessionId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("Player1Wager")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int?>("Player2SessionId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Player2Wager")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime?>("StartedAt")
@@ -380,9 +377,6 @@ namespace prisonbreak.Server.Migrations
                     b.Property<int>("Player1SessionId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("Player1Wager")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int?>("Player2Choice")
                         .HasColumnType("INTEGER");
 
@@ -392,9 +386,6 @@ namespace prisonbreak.Server.Migrations
                         .HasDefaultValue(0);
 
                     b.Property<int?>("Player2SessionId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Player2Wager")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("RoundNumber")
@@ -513,13 +504,7 @@ namespace prisonbreak.Server.Migrations
                     b.Property<int>("Player1SessionId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("Player1Wager")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int?>("Player2SessionId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Player2Wager")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime?>("StartedAt")
@@ -551,7 +536,7 @@ namespace prisonbreak.Server.Migrations
                     b.Property<int>("Coins")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")
-                        .HasDefaultValue(500);
+                        .HasDefaultValue(100);
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()

@@ -14,8 +14,9 @@ public interface ITicTacToeService
     /// <param name="sessionId">ID de la session du joueur qui crée la partie</param>
     /// <param name="gameMode">Mode de jeu : contre un joueur ou contre l'IA</param>
     /// <param name="player2SessionId">ID de la session du joueur 2 (optionnel, pour inviter un joueur spécifique)</param>
+    /// <param name="wager">Mise en coins (optionnel, 0 par défaut)</param>
     /// <returns>La partie créée</returns>
-    Task<TicTacToeGame> CreateGameAsync(int sessionId, TicTacToeGameMode gameMode = TicTacToeGameMode.Player, int? player2SessionId = null);
+    Task<TicTacToeGame> CreateGameAsync(int sessionId, TicTacToeGameMode gameMode = TicTacToeGameMode.Player, int? player2SessionId = null, int wager = 0);
 
     /// <summary>
     /// Récupère une partie par son ID
@@ -42,8 +43,9 @@ public interface ITicTacToeService
     /// </summary>
     /// <param name="gameId">ID de la partie</param>
     /// <param name="sessionId">ID de la session du joueur qui rejoint</param>
+    /// <param name="wager">Mise en coins (doit correspondre à la mise du joueur 1 si une mise existe)</param>
     /// <returns>La partie mise à jour</returns>
-    Task<TicTacToeGame> JoinGameAsync(int gameId, int sessionId);
+    Task<TicTacToeGame> JoinGameAsync(int gameId, int sessionId, int wager = 0);
 
     /// <summary>
     /// Joue un coup dans la partie

@@ -30,13 +30,29 @@ public class TicTacToeService : ITicTacToeService
     /// <summary>
     /// Crée une nouvelle partie de Tic-Tac-Toe
     /// </summary>
-    public async Task<TicTacToeGame> CreateGameAsync(int sessionId, TicTacToeGameMode gameMode = TicTacToeGameMode.Player, int? player2SessionId = null)
+    public async Task<TicTacToeGame> CreateGameAsync(int sessionId, TicTacToeGameMode gameMode = TicTacToeGameMode.Player, int? player2SessionId = null, int wager = 0)
     {
         // Vérifier que la session existe et est valide
         var session = await _sessionRepository.GetByIdAsync(sessionId);
         if (session == null || !session.IsValid())
         {
             throw new ArgumentException($"La session avec l'ID {sessionId} n'existe pas ou n'est pas valide", nameof(sessionId));
+        }
+
+        // Si une mise est spécifiée, vérifier et débiter les coins
+        if (wager > 0)
+        {
+            var user = await _context.Users.FindAsync(session.UserId);
+            if (user == null)
+            {
+                throw new ArgumentException("L'utilisateur n'existe pas");
+            }
+            if (user.Coins < wager)
+            {
+                throw new InvalidOperationException("Vous n'avez pas assez de coins pour cette mise");
+            }
+            user.RemoveCoins(wager);
+            await _context.SaveChangesAsync();
         }
 
         // Si un joueur 2 est spécifié, vérifier qu'il existe et est valide
@@ -62,13 +78,15 @@ public class TicTacToeService : ITicTacToeService
             CurrentPlayer = 1,
             Status = gameMode == TicTacToeGameMode.AI 
                 ? TicTacToeGameStatus.InProgress 
-                : (player2SessionId.HasValue ? TicTacToeGameStatus.InProgress : TicTacToeGameStatus.WaitingForPlayer),
+                : TicTacToeGameStatus.WaitingForPlayer, // Toujours en attente pour les parties multijoueurs, même avec player2SessionId
             GameMode = gameMode,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            Player1Wager = wager
         };
 
-        // Si c'est contre l'IA ou si un joueur 2 est déjà assigné, démarrer immédiatement
-        if (gameMode == TicTacToeGameMode.AI || player2SessionId.HasValue)
+        // Si c'est contre l'IA, démarrer immédiatement
+        // Pour les parties multijoueurs, on attend que le joueur 2 accepte et entre sa mise
+        if (gameMode == TicTacToeGameMode.AI)
         {
             game.StartedAt = DateTime.UtcNow;
         }
@@ -127,7 +145,7 @@ public class TicTacToeService : ITicTacToeService
     /// <summary>
     /// Rejoint une partie existante
     /// </summary>
-    public async Task<TicTacToeGame> JoinGameAsync(int gameId, int sessionId)
+    public async Task<TicTacToeGame> JoinGameAsync(int gameId, int sessionId, int wager = 0)
     {
         var game = await GetGameByIdAsync(gameId);
         if (game == null)
@@ -150,6 +168,41 @@ public class TicTacToeService : ITicTacToeService
         if (session == null || !session.IsValid())
         {
             throw new ArgumentException($"La session avec l'ID {sessionId} n'existe pas ou n'est pas valide", nameof(sessionId));
+        }
+
+        // Vérifier et gérer la mise
+        if (game.Player1Wager > 0)
+        {
+            if (wager != game.Player1Wager)
+            {
+                throw new InvalidOperationException($"La mise doit être de {game.Player1Wager} coins pour rejoindre cette partie");
+            }
+            
+            var user2 = await _context.Users.FindAsync(session.UserId);
+            if (user2 == null)
+            {
+                throw new ArgumentException("L'utilisateur n'existe pas");
+            }
+            if (user2.Coins < wager)
+            {
+                throw new InvalidOperationException("Vous n'avez pas assez de coins pour cette mise");
+            }
+            user2.RemoveCoins(wager);
+            game.Player2Wager = wager;
+        }
+        else if (wager > 0)
+        {
+            var user2 = await _context.Users.FindAsync(session.UserId);
+            if (user2 == null)
+            {
+                throw new ArgumentException("L'utilisateur n'existe pas");
+            }
+            if (user2.Coins < wager)
+            {
+                throw new InvalidOperationException("Vous n'avez pas assez de coins pour cette mise");
+            }
+            user2.RemoveCoins(wager);
+            game.Player2Wager = wager;
         }
 
         game.Player2SessionId = sessionId;
@@ -236,12 +289,49 @@ public class TicTacToeService : ITicTacToeService
             game.Status = TicTacToeGameStatus.Completed;
             game.WinnerPlayerId = winner;
             game.CompletedAt = DateTime.UtcNow;
+
+            // Distribuer les gains si il y a des paris
+            if (game.TotalWager > 0)
+            {
+                var winnerSession = winner == 1 ? game.Player1Session : game.Player2Session;
+                if (winnerSession != null)
+                {
+                    var winnerUser = await _context.Users.FindAsync(winnerSession.UserId);
+                    if (winnerUser != null)
+                    {
+                        winnerUser.AddCoins(game.TotalWager);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+            }
         }
         else if (game.MoveCount >= 9)
         {
-            // Match nul
+            // Match nul - rembourser les mises
             game.Status = TicTacToeGameStatus.Draw;
             game.CompletedAt = DateTime.UtcNow;
+
+            if (game.TotalWager > 0)
+            {
+                // Rembourser les deux joueurs
+                if (game.Player1Session != null)
+                {
+                    var user1 = await _context.Users.FindAsync(game.Player1Session.UserId);
+                    if (user1 != null && game.Player1Wager > 0)
+                    {
+                        user1.AddCoins(game.Player1Wager);
+                    }
+                }
+                if (game.Player2Session != null)
+                {
+                    var user2 = await _context.Users.FindAsync(game.Player2Session.UserId);
+                    if (user2 != null && game.Player2Wager > 0)
+                    {
+                        user2.AddCoins(game.Player2Wager);
+                    }
+                }
+                await _context.SaveChangesAsync();
+            }
         }
         else
         {
@@ -343,7 +433,9 @@ public class TicTacToeService : ITicTacToeService
             CompletedAt = game.CompletedAt,
             ElapsedSeconds = game.ElapsedSeconds,
             MoveCount = game.MoveCount,
-            GameMode = (int)game.GameMode
+            GameMode = (int)game.GameMode,
+            Player1Wager = game.Player1Wager,
+            Player2Wager = game.Player2Wager
         };
     }
 

@@ -103,6 +103,22 @@ public class RockPaperScissorsGame
     public int ElapsedSeconds { get; set; }
 
     /// <summary>
+    /// Mise du joueur 1 en coins
+    /// </summary>
+    public int Player1Wager { get; set; } = 0;
+
+    /// <summary>
+    /// Mise du joueur 2 en coins
+    /// </summary>
+    public int Player2Wager { get; set; } = 0;
+
+    /// <summary>
+    /// Total de la mise (Player1Wager + Player2Wager)
+    /// Le gagnant remporte ce total
+    /// </summary>
+    public int TotalWager => Player1Wager + Player2Wager;
+
+    /// <summary>
     /// Vérifie si la partie est terminée
     /// </summary>
     public bool IsCompleted() => Status == RPSGameStatus.Completed || 

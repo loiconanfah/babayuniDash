@@ -80,7 +80,7 @@ export const useRockPaperScissorsStore = defineStore('rockPaperScissors', () => 
   /**
    * Crée une nouvelle partie
    */
-  async function createGame(gameMode: number, player2SessionId?: number): Promise<void> {
+  async function createGame(gameMode: number, player2SessionId?: number, wager: number = 0): Promise<void> {
     if (!currentSessionId.value) {
       throw new Error('Session ID non défini')
     }
@@ -92,7 +92,8 @@ export const useRockPaperScissorsStore = defineStore('rockPaperScissors', () => 
       const game = await rpsApi.create({
         sessionId: currentSessionId.value,
         gameMode,
-        player2SessionId
+        player2SessionId,
+        wager
       })
       currentGame.value = game
     } catch (err) {
@@ -179,7 +180,7 @@ export const useRockPaperScissorsStore = defineStore('rockPaperScissors', () => 
   /**
    * Rejoint une partie existante
    */
-  async function joinGame(gameId: number): Promise<void> {
+  async function joinGame(gameId: number, wager: number = 0): Promise<void> {
     if (!currentSessionId.value) {
       throw new Error('Session ID non défini')
     }
@@ -188,7 +189,7 @@ export const useRockPaperScissorsStore = defineStore('rockPaperScissors', () => 
       isLoading.value = true
       error.value = null
 
-      const game = await rpsApi.joinGame(gameId, currentSessionId.value)
+      const game = await rpsApi.joinGame(gameId, currentSessionId.value, wager)
       currentGame.value = game
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Erreur lors de la jonction à la partie'

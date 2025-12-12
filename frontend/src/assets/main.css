@@ -10,19 +10,42 @@
   }
 
   body {
-    /* Fond sombre + texte lisible + meilleure police */
+    /* Fond sombre avec gradient subtil + texte lisible + meilleure police */
     @apply bg-slate-950 text-slate-50 antialiased;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(251, 146, 60, 0.05) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.05) 0px, transparent 50%);
   }
 
   #app {
-    /* L'app occupe toute la hauteur de l’écran */
+    /* L'app occupe toute la hauteur de l'écran */
     @apply min-h-screen;
+  }
+
+  /* Scrollbar personnalisée */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-slate-900;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-700 rounded-full;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-600;
   }
 }
 
 /* 3. Petites classes utilitaires pour Prison Break (optionnel) */
 @layer components {
-  /* Conteneur principal type “mur de briques” */
+  /* Conteneur principal type "mur de briques" */
   .pb-brick-wall {
     @apply min-h-screen flex items-center justify-center px-4 py-6 md:px-8;
     background-image:
@@ -35,5 +58,41 @@
   /* Carte centrale bleu nuit */
   .pb-dashboard-card {
     @apply w-full max-w-5xl rounded-3xl bg-slate-900/95 shadow-2xl border border-slate-800/80;
+  }
+
+  /* Effet de glow pour les éléments interactifs */
+  .glow-orange {
+    box-shadow: 0 0 20px rgba(251, 146, 60, 0.3);
+  }
+
+  .glow-blue {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  }
+
+  /* Animation de pulse subtile */
+  @keyframes subtle-pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+
+  .animate-subtle-pulse {
+    animation: subtle-pulse 3s ease-in-out infinite;
+  }
+
+  /* Effet de glassmorphism */
+  .glass {
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+  }
+
+  /* Gradient text moderne */
+  .gradient-text {
+    @apply bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 bg-clip-text text-transparent;
   }
 }

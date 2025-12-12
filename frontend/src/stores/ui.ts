@@ -3,7 +3,7 @@
 
 import { defineStore } from 'pinia';
 
-export type Screen = 'home' | 'levels' | 'game' | 'leaderboard' | 'stats' | 'games' | 'ticTacToe' | 'connectFour' | 'rockPaperScissors' | 'adventure';
+export type Screen = 'home' | 'levels' | 'game' | 'leaderboard' | 'stats' | 'games' | 'ticTacToe' | 'connectFour' | 'rockPaperScissors' | 'adventure' | 'shop' | 'collection' | 'matches' | 'profile';
 export type Difficulty = 'easy' | 'medium' | 'hard' | null;
 
 interface UiState {
@@ -12,6 +12,7 @@ interface UiState {
   isTutorialModalOpen: boolean;
   isVictoryModalOpen: boolean;
   selectedDifficulty: Difficulty;
+  isMobileMenuOpen: boolean;
 }
 
 export const useUiStore = defineStore('ui', {
@@ -20,7 +21,8 @@ export const useUiStore = defineStore('ui', {
     isUserModalOpen: false,
     isTutorialModalOpen: false,
     isVictoryModalOpen: false,
-    selectedDifficulty: null
+    selectedDifficulty: null,
+    isMobileMenuOpen: false
   }),
 
   actions: {
@@ -55,6 +57,18 @@ export const useUiStore = defineStore('ui', {
     goToAdventure() {
       this.currentScreen = 'adventure';
     },
+    goToShop() {
+      this.currentScreen = 'shop';
+    },
+    goToCollection() {
+      this.currentScreen = 'collection';
+    },
+    goToMatches() {
+      this.currentScreen = 'matches';
+    },
+    goToProfile() {
+      this.currentScreen = 'profile';
+    },
 
     // Modale utilisateur
     openUserModal() {
@@ -83,6 +97,14 @@ export const useUiStore = defineStore('ui', {
           },
           closeVictoryModal() {
             this.isVictoryModalOpen = false;
+          },
+
+          // Menu mobile
+          toggleMobileMenu() {
+            this.isMobileMenuOpen = !this.isMobileMenuOpen;
+          },
+          closeMobileMenu() {
+            this.isMobileMenuOpen = false;
           }
         }
       });

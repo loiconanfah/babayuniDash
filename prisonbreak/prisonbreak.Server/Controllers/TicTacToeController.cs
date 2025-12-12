@@ -44,7 +44,7 @@ public class TicTacToeController : ControllerBase
                 request.SessionId, request.GameMode);
 
             var gameMode = (TicTacToeGameMode)request.GameMode;
-            var game = await _ticTacToeService.CreateGameAsync(request.SessionId, gameMode, request.Player2SessionId);
+            var game = await _ticTacToeService.CreateGameAsync(request.SessionId, gameMode, request.Player2SessionId, request.Wager);
             var gameDto = _ticTacToeService.ConvertToDto(game);
 
             return CreatedAtAction(nameof(GetGameById), new { id = game.Id }, gameDto);
@@ -149,7 +149,7 @@ public class TicTacToeController : ControllerBase
                 return BadRequest("La requête ne peut pas être nulle");
             }
 
-            var game = await _ticTacToeService.JoinGameAsync(id, request.SessionId);
+            var game = await _ticTacToeService.JoinGameAsync(id, request.SessionId, request.Wager);
             var gameDto = _ticTacToeService.ConvertToDto(game);
 
             _logger.LogInformation("Joueur a rejoint la partie : GameId={GameId}, SessionId={SessionId}", id, request.SessionId);

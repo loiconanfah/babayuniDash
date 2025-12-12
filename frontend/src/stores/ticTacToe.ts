@@ -77,12 +77,12 @@ export const useTicTacToeStore = defineStore('ticTacToe', () => {
   /**
    * Crée une nouvelle partie
    */
-  async function createGame(sessionId: number, gameMode: number = 1, player2SessionId?: number): Promise<void> {
+  async function createGame(sessionId: number, gameMode: number = 1, player2SessionId?: number, wager: number = 0): Promise<void> {
     try {
       isLoading.value = true
       error.value = null
 
-      const game = await ticTacToeApi.create({ sessionId, gameMode, player2SessionId })
+      const game = await ticTacToeApi.create({ sessionId, gameMode, player2SessionId, wager })
       currentGame.value = game
       currentSessionId.value = sessionId
     } catch (err) {
@@ -153,12 +153,12 @@ export const useTicTacToeStore = defineStore('ticTacToe', () => {
   /**
    * Rejoint une partie existante
    */
-  async function joinGame(gameId: number, sessionId: number): Promise<void> {
+  async function joinGame(gameId: number, sessionId: number, wager: number = 0): Promise<void> {
     try {
       isLoading.value = true
       error.value = null
 
-      const game = await ticTacToeApi.joinGame(gameId, sessionId)
+      const game = await ticTacToeApi.joinGame(gameId, sessionId, wager)
       currentGame.value = game
       currentSessionId.value = sessionId
     } catch (err) {

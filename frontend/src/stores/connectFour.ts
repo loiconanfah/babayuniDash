@@ -78,7 +78,7 @@ export const useConnectFourStore = defineStore('connectFour', () => {
   /**
    * Crée une nouvelle partie
    */
-  async function createGame(gameMode: number, player2SessionId?: number): Promise<void> {
+  async function createGame(gameMode: number, player2SessionId?: number, wager: number = 0): Promise<void> {
     if (!currentSessionId.value) {
       throw new Error('Session ID non défini')
     }
@@ -90,7 +90,8 @@ export const useConnectFourStore = defineStore('connectFour', () => {
       const game = await connectFourApi.create({
         sessionId: currentSessionId.value,
         gameMode,
-        player2SessionId
+        player2SessionId,
+        wager
       })
       currentGame.value = game
     } catch (err) {
@@ -177,7 +178,7 @@ export const useConnectFourStore = defineStore('connectFour', () => {
   /**
    * Rejoint une partie existante
    */
-  async function joinGame(gameId: number): Promise<void> {
+  async function joinGame(gameId: number, wager: number = 0): Promise<void> {
     if (!currentSessionId.value) {
       throw new Error('Session ID non défini')
     }
@@ -186,7 +187,7 @@ export const useConnectFourStore = defineStore('connectFour', () => {
       isLoading.value = true
       error.value = null
 
-      const game = await connectFourApi.joinGame(gameId, currentSessionId.value)
+      const game = await connectFourApi.joinGame(gameId, currentSessionId.value, wager)
       currentGame.value = game
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Erreur lors de la jonction à la partie'

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using prisonbreak.Server.Data;
 using prisonbreak.Server.Repositories;
 using prisonbreak.Server.Services;
+using prisonbreak.Server.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +39,7 @@ builder.Services.AddScoped<ITicTacToeService, TicTacToeService>();
 builder.Services.AddScoped<IConnectFourService, ConnectFourService>();
 builder.Services.AddScoped<IRockPaperScissorsService, RockPaperScissorsService>();
 builder.Services.AddScoped<IAdventureService, AdventureService>();
+builder.Services.AddScoped<IItemService, ItemService>();
 
 // Configuration des contrôleurs API
 builder.Services.AddControllers();
@@ -140,6 +142,11 @@ using (var scope = app.Services.CreateScope())
         logger.LogInformation("Application des migrations de base de données...");
         context.Database.Migrate();
         logger.LogInformation("Migrations appliquées avec succès.");
+
+        // Initialiser les items de la boutique
+        logger.LogInformation("Initialisation des items de la boutique...");
+        await SeedItems.SeedAsync(context);
+        logger.LogInformation("Items de la boutique initialisés.");
 
         // TODO: Ajouter des données de test ici si nécessaire
         // Par exemple : créer quelques puzzles de base

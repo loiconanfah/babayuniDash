@@ -15,7 +15,7 @@ public interface IConnectFourService
     /// <param name="gameMode">Mode de jeu : contre un joueur ou contre l'IA</param>
     /// <param name="player2SessionId">ID de la session du joueur 2 (optionnel, pour inviter un joueur spécifique)</param>
     /// <returns>La partie créée</returns>
-    Task<ConnectFourGame> CreateGameAsync(int sessionId, ConnectFourGameMode gameMode = ConnectFourGameMode.Player, int? player2SessionId = null);
+    Task<ConnectFourGame> CreateGameAsync(int sessionId, int wager, ConnectFourGameMode gameMode = ConnectFourGameMode.Player, int? player2SessionId = null);
 
     /// <summary>
     /// Récupère une partie par son ID
@@ -43,7 +43,7 @@ public interface IConnectFourService
     /// <param name="gameId">ID de la partie</param>
     /// <param name="sessionId">ID de la session du joueur qui rejoint</param>
     /// <returns>La partie mise à jour</returns>
-    Task<ConnectFourGame> JoinGameAsync(int gameId, int sessionId);
+    Task<ConnectFourGame> JoinGameAsync(int gameId, int sessionId, int wager = 0);
 
     /// <summary>
     /// Joue un coup dans la partie (laisse tomber une pièce dans une colonne)

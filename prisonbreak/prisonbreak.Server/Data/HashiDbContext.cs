@@ -80,6 +80,16 @@ namespace prisonbreak.Server.Data
         public DbSet<AdventureGame> AdventureGames => Set<AdventureGame>();
 
         /// <summary>
+        /// Table des items disponibles dans la boutique.
+        /// </summary>
+        public DbSet<Item> Items => Set<Item>();
+
+        /// <summary>
+        /// Table de jonction pour les items possédés par les utilisateurs.
+        /// </summary>
+        public DbSet<UserItem> UserItems => Set<UserItem>();
+
+        /// <summary>
         /// Configuration fine du modèle : contraintes, index, relations.
         /// Tout ce qui touche à la structure SQL est centralisé ici.
         /// </summary>
@@ -97,6 +107,8 @@ namespace prisonbreak.Server.Data
             ConfigureConnectFourGame(modelBuilder);
             ConfigureRockPaperScissorsGame(modelBuilder);
             ConfigureAdventureGame(modelBuilder);
+            ConfigureItem(modelBuilder);
+            ConfigureUserItem(modelBuilder);
         }
 
         // ============================
@@ -138,6 +150,10 @@ namespace prisonbreak.Server.Data
 
             entity.Property(u => u.IsActive)
                   .HasDefaultValue(true);
+
+            // Coins par défaut
+            entity.Property(u => u.Coins)
+                  .HasDefaultValue(500);
 
             // Relation logique User (1) -> (N) Sessions
             // Note: La collection Sessions n'existe pas dans User, mais la relation est gérée via UserId dans Session
@@ -560,6 +576,88 @@ namespace prisonbreak.Server.Data
                   .WithMany()
                   .HasForeignKey(g => g.PlayerSessionId)
                   .OnDelete(DeleteBehavior.Cascade);
+        }
+
+        // ============================
+        // Configuration Item
+        // ============================
+
+        /// <summary>
+        /// Configure la table Items
+        /// </summary>
+        private static void ConfigureItem(ModelBuilder modelBuilder)
+        {
+            var entity = modelBuilder.Entity<Item>();
+
+            entity.ToTable("Items");
+
+            entity.HasKey(i => i.Id);
+
+            entity.Property(i => i.Name)
+                  .IsRequired()
+                  .HasMaxLength(100);
+
+            entity.Property(i => i.Description)
+                  .HasMaxLength(500);
+
+            entity.Property(i => i.Price)
+                  .IsRequired();
+
+            entity.Property(i => i.ItemType)
+                  .IsRequired()
+                  .HasMaxLength(50);
+
+            entity.Property(i => i.Rarity)
+                  .HasMaxLength(20)
+                  .HasDefaultValue("Common");
+
+            entity.Property(i => i.IsAvailable)
+                  .HasDefaultValue(true);
+
+            entity.Property(i => i.CreatedAt)
+                  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.HasIndex(i => i.ItemType);
+            entity.HasIndex(i => i.Rarity);
+        }
+
+        // ============================
+        // Configuration UserItem
+        // ============================
+
+        /// <summary>
+        /// Configure la table UserItems (relation plusieurs-à-plusieurs)
+        /// </summary>
+        private static void ConfigureUserItem(ModelBuilder modelBuilder)
+        {
+            var entity = modelBuilder.Entity<UserItem>();
+
+            entity.ToTable("UserItems");
+
+            entity.HasKey(ui => ui.Id);
+
+            entity.Property(ui => ui.PurchasedAt)
+                  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(ui => ui.IsEquipped)
+                  .HasDefaultValue(false);
+
+            // Index pour les requêtes
+            entity.HasIndex(ui => ui.UserId);
+            entity.HasIndex(ui => ui.ItemId);
+            entity.HasIndex(ui => new { ui.UserId, ui.ItemId }).IsUnique(); // Un utilisateur ne peut avoir qu'un seul exemplaire d'un item
+
+            // Relation UserItem -> User
+            entity.HasOne(ui => ui.User)
+                  .WithMany(u => u.UserItems)
+                  .HasForeignKey(ui => ui.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            // Relation UserItem -> Item
+            entity.HasOne(ui => ui.Item)
+                  .WithMany(i => i.UserItems)
+                  .HasForeignKey(ui => ui.ItemId)
+                  .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

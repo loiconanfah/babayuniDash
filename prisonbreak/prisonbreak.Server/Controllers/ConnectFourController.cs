@@ -44,7 +44,7 @@ public class ConnectFourController : ControllerBase
                 request.SessionId, request.GameMode);
 
             var gameMode = (ConnectFourGameMode)request.GameMode;
-            var game = await _connectFourService.CreateGameAsync(request.SessionId, gameMode, request.Player2SessionId);
+            var game = await _connectFourService.CreateGameAsync(request.SessionId, request.Wager, gameMode, request.Player2SessionId);
             var gameDto = _connectFourService.ConvertToDto(game);
 
             return CreatedAtAction(nameof(GetGameById), new { id = game.Id }, gameDto);
@@ -149,7 +149,7 @@ public class ConnectFourController : ControllerBase
                 return BadRequest("La requête ne peut pas être nulle");
             }
 
-            var game = await _connectFourService.JoinGameAsync(id, request.SessionId);
+            var game = await _connectFourService.JoinGameAsync(id, request.SessionId, request.Wager);
             var gameDto = _connectFourService.ConvertToDto(game);
 
             _logger.LogInformation("Joueur a rejoint la partie : GameId={GameId}, SessionId={SessionId}", id, request.SessionId);

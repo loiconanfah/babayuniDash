@@ -296,6 +296,12 @@ export interface TicTacToeGame {
   moveCount: number
   /** Mode de jeu : 1 = contre un joueur, 2 = contre l'IA */
   gameMode: TicTacToeGameMode
+  /** Mise du joueur 1 en coins */
+  player1Wager: number
+  /** Mise du joueur 2 en coins */
+  player2Wager: number
+  /** Total de la mise (player1Wager + player2Wager) */
+  totalWager: number
 }
 
 /**
@@ -328,6 +334,8 @@ export interface CreateTicTacToeGameRequest {
   gameMode: TicTacToeGameMode
   /** ID de la session du joueur 2 (optionnel, pour inviter un joueur spécifique) */
   player2SessionId?: number
+  /** Mise en coins (optionnel, 0 par défaut) */
+  wager?: number
 }
 
 /**
@@ -338,6 +346,8 @@ export interface JoinTicTacToeGameRequest {
   gameId: number
   /** ID de la session du joueur */
   sessionId: number
+  /** Mise en coins (doit correspondre à la mise du joueur 1 si une mise existe) */
+  wager?: number
 }
 
 /**
@@ -410,6 +420,12 @@ export interface ConnectFourGame {
   moveCount: number
   /** Mode de jeu : 1 = contre un joueur, 2 = contre l'IA */
   gameMode: ConnectFourGameMode
+  /** Mise du joueur 1 en coins */
+  player1Wager: number
+  /** Mise du joueur 2 en coins */
+  player2Wager: number
+  /** Total de la mise (player1Wager + player2Wager) */
+  totalWager: number
 }
 
 /**
@@ -422,6 +438,8 @@ export interface CreateConnectFourGameRequest {
   gameMode: ConnectFourGameMode
   /** ID de la session du joueur 2 (optionnel, pour inviter un joueur spécifique) */
   player2SessionId?: number
+  /** Mise en coins (optionnel, 0 par défaut) */
+  wager?: number
 }
 
 /**
@@ -432,6 +450,8 @@ export interface JoinConnectFourGameRequest {
   gameId: number
   /** ID de la session du joueur */
   sessionId: number
+  /** Mise en coins (doit correspondre à la mise du joueur 1 si une mise existe) */
+  wager?: number
 }
 
 /**
@@ -524,6 +544,12 @@ export interface RockPaperScissorsGame {
   elapsedSeconds: number
   /** Mode de jeu : 1 = contre un joueur, 2 = contre l'IA */
   gameMode: RPSGameMode
+  /** Mise du joueur 1 en coins */
+  player1Wager: number
+  /** Mise du joueur 2 en coins */
+  player2Wager: number
+  /** Total de la mise (player1Wager + player2Wager) */
+  totalWager: number
 }
 
 /**
@@ -536,6 +562,8 @@ export interface CreateRPSGameRequest {
   gameMode: RPSGameMode
   /** ID de la session du joueur 2 (optionnel, pour inviter un joueur spécifique) */
   player2SessionId?: number
+  /** Mise en coins (optionnel, 0 par défaut) */
+  wager?: number
 }
 
 /**
@@ -546,6 +574,8 @@ export interface JoinRPSGameRequest {
   gameId: number
   /** ID de la session du joueur */
   sessionId: number
+  /** Mise en coins (doit correspondre à la mise du joueur 1 si une mise existe) */
+  wager?: number
 }
 
 /**
@@ -656,5 +686,56 @@ export interface PuzzleInfoDto {
   hints: string[]
   /** Points gagnés en résolvant l'énigme */
   points: number
+}
+
+/**
+ * Représente un item de la boutique
+ */
+export interface Item {
+  id: number
+  name: string
+  description: string
+  price: number
+  itemType: string
+  rarity: string
+  imageUrl: string
+  icon: string
+  isAvailable: boolean
+  isOwned: boolean
+}
+
+/**
+ * Représente un item possédé par un utilisateur
+ */
+export interface UserItem {
+  id: number
+  itemId: number
+  item: Item
+  purchasedAt: string
+  isEquipped: boolean
+}
+
+/**
+ * Représente les coins d'un utilisateur
+ */
+export interface UserCoins {
+  userId: number
+  coins: number
+}
+
+/**
+ * Requête pour acheter un item
+ */
+export interface PurchaseItemRequest {
+  itemId: number
+  userId: number
+}
+
+/**
+ * Requête pour équiper/déséquiper un item
+ */
+export interface EquipItemRequest {
+  userItemId: number
+  isEquipped: boolean
 }
 

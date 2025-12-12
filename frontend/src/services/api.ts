@@ -296,13 +296,13 @@ export const ticTacToeApi = {
   /**
    * Rejoint une partie existante
    */
-  async joinGame(gameId: number, sessionId: number): Promise<TicTacToeGame> {
+  async joinGame(gameId: number, sessionId: number, wager: number = 0): Promise<TicTacToeGame> {
     const response = await fetch(`${API_BASE_URL}/TicTacToe/${gameId}/join`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ gameId, sessionId })
+      body: JSON.stringify({ gameId, sessionId, wager })
     })
     return handleResponse<TicTacToeGame>(response)
   },
@@ -381,13 +381,13 @@ export const connectFourApi = {
   /**
    * Rejoint une partie existante
    */
-  async joinGame(gameId: number, sessionId: number): Promise<ConnectFourGame> {
+  async joinGame(gameId: number, sessionId: number, wager: number = 0): Promise<ConnectFourGame> {
     const response = await fetch(`${API_BASE_URL}/ConnectFour/${gameId}/join`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ gameId, sessionId })
+      body: JSON.stringify({ gameId, sessionId, wager })
     })
     return handleResponse<ConnectFourGame>(response)
   },
@@ -469,13 +469,13 @@ export const rpsApi = {
   /**
    * Rejoint une partie existante
    */
-  async joinGame(gameId: number, sessionId: number): Promise<RockPaperScissorsGame> {
+  async joinGame(gameId: number, sessionId: number, wager: number = 0): Promise<RockPaperScissorsGame> {
     const response = await fetch(`${API_BASE_URL}/RockPaperScissors/${gameId}/join`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ gameId, sessionId })
+      body: JSON.stringify({ gameId, sessionId, wager })
     })
     return handleResponse<RockPaperScissorsGame>(response)
   },

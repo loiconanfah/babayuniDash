@@ -14,19 +14,22 @@ interface UserState {
   user: User | null;
   session: SessionDto | null;
   isInitialized: boolean;
+  coins: number;
 }
 
 export const useUserStore = defineStore('user', {
   state: (): UserState => ({
     user: null,
     session: null,
-    isInitialized: false
+    isInitialized: false,
+    coins: 0
   }),
 
   getters: {
     isLoggedIn: (state) => state.user !== null,
     hasActiveSession: (state) => state.session !== null && state.session.isActive,
-    sessionId: (state) => state.session?.id ?? null
+    sessionId: (state) => state.session?.id ?? null,
+    userId: (state) => state.user?.id ?? null
   },
 
   actions: {
@@ -66,6 +69,10 @@ export const useUserStore = defineStore('user', {
      */
     setUser(user: User) {
       this.user = user;
+      // Charger les coins depuis le UserDto si disponible
+      if ('coins' in user && typeof (user as any).coins === 'number') {
+        this.coins = (user as any).coins;
+      }
       window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(user));
     },
 
@@ -116,6 +123,25 @@ export const useUserStore = defineStore('user', {
         userAgent: navigator.userAgent
       });
       this.setSession(session);
+      
+      // Charger les coins de l'utilisateur
+      await this.loadCoins();
+    },
+
+    /**
+     * Charge les coins de l'utilisateur depuis l'API
+     */
+    async loadCoins() {
+      if (!this.user?.id) return;
+      
+      try {
+        const { getUserCoins } = await import('@/services/shopApi');
+        const coinsData = await getUserCoins(this.user.id);
+        this.coins = coinsData.coins;
+      } catch (err) {
+        console.warn('Impossible de charger les coins:', err);
+        this.coins = 0;
+      }
     },
 
     /**

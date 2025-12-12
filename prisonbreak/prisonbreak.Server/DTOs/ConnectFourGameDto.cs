@@ -84,6 +84,21 @@ public class ConnectFourGameDto
     /// Mode de jeu : 1 = contre un joueur, 2 = contre l'IA
     /// </summary>
     public int GameMode { get; set; }
+
+    /// <summary>
+    /// Mise du joueur 1 en coins
+    /// </summary>
+    public int Player1Wager { get; set; }
+
+    /// <summary>
+    /// Mise du joueur 2 en coins
+    /// </summary>
+    public int Player2Wager { get; set; }
+
+    /// <summary>
+    /// Total de la mise (Player1Wager + Player2Wager)
+    /// </summary>
+    public int TotalWager => Player1Wager + Player2Wager;
 }
 
 /// <summary>
@@ -105,6 +120,11 @@ public class CreateConnectFourGameRequest
     /// Identifiant de la session du joueur 2 (optionnel, pour inviter un joueur spécifique)
     /// </summary>
     public int? Player2SessionId { get; set; }
+
+    /// <summary>
+    /// Mise en coins (optionnel, 0 par défaut)
+    /// </summary>
+    public int Wager { get; set; } = 0;
 }
 
 /// <summary>
@@ -121,6 +141,11 @@ public class JoinConnectFourGameRequest
     /// Identifiant de la session du joueur qui rejoint
     /// </summary>
     public int SessionId { get; set; }
+
+    /// <summary>
+    /// Mise en coins (doit correspondre à la mise du joueur 1 si une mise existe)
+    /// </summary>
+    public int Wager { get; set; } = 0;
 }
 
 /// <summary>

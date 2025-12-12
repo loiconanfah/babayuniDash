@@ -24,6 +24,9 @@ public class RockPaperScissorsGameDto
     public DateTime? CompletedAt { get; set; }
     public int ElapsedSeconds { get; set; }
     public int GameMode { get; set; }
+    public int Player1Wager { get; set; }
+    public int Player2Wager { get; set; }
+    public int TotalWager => Player1Wager + Player2Wager;
 }
 
 public class CreateRPSGameRequest
@@ -31,12 +34,14 @@ public class CreateRPSGameRequest
     public int SessionId { get; set; }
     public int GameMode { get; set; } = 1;
     public int? Player2SessionId { get; set; }
+    public int Wager { get; set; } = 0;
 }
 
 public class JoinRPSGameRequest
 {
     public int GameId { get; set; }
     public int SessionId { get; set; }
+    public int Wager { get; set; } = 0;
 }
 
 public class PlayRPSChoiceRequest

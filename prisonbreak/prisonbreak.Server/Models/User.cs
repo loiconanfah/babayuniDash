@@ -45,6 +45,18 @@ namespace prisonbreak.Server.Models
         public bool IsActive { get; set; } = true;
 
         /// <summary>
+        /// Nombre de coins (monnaie virtuelle) possédés par l'utilisateur
+        /// Utilisé pour acheter des items dans la boutique et parier sur les parties
+        /// </summary>
+        public int Coins { get; set; } = 500; // Coins de départ
+
+        /// <summary>
+        /// Collection des items possédés par l'utilisateur
+        /// Relation plusieurs-à-plusieurs via UserItem
+        /// </summary>
+        public ICollection<UserItem> UserItems { get; set; } = new List<UserItem>();
+
+        /// <summary>
         /// Met à jour la date de dernière connexion du joueur.
         /// Cette méthode est utilisée par SessionService (user.UpdateLastLogin()).
         /// </summary>
@@ -53,6 +65,28 @@ namespace prisonbreak.Server.Models
             LastLoginAt = DateTime.UtcNow;
             // On peut aussi forcer le compte comme actif au passage.
             IsActive = true;
+        }
+
+        /// <summary>
+        /// Ajoute des coins à l'utilisateur
+        /// </summary>
+        public void AddCoins(int amount)
+        {
+            if (amount > 0)
+                Coins += amount;
+        }
+
+        /// <summary>
+        /// Retire des coins de l'utilisateur
+        /// </summary>
+        public bool RemoveCoins(int amount)
+        {
+            if (amount > 0 && Coins >= amount)
+            {
+                Coins -= amount;
+                return true;
+            }
+            return false;
         }
     }
 }

@@ -62,7 +62,8 @@ namespace prisonbreak.Server.Services
                 CreatedAt = user.CreatedAt,
                 LastLoginAt = user.LastLoginAt,
                 IsActive = user.IsActive,
-                ActiveSessionCount = activeSessionCount
+                ActiveSessionCount = activeSessionCount,
+                Coins = user.Coins
             };
         }
     }

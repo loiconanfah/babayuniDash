@@ -23,12 +23,31 @@ public class RockPaperScissorsService : IRockPaperScissorsService
         _logger = logger;
     }
 
-    public async Task<RockPaperScissorsGame> CreateGameAsync(int sessionId, RPSGameMode gameMode = RPSGameMode.Player, int? player2SessionId = null)
+    public async Task<RockPaperScissorsGame> CreateGameAsync(int sessionId, int wager, RPSGameMode gameMode = RPSGameMode.Player, int? player2SessionId = null)
     {
         var session = await _sessionRepository.GetByIdAsync(sessionId);
         if (session == null || !session.IsValid())
         {
             throw new ArgumentException($"La session avec l'ID {sessionId} n'existe pas ou n'est pas valide", nameof(sessionId));
+        }
+
+        // Gérer la mise si c'est une partie multijoueur
+        if (wager > 0 && gameMode == RPSGameMode.Player)
+        {
+            var user = await _context.Users.FindAsync(session.UserId);
+            if (user == null)
+            {
+                throw new ArgumentException("L'utilisateur associé à la session n'existe pas", nameof(sessionId));
+            }
+
+            if (user.Coins < wager)
+            {
+                throw new InvalidOperationException($"Vous n'avez pas assez de coins. Vous avez {user.Coins} coins, mais vous essayez de miser {wager} coins.");
+            }
+
+            // Déduire les coins du joueur 1
+            user.Coins -= wager;
+            _context.Users.Update(user);
         }
 
         if (player2SessionId.HasValue && gameMode == RPSGameMode.Player)
@@ -52,12 +71,15 @@ public class RockPaperScissorsService : IRockPaperScissorsService
             GameMode = gameMode,
             Status = gameMode == RPSGameMode.AI 
                 ? RPSGameStatus.WaitingForChoices 
-                : (player2SessionId.HasValue ? RPSGameStatus.WaitingForChoices : RPSGameStatus.WaitingForPlayer),
+                : RPSGameStatus.WaitingForPlayer, // Toujours en attente pour les parties multijoueurs, même avec player2SessionId
             CreatedAt = DateTime.UtcNow,
-            RoundsToWin = 3
+            RoundsToWin = 3,
+            Player1Wager = wager
         };
 
-        if (gameMode == RPSGameMode.AI || player2SessionId.HasValue)
+        // Si c'est contre l'IA, démarrer immédiatement
+        // Pour les parties multijoueurs, on attend que le joueur 2 accepte et entre sa mise
+        if (gameMode == RPSGameMode.AI)
         {
             game.StartedAt = DateTime.UtcNow;
         }
@@ -106,7 +128,7 @@ public class RockPaperScissorsService : IRockPaperScissorsService
             .ToListAsync();
     }
 
-    public async Task<RockPaperScissorsGame> JoinGameAsync(int gameId, int sessionId)
+    public async Task<RockPaperScissorsGame> JoinGameAsync(int gameId, int sessionId, int wager = 0)
     {
         var game = await GetGameByIdAsync(gameId);
         if (game == null)
@@ -130,7 +152,37 @@ public class RockPaperScissorsService : IRockPaperScissorsService
             throw new ArgumentException($"La session avec l'ID {sessionId} n'existe pas ou n'est pas valide", nameof(sessionId));
         }
 
+        // Gérer la mise si nécessaire
+        if (game.Player1Wager > 0)
+        {
+            if (wager != game.Player1Wager)
+            {
+                throw new InvalidOperationException($"Vous devez miser exactement {game.Player1Wager} coins pour rejoindre cette partie");
+            }
+
+            var user = await _context.Users.FindAsync(session.UserId);
+            if (user == null)
+            {
+                throw new ArgumentException("L'utilisateur associé à la session n'existe pas", nameof(sessionId));
+            }
+
+            if (user.Coins < wager)
+            {
+                throw new InvalidOperationException($"Vous n'avez pas assez de coins. Vous avez {user.Coins} coins, mais vous essayez de miser {wager} coins.");
+            }
+
+            // Déduire les coins du joueur 2
+            user.Coins -= wager;
+            _context.Users.Update(user);
+        }
+        else if (wager > 0)
+        {
+            // Si le joueur 1 n'a pas misé mais le joueur 2 veut miser, ce n'est pas autorisé
+            throw new InvalidOperationException("Le joueur 1 n'a pas misé de coins, vous ne pouvez pas miser");
+        }
+
         game.Player2SessionId = sessionId;
+        game.Player2Wager = wager;
         game.Status = RPSGameStatus.WaitingForChoices;
         game.StartedAt = DateTime.UtcNow;
 
@@ -209,12 +261,42 @@ public class RockPaperScissorsService : IRockPaperScissorsService
                 game.WinnerPlayerId = 1;
                 game.Status = RPSGameStatus.Completed;
                 game.CompletedAt = DateTime.UtcNow;
+
+                // Distribuer les gains si il y a des paris
+                if (game.Player1Wager + game.Player2Wager > 0)
+                {
+                    if (game.Player1Session != null)
+                    {
+                        var winnerUser = await _context.Users.FindAsync(game.Player1Session.UserId);
+                        if (winnerUser != null)
+                        {
+                            var totalWager = game.Player1Wager + game.Player2Wager;
+                            winnerUser.Coins += totalWager;
+                            _context.Users.Update(winnerUser);
+                        }
+                    }
+                }
             }
             else if (game.Player2Score >= game.RoundsToWin)
             {
                 game.WinnerPlayerId = 2;
                 game.Status = RPSGameStatus.Completed;
                 game.CompletedAt = DateTime.UtcNow;
+
+                // Distribuer les gains si il y a des paris
+                if (game.Player1Wager + game.Player2Wager > 0)
+                {
+                    if (game.Player2Session != null)
+                    {
+                        var winnerUser = await _context.Users.FindAsync(game.Player2Session.UserId);
+                        if (winnerUser != null)
+                        {
+                            var totalWager = game.Player1Wager + game.Player2Wager;
+                            winnerUser.Coins += totalWager;
+                            _context.Users.Update(winnerUser);
+                        }
+                    }
+                }
             }
         }
 
@@ -282,6 +364,22 @@ public class RockPaperScissorsService : IRockPaperScissorsService
         game.CompletedAt = DateTime.UtcNow;
         game.ElapsedSeconds = (int)(DateTime.UtcNow - (game.StartedAt ?? game.CreatedAt)).TotalSeconds;
 
+        // Distribuer les gains si il y a des paris
+        if (game.Player1Wager + game.Player2Wager > 0)
+        {
+            var winnerSession = game.WinnerPlayerId == 1 ? game.Player1Session : game.Player2Session;
+            if (winnerSession != null)
+            {
+                var winnerUser = await _context.Users.FindAsync(winnerSession.UserId);
+                if (winnerUser != null)
+                {
+                    var totalWager = game.Player1Wager + game.Player2Wager;
+                    winnerUser.Coins += totalWager;
+                    _context.Users.Update(winnerUser);
+                }
+            }
+        }
+
         await _context.SaveChangesAsync();
 
         _logger?.LogInformation("Partie abandonnée : GameId={GameId}, Player={Player}", gameId, playerNumber);
@@ -318,7 +416,9 @@ public class RockPaperScissorsService : IRockPaperScissorsService
             StartedAt = game.StartedAt,
             CompletedAt = game.CompletedAt,
             ElapsedSeconds = game.ElapsedSeconds,
-            GameMode = (int)game.GameMode
+            GameMode = (int)game.GameMode,
+            Player1Wager = game.Player1Wager,
+            Player2Wager = game.Player2Wager
         };
 
         return dto;

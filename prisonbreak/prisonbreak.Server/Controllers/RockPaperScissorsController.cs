@@ -28,7 +28,7 @@ public class RockPaperScissorsController : ControllerBase
             if (request == null) return BadRequest("La requête ne peut pas être nulle");
             _logger.LogInformation("Création d'une partie RPS : SessionId={SessionId}, GameMode={GameMode}", request.SessionId, request.GameMode);
             var gameMode = (RPSGameMode)request.GameMode;
-            var game = await _rpsService.CreateGameAsync(request.SessionId, gameMode, request.Player2SessionId);
+            var game = await _rpsService.CreateGameAsync(request.SessionId, request.Wager, gameMode, request.Player2SessionId);
             var gameDto = _rpsService.ConvertToDto(game, request.SessionId);
             return CreatedAtAction(nameof(GetGameById), new { id = game.Id }, gameDto);
         }
@@ -79,7 +79,7 @@ public class RockPaperScissorsController : ControllerBase
         try
         {
             if (request == null) return BadRequest("La requête ne peut pas être nulle");
-            var game = await _rpsService.JoinGameAsync(id, request.SessionId);
+            var game = await _rpsService.JoinGameAsync(id, request.SessionId, request.Wager);
             var gameDto = _rpsService.ConvertToDto(game, request.SessionId);
             _logger.LogInformation("Joueur a rejoint la partie : GameId={GameId}, SessionId={SessionId}", id, request.SessionId);
             return Ok(gameDto);
