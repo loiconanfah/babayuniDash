@@ -15,6 +15,14 @@
         <p class="text-base text-slate-300 max-w-2xl">
           Observez les parties multijoueurs en cours avec paris. Rejoignez ou créez votre propre match !
         </p>
+        <div class="mt-4">
+          <button
+            @click="uiStore.goToTournaments()"
+            class="px-6 py-3 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold hover:from-yellow-400 hover:to-orange-400 transition-all duration-300 shadow-lg hover:shadow-xl"
+          >
+            🏆 Voir les Tournois
+          </button>
+        </div>
       </header>
 
       <!-- Filtres par type de jeu -->

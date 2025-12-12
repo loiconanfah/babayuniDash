@@ -561,6 +561,57 @@ namespace prisonbreak.Server.Migrations
                     b.ToTable("Items", (string)null);
                 });
 
+            modelBuilder.Entity("prisonbreak.Server.Models.Notification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("DataJson")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsRead")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("IsRead");
+
+                    b.HasIndex("Type");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Notifications", (string)null);
+                });
+
             modelBuilder.Entity("prisonbreak.Server.Models.Puzzle", b =>
                 {
                     b.Property<int>("Id")
@@ -790,6 +841,155 @@ namespace prisonbreak.Server.Migrations
                     b.HasIndex("Status");
 
                     b.ToTable("TicTacToeGames", (string)null);
+                });
+
+            modelBuilder.Entity("prisonbreak.Server.Models.Tournament", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int>("CurrentParticipants")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EntryFee")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("FirstPlacePrize")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("GameType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MaxParticipants")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SecondPlacePrize")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ThirdPlacePrize")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TotalPrize")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GameType");
+
+                    b.HasIndex("StartDate");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("Tournaments", (string)null);
+                });
+
+            modelBuilder.Entity("prisonbreak.Server.Models.TournamentMatch", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("GameId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Participant1Id")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Participant2Id")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Round")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TournamentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("WinnerId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Participant1Id");
+
+                    b.HasIndex("Participant2Id");
+
+                    b.HasIndex("Round");
+
+                    b.HasIndex("TournamentId");
+
+                    b.ToTable("TournamentMatches", (string)null);
+                });
+
+            modelBuilder.Entity("prisonbreak.Server.Models.TournamentParticipant", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("FinalPosition")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsEliminated")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int>("PrizeWon")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TournamentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TournamentId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("TournamentId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("TournamentParticipants", (string)null);
                 });
 
             modelBuilder.Entity("prisonbreak.Server.Models.User", b =>
@@ -1060,6 +1260,17 @@ namespace prisonbreak.Server.Migrations
                     b.Navigation("Puzzle");
                 });
 
+            modelBuilder.Entity("prisonbreak.Server.Models.Notification", b =>
+                {
+                    b.HasOne("prisonbreak.Server.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("prisonbreak.Server.Models.RockPaperScissorsGame", b =>
                 {
                     b.HasOne("prisonbreak.Server.Models.Session", "Player1Session")
@@ -1105,6 +1316,52 @@ namespace prisonbreak.Server.Migrations
                     b.Navigation("Player1Session");
 
                     b.Navigation("Player2Session");
+                });
+
+            modelBuilder.Entity("prisonbreak.Server.Models.TournamentMatch", b =>
+                {
+                    b.HasOne("prisonbreak.Server.Models.TournamentParticipant", "Participant1")
+                        .WithMany()
+                        .HasForeignKey("Participant1Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("prisonbreak.Server.Models.TournamentParticipant", "Participant2")
+                        .WithMany()
+                        .HasForeignKey("Participant2Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("prisonbreak.Server.Models.Tournament", "Tournament")
+                        .WithMany("Matches")
+                        .HasForeignKey("TournamentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Participant1");
+
+                    b.Navigation("Participant2");
+
+                    b.Navigation("Tournament");
+                });
+
+            modelBuilder.Entity("prisonbreak.Server.Models.TournamentParticipant", b =>
+                {
+                    b.HasOne("prisonbreak.Server.Models.Tournament", "Tournament")
+                        .WithMany("Participants")
+                        .HasForeignKey("TournamentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("prisonbreak.Server.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tournament");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("prisonbreak.Server.Models.UserItem", b =>
@@ -1157,6 +1414,13 @@ namespace prisonbreak.Server.Migrations
             modelBuilder.Entity("prisonbreak.Server.Models.Session", b =>
                 {
                     b.Navigation("Games");
+                });
+
+            modelBuilder.Entity("prisonbreak.Server.Models.Tournament", b =>
+                {
+                    b.Navigation("Matches");
+
+                    b.Navigation("Participants");
                 });
 
             modelBuilder.Entity("prisonbreak.Server.Models.User", b =>

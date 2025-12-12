@@ -41,5 +41,10 @@ public interface IItemService
     /// Ajoute des coins à un utilisateur
     /// </summary>
     Task<int> AddCoinsAsync(int userId, int amount);
+
+    /// <summary>
+    /// Récupère l'avatar équipé d'un utilisateur (item de type Avatar qui est équipé)
+    /// </summary>
+    Task<ItemDto?> GetEquippedAvatarAsync(int userId);
 }
 

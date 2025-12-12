@@ -3,6 +3,7 @@ using prisonbreak.Server.Data;
 using prisonbreak.Server.Repositories;
 using prisonbreak.Server.Services;
 using prisonbreak.Server.Models;
+using prisonbreak.Server.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,6 +44,11 @@ builder.Services.AddScoped<IItemService, ItemService>();
 builder.Services.AddScoped<IFriendshipService, FriendshipService>();
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<ICommunityService, CommunityService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<ITournamentService, TournamentService>();
+
+// Configuration SignalR pour le chat en temps réel
+builder.Services.AddSignalR();
 
 // Configuration des contrôleurs API
 builder.Services.AddControllers();
@@ -154,6 +160,9 @@ app.UseHttpsRedirection();
 
 // Activer CORS pour le frontend (après UseRouting si utilisé, avant UseEndpoints)
 app.UseCors("AllowVueFrontend");
+
+// Configuration SignalR
+app.MapHub<prisonbreak.Server.Hubs.ChatHub>("/hubs/chat");
 
 // Servir les fichiers statiques (nécessaire pour les uploads d'images même en développement)
 app.UseStaticFiles();

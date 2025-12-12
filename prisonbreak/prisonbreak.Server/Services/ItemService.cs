@@ -240,5 +240,33 @@ public class ItemService : IItemService
 
         return user.Coins;
     }
+
+    public async Task<ItemDto?> GetEquippedAvatarAsync(int userId)
+    {
+        var equippedAvatar = await _context.UserItems
+            .Include(ui => ui.Item)
+            .Where(ui => ui.UserId == userId 
+                && ui.Item.ItemType == "Avatar" 
+                && ui.IsEquipped)
+            .Select(ui => ui.Item)
+            .FirstOrDefaultAsync();
+
+        if (equippedAvatar == null)
+            return null;
+
+        return new ItemDto
+        {
+            Id = equippedAvatar.Id,
+            Name = equippedAvatar.Name,
+            Description = equippedAvatar.Description,
+            Price = equippedAvatar.Price,
+            ItemType = equippedAvatar.ItemType,
+            Rarity = equippedAvatar.Rarity,
+            ImageUrl = equippedAvatar.ImageUrl,
+            Icon = equippedAvatar.Icon,
+            IsAvailable = equippedAvatar.IsAvailable,
+            IsOwned = true
+        };
+    }
 }
 

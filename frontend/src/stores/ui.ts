@@ -3,7 +3,7 @@
 
 import { defineStore } from 'pinia';
 
-export type Screen = 'home' | 'levels' | 'game' | 'leaderboard' | 'stats' | 'games' | 'ticTacToe' | 'connectFour' | 'rockPaperScissors' | 'adventure' | 'shop' | 'collection' | 'matches' | 'profile' | 'community';
+export type Screen = 'home' | 'levels' | 'game' | 'leaderboard' | 'stats' | 'games' | 'ticTacToe' | 'connectFour' | 'rockPaperScissors' | 'adventure' | 'shop' | 'collection' | 'matches' | 'profile' | 'community' | 'tournaments';
 export type Difficulty = 'easy' | 'medium' | 'hard' | null;
 
 interface UiState {
@@ -75,6 +75,9 @@ export const useUiStore = defineStore('ui', {
     },
     goToCommunity() {
       this.currentScreen = 'community';
+    },
+    goToTournaments() {
+      this.currentScreen = 'tournaments';
     },
 
     // Modale utilisateur

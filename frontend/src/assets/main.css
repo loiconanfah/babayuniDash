@@ -135,4 +135,18 @@
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(148, 163, 184, 0.15);
   }
+
+  /* Animation de brillance pour les cartes d'items */
+  @keyframes shine {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .animate-shine {
+    animation: shine 1.5s ease-in-out infinite;
+  }
 }

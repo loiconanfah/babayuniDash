@@ -100,17 +100,6 @@
                 </p>
               </div>
 
-              <!-- Bouton d'action -->
-              <button
-                @click="onPlay"
-                class="w-full px-6 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 text-white text-sm font-bold tracking-wide hover:from-cyan-400 hover:via-purple-400 hover:to-pink-400 transition-all duration-300 shadow-lg shadow-cyan-500/40 hover:shadow-xl hover:shadow-cyan-500/60 hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>Jouer maintenant</span>
-              </button>
             </div>
           </div>
         </div>
@@ -417,46 +406,6 @@
         </div>
       </section>
 
-      <!-- Boutons principaux -->
-      <section class="flex flex-wrap gap-4 animate-slide-up" style="animation-delay: 0.4s">
-        <button
-          v-if="!isLoggedIn"
-          class="group relative px-8 py-4 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 text-slate-900 text-sm font-bold tracking-wide hover:from-orange-400 hover:to-orange-500 transition-all duration-300 shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/40 hover:scale-105 active:scale-95 overflow-hidden"
-          @click="onPlayOrRegister"
-        >
-          <span class="relative z-10 flex items-center gap-2">
-            <span>🎮</span>
-            <span>Jouer / S'inscrire</span>
-            <span class="opacity-0 group-hover:opacity-100 transition-opacity">→</span>
-          </span>
-          <div class="absolute inset-0 bg-gradient-to-r from-orange-400 to-orange-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-        </button>
-
-        <button
-          v-else
-          class="group relative px-8 py-4 rounded-full bg-gradient-to-r from-green-500 to-green-600 text-slate-900 text-sm font-bold tracking-wide hover:from-green-400 hover:to-green-500 transition-all duration-300 shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 hover:scale-105 active:scale-95 overflow-hidden"
-          @click="onPlay"
-        >
-          <span class="relative z-10 flex items-center gap-2">
-            <span>🎮</span>
-            <span>Jouer</span>
-            <span class="opacity-0 group-hover:opacity-100 transition-opacity">→</span>
-          </span>
-          <div class="absolute inset-0 bg-gradient-to-r from-green-400 to-green-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-        </button>
-
-        <button
-          class="group relative px-8 py-4 rounded-full bg-gradient-to-r from-slate-800 to-slate-900 text-slate-100 text-sm font-bold tracking-wide hover:from-slate-700 hover:to-slate-800 transition-all duration-300 shadow-lg shadow-slate-900/30 hover:shadow-xl hover:shadow-slate-900/40 hover:scale-105 active:scale-95 border border-slate-700 hover:border-slate-600 overflow-hidden"
-          @click="onTutorial"
-        >
-          <span class="relative z-10 flex items-center gap-2">
-            <span>📖</span>
-            <span>Tutoriel</span>
-            <span class="opacity-0 group-hover:opacity-100 transition-opacity">→</span>
-          </span>
-          <div class="absolute inset-0 bg-gradient-to-r from-slate-700 to-slate-800 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-        </button>
-      </section>
 
       <!-- Section Amis et Aperçu Communauté -->
       <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10 animate-slide-up" style="animation-delay: 0.4s">
@@ -603,17 +552,6 @@ const userIdLabel = computed(() => {
   return userStore.user.id.toString().padStart(3, '0');
 });
 
-function onPlayOrRegister() {
-  uiStore.openUserModal();
-}
-
-function onPlay() {
-  uiStore.goToLevels();
-}
-
-function onTutorial() {
-  uiStore.openTutorialModal();
-}
 
 const recentPosts = computed(() => communityStore.posts.slice(0, 3));
 const communityStats = computed(() => ({

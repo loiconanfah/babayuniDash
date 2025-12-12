@@ -15,6 +15,7 @@ interface UserState {
   session: SessionDto | null;
   isInitialized: boolean;
   coins: number;
+  equippedAvatarUrl: string | null;
 }
 
 export const useUserStore = defineStore('user', {
@@ -22,7 +23,8 @@ export const useUserStore = defineStore('user', {
     user: null,
     session: null,
     isInitialized: false,
-    coins: 0
+    coins: 0,
+    equippedAvatarUrl: null
   }),
 
   getters: {
@@ -126,6 +128,8 @@ export const useUserStore = defineStore('user', {
       
       // Charger les coins de l'utilisateur
       await this.loadCoins();
+      // Charger l'avatar équipé
+      await this.loadEquippedAvatar();
     },
 
     /**
@@ -141,6 +145,26 @@ export const useUserStore = defineStore('user', {
       } catch (err) {
         console.warn('Impossible de charger les coins:', err);
         this.coins = 0;
+      }
+    },
+
+    /**
+     * Charge l'avatar équipé de l'utilisateur
+     */
+    async loadEquippedAvatar() {
+      if (!this.user?.id) {
+        this.equippedAvatarUrl = null;
+        return;
+      }
+      
+      try {
+        const { getUserItems } = await import('@/services/shopApi');
+        const userItems = await getUserItems(this.user.id);
+        const equippedAvatar = userItems.find(ui => ui.item.itemType === 'Avatar' && ui.isEquipped);
+        this.equippedAvatarUrl = equippedAvatar?.item.imageUrl || null;
+      } catch (err) {
+        console.warn('Impossible de charger l\'avatar équipé:', err);
+        this.equippedAvatarUrl = null;
       }
     },
 

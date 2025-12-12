@@ -301,62 +301,20 @@
             </button>
 
             <!-- Panneau de notifications -->
-            <div
-              v-if="notificationsStore.showNotificationsPanel"
-              @click.stop
-              class="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-96 max-w-[calc(100vw-2rem)] sm:max-w-none bg-gradient-to-br from-zinc-800 to-zinc-900 rounded-2xl shadow-2xl border border-zinc-700/50 overflow-hidden z-[70] max-h-[calc(100vh-6rem)] flex flex-col backdrop-blur-xl"
-            >
-              <div class="px-5 py-4 border-b border-zinc-700/50 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 flex items-center justify-between">
-                <h3 class="text-lg font-bold text-zinc-50">Notifications</h3>
-                <button
-                  @click="notificationsStore.markAllAsRead()"
-                  class="text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
-                  v-if="notificationsStore.unreadCount > 0"
-                >
-                  Tout marquer comme lu
-                </button>
-              </div>
-              
-              <div class="overflow-y-auto flex-1">
-                <div v-if="notificationsStore.notifications.length === 0" class="px-5 py-8 text-center text-zinc-400">
-                  <p class="text-sm">Aucune notification</p>
-                </div>
-                <div v-else class="divide-y divide-zinc-700/50">
-                  <div
-                    v-for="notification in notificationsStore.notifications"
-                    :key="notification.id"
-                    @click="handleNotificationClick(notification)"
-                    class="px-5 py-4 hover:bg-zinc-700/30 transition-colors cursor-pointer"
-                    :class="{ 'bg-zinc-700/20': !notification.read }"
-                  >
-                    <div class="flex items-start gap-3">
-                      <div class="flex-1">
-                        <p class="text-sm font-semibold text-zinc-50 mb-1">{{ notification.title }}</p>
-                        <p class="text-xs text-zinc-300">{{ notification.message }}</p>
-                        <p class="text-[10px] text-zinc-500 mt-1">
-                          {{ formatTime(notification.createdAt) }}
-                        </p>
-                      </div>
-                      <button
-                        @click.stop="notificationsStore.removeNotification(notification.id)"
-                        class="text-zinc-500 hover:text-red-400 transition-colors"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <NotificationsPanel />
           </div>
 
           <!-- Menu utilisateur si connecté -->
           <div v-if="userStore.isLoggedIn" class="relative z-[60]">
             <div class="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2 rounded-xl hover:bg-zinc-800/60 transition-all duration-200 cursor-pointer border border-zinc-700/30 hover:border-cyan-500/30" @click="toggleUserMenu">
-              <div class="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gradient-to-br from-cyan-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xs sm:text-sm shadow-lg shadow-cyan-500/40 ring-2 ring-zinc-800">
-                {{ userStore.user?.name?.charAt(0).toUpperCase() || 'U' }}
+              <div class="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gradient-to-br from-cyan-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xs sm:text-sm shadow-lg shadow-cyan-500/40 ring-2 ring-zinc-800 overflow-hidden">
+                <img
+                  v-if="userStore.equippedAvatarUrl"
+                  :src="userStore.equippedAvatarUrl"
+                  :alt="userStore.user?.name"
+                  class="w-full h-full object-cover"
+                />
+                <span v-else>{{ userStore.user?.name?.charAt(0).toUpperCase() || 'U' }}</span>
               </div>
               <div class="hidden md:flex flex-col items-start">
                 <span class="text-xs sm:text-sm text-zinc-100 font-semibold leading-tight truncate max-w-[120px]">{{ userStore.user?.name }}</span>
@@ -447,11 +405,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, onUnmounted } from 'vue';
+import { computed, onMounted, ref, onUnmounted, watch } from 'vue';
 import { useUiStore } from '@/stores/ui';
 import { useUserStore } from '@/stores/user';
 import { useStatsStore } from '@/stores/stats';
 import { useNotificationsStore } from '@/stores/notifications';
+import { useChatStore } from '@/stores/chat';
 
 import HomeScreen from '@/components/HomeScreen.vue';
 import LevelSelectScreen from '@/components/LevelSelectScreen.vue';
@@ -467,6 +426,8 @@ import CollectionScreen from '@/components/CollectionScreen.vue';
 import MatchesScreen from '@/components/MatchesScreen.vue';
 import ProfileScreen from '@/components/ProfileScreen.vue';
 import CommunityScreen from '@/components/CommunityScreen.vue';
+import NotificationsPanel from '@/components/NotificationsPanel.vue';
+import TournamentsScreen from '@/components/TournamentsScreen.vue';
 import UserRegisterModal from '@/components/UserRegisterModal.vue';
 import TutorialModal from '@/components/TutorialModal.vue';
 import ChatPanel from '@/components/ChatPanel.vue';
@@ -477,6 +438,7 @@ const ui = useUiStore();
 const userStore = useUserStore();
 const statsStore = useStatsStore();
 const notificationsStore = useNotificationsStore();
+const chatStore = useChatStore();
 
 // État du menu utilisateur
 const isUserMenuOpen = ref(false);
@@ -586,6 +548,24 @@ onMounted(async () => {
       // Ignorer les erreurs si l'utilisateur n'a pas encore de statistiques
       console.log('Aucune statistique disponible pour cet utilisateur');
     }
+    
+    // Charger l'avatar équipé
+    await userStore.loadEquippedAvatar();
+    
+    // Charger les notifications
+    await notificationsStore.loadNotifications();
+    
+    // Initialiser SignalR pour le chat en temps réel
+    await chatStore.initializeSignalR(userStore.user.id);
+  }
+});
+
+// Déconnecter SignalR quand l'utilisateur se déconnecte
+watch(() => userStore.isLoggedIn, async (isLoggedIn) => {
+  if (!isLoggedIn) {
+    await chatStore.disconnectSignalR();
+  } else if (userStore.user?.id) {
+    await chatStore.initializeSignalR(userStore.user.id);
   }
 });
 
@@ -606,6 +586,7 @@ const currentComponent = computed(() => {
     case 'matches': return MatchesScreen;
     case 'profile': return ProfileScreen;
     case 'community': return CommunityScreen;
+    case 'tournaments': return TournamentsScreen;
     case 'leaderboard': return HomeScreen; // temporaire
     default: return HomeScreen;
   }

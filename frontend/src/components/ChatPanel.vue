@@ -16,9 +16,17 @@
           <h3 class="text-sm font-bold text-zinc-50">
             {{ currentOtherUser?.name || 'Chat' }}
           </h3>
-          <p class="text-xs text-zinc-400">
-            {{ currentOtherUser?.isOnline ? 'En ligne' : 'Hors ligne' }}
-          </p>
+          <div class="flex items-center gap-2">
+            <div 
+              :class="[
+                'h-2 w-2 rounded-full',
+                currentOtherUser?.isOnline ? 'bg-green-500 animate-pulse' : 'bg-zinc-500'
+              ]"
+            ></div>
+            <p class="text-xs text-zinc-400">
+              {{ currentOtherUser?.isOnline ? 'En ligne' : 'Hors ligne' }}
+            </p>
+          </div>
         </div>
       </div>
       <button
@@ -32,7 +40,14 @@
     </div>
 
     <!-- Messages -->
-    <div class="flex-1 overflow-y-auto p-4 space-y-4 bg-zinc-950">
+    <div ref="messagesContainer" class="flex-1 overflow-y-auto p-4 space-y-4 bg-zinc-950">
+      <div v-if="chatStore.currentConversation.length === 0" class="flex items-center justify-center h-full">
+        <div class="text-center">
+          <div class="text-4xl mb-4 opacity-50">💬</div>
+          <p class="text-zinc-400 text-sm">Aucun message</p>
+          <p class="text-zinc-500 text-xs mt-1">Commencez la conversation !</p>
+        </div>
+      </div>
       <div
         v-for="message in chatStore.currentConversation"
         :key="message.id"
@@ -43,21 +58,33 @@
       >
         <div
           :class="[
-            'max-w-[80%] rounded-2xl px-4 py-2',
+            'max-w-[80%] rounded-2xl px-4 py-2 transition-all duration-200',
             message.senderId === userStore.user?.id
-              ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white'
-              : 'bg-zinc-800 text-zinc-50'
+              ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg'
+              : 'bg-zinc-800 text-zinc-50 shadow-md'
           ]"
         >
-          <p class="text-sm">{{ message.content }}</p>
-          <p
-            :class="[
-              'text-xs mt-1',
-              message.senderId === userStore.user?.id ? 'text-white/70' : 'text-zinc-400'
-            ]"
-          >
-            {{ formatTime(message.sentAt) }}
-          </p>
+          <p class="text-sm break-words">{{ message.content }}</p>
+          <div class="flex items-center gap-2 mt-1">
+            <p
+              :class="[
+                'text-xs',
+                message.senderId === userStore.user?.id ? 'text-white/70' : 'text-zinc-400'
+              ]"
+            >
+              {{ formatTime(message.sentAt) }}
+            </p>
+            <svg
+              v-if="message.senderId === userStore.user?.id"
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-3 w-3"
+              :class="message.isRead ? 'text-blue-300' : 'text-white/50'"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
+            </svg>
+          </div>
         </div>
       </div>
     </div>
@@ -98,21 +125,44 @@ const uiStore = useUiStore();
 
 const messageContent = ref('');
 const isOpen = computed(() => uiStore.isChatOpen);
+const messagesContainer = ref<HTMLElement | null>(null);
 
 const currentOtherUser = computed(() => {
   if (!chatStore.currentOtherUserId || !chatStore.conversations.length) return null;
   return chatStore.conversations.find(c => c.otherUserId === chatStore.currentOtherUserId);
 });
 
+// Scroll automatique vers le bas quand de nouveaux messages arrivent
 watch(() => chatStore.currentConversation, () => {
-  // Scroll to bottom when new messages arrive
+  scrollToBottom();
+}, { deep: true });
+
+// Scroll quand le chat s'ouvre
+watch(isOpen, async (newValue) => {
+  if (newValue) {
+    setTimeout(() => scrollToBottom(), 100);
+    // Initialiser SignalR si pas déjà connecté
+    if (userStore.user?.id && !chatStore.isConnected) {
+      await chatStore.initializeSignalR(userStore.user.id);
+    }
+  }
+});
+
+// Charger la conversation quand on change d'utilisateur
+watch(() => chatStore.currentOtherUserId, async (newUserId) => {
+  if (newUserId && userStore.user?.id) {
+    await chatStore.fetchConversation(userStore.user.id, newUserId);
+    scrollToBottom();
+  }
+});
+
+function scrollToBottom() {
   setTimeout(() => {
-    const messagesContainer = document.querySelector('.overflow-y-auto');
-    if (messagesContainer) {
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    if (messagesContainer.value) {
+      messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
     }
   }, 100);
-}, { deep: true });
+}
 
 function formatTime(dateString: string) {
   const date = new Date(dateString);
@@ -129,15 +179,21 @@ function formatTime(dateString: string) {
 async function sendMessage() {
   if (!messageContent.value.trim() || !userStore.user || !chatStore.currentOtherUserId) return;
 
+  const content = messageContent.value.trim();
+  messageContent.value = ''; // Vider immédiatement pour une meilleure UX
+
   try {
     await chatStore.sendMessage(
       userStore.user.id,
       chatStore.currentOtherUserId,
-      messageContent.value.trim()
+      content
     );
-    messageContent.value = '';
+    // Le message sera ajouté automatiquement via SignalR
+    scrollToBottom();
   } catch (error) {
     console.error('Erreur lors de l\'envoi du message:', error);
+    // Remettre le message en cas d'erreur
+    messageContent.value = content;
   }
 }
 

@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using prisonbreak.Server.Data;
 using prisonbreak.Server.DTOs;
+using prisonbreak.Server.Hubs;
 using prisonbreak.Server.Models;
 
 namespace prisonbreak.Server.Services
@@ -12,11 +14,16 @@ namespace prisonbreak.Server.Services
     {
         private readonly HashiDbContext _context;
         private readonly IFriendshipService _friendshipService;
+        private readonly IHubContext<ChatHub>? _hubContext;
 
-        public ChatService(HashiDbContext context, IFriendshipService friendshipService)
+        public ChatService(
+            HashiDbContext context, 
+            IFriendshipService friendshipService,
+            IHubContext<ChatHub>? hubContext = null)
         {
             _context = context;
             _friendshipService = friendshipService;
+            _hubContext = hubContext;
         }
 
         public async Task<ChatMessageDto> SendMessageAsync(int senderId, int receiverId, string content)
@@ -47,7 +54,7 @@ namespace prisonbreak.Server.Services
             _context.ChatMessages.Add(message);
             await _context.SaveChangesAsync();
 
-            return new ChatMessageDto
+            var messageDto = new ChatMessageDto
             {
                 Id = message.Id,
                 SenderId = senderId,
@@ -58,6 +65,17 @@ namespace prisonbreak.Server.Services
                 SentAt = message.SentAt,
                 IsRead = false
             };
+
+            // Envoyer le message via SignalR en temps réel
+            if (_hubContext != null)
+            {
+                // Envoyer au destinataire s'il est connecté
+                await _hubContext.Clients.Group($"user_{receiverId}").SendAsync("ReceiveMessage", messageDto);
+                // Envoyer aussi à l'expéditeur pour confirmation
+                await _hubContext.Clients.Group($"user_{senderId}").SendAsync("MessageSent", messageDto);
+            }
+
+            return messageDto;
         }
 
         public async Task<List<ChatMessageDto>> GetConversationAsync(int userId1, int userId2)
@@ -135,6 +153,12 @@ namespace prisonbreak.Server.Services
             message.ReadAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
+            // Notifier via SignalR que le message a été lu
+            if (_hubContext != null)
+            {
+                await _hubContext.Clients.All.SendAsync("MessageRead", messageId, userId);
+            }
+
             return true;
         }
 
@@ -145,4 +169,6 @@ namespace prisonbreak.Server.Services
         }
     }
 }
+
+
 

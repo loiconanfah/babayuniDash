@@ -22,6 +22,7 @@ namespace prisonbreak.Server.Controllers
         {
             try
             {
+                // Le service envoie déjà via SignalR, on retourne juste le message
                 var message = await _chatService.SendMessageAsync(request.SenderId, request.ReceiverId, request.Content);
                 return Ok(message);
             }
@@ -107,4 +108,6 @@ namespace prisonbreak.Server.Controllers
         public int UserId { get; set; }
     }
 }
+
+
 

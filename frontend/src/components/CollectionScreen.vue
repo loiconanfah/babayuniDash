@@ -56,9 +56,15 @@
             ? 'border-purple-500/50 shadow-purple-500/20'
             : 'border-slate-700/50 hover:border-purple-500/30'"
         >
-          <!-- Image/Icone -->
+          <!-- Image de l'item -->
           <div class="relative h-48 bg-gradient-to-br from-purple-600/20 via-slate-900 to-slate-800 flex items-center justify-center overflow-hidden">
-            <div class="text-8xl opacity-40 group-hover:scale-110 transition-transform duration-500">{{ userItem.item.icon }}</div>
+            <img
+              v-if="userItem.item.imageUrl"
+              :src="userItem.item.imageUrl"
+              :alt="userItem.item.name"
+              class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            />
+            <div v-else class="text-8xl opacity-40 group-hover:scale-110 transition-transform duration-500">{{ userItem.item.icon }}</div>
             <div v-if="userItem.isEquipped" class="absolute top-3 right-3">
               <span class="px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg">
                 Équipé
@@ -155,6 +161,11 @@ async function handleEquip(userItem: UserItem) {
     
     // Recharger la collection
     await loadUserItems()
+    
+    // Si c'est un avatar, recharger l'avatar équipé dans le store
+    if (userItem.item.itemType === 'Avatar') {
+      await userStore.loadEquippedAvatar()
+    }
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Erreur lors de l\'équipement'
   } finally {

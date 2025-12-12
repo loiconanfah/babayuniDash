@@ -120,6 +120,26 @@ namespace prisonbreak.Server.Data
         public DbSet<CommunityPostComment> CommunityPostComments => Set<CommunityPostComment>();
 
         /// <summary>
+        /// Table des notifications utilisateur.
+        /// </summary>
+        public DbSet<Notification> Notifications => Set<Notification>();
+
+        /// <summary>
+        /// Table des tournois.
+        /// </summary>
+        public DbSet<Tournament> Tournaments => Set<Tournament>();
+
+        /// <summary>
+        /// Table des participants aux tournois.
+        /// </summary>
+        public DbSet<TournamentParticipant> TournamentParticipants => Set<TournamentParticipant>();
+
+        /// <summary>
+        /// Table des matchs de tournois.
+        /// </summary>
+        public DbSet<TournamentMatch> TournamentMatches => Set<TournamentMatch>();
+
+        /// <summary>
         /// Configuration fine du modèle : contraintes, index, relations.
         /// Tout ce qui touche à la structure SQL est centralisé ici.
         /// </summary>
@@ -145,6 +165,8 @@ namespace prisonbreak.Server.Data
             ConfigureCommunityPost(modelBuilder);
             ConfigureCommunityPostLike(modelBuilder);
             ConfigureCommunityPostComment(modelBuilder);
+            ConfigureNotification(modelBuilder);
+            ConfigureTournament(modelBuilder);
         }
 
         // ============================
@@ -915,6 +937,108 @@ namespace prisonbreak.Server.Data
             entity.Property(cpc => cpc.Content)
                   .IsRequired()
                   .HasMaxLength(1000);
+        }
+
+        // ============================
+        // Configuration Notification
+        // ============================
+
+        private static void ConfigureNotification(ModelBuilder modelBuilder)
+        {
+            var entity = modelBuilder.Entity<Notification>();
+
+            entity.ToTable("Notifications");
+
+            entity.HasKey(n => n.Id);
+
+            entity.HasIndex(n => n.UserId);
+            entity.HasIndex(n => n.Type);
+            entity.HasIndex(n => n.IsRead);
+            entity.HasIndex(n => n.CreatedAt);
+
+            entity.HasOne(n => n.User)
+                  .WithMany()
+                  .HasForeignKey(n => n.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(n => n.CreatedAt)
+                  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(n => n.IsRead)
+                  .HasDefaultValue(false);
+
+            entity.Property(n => n.Title)
+                  .IsRequired()
+                  .HasMaxLength(200);
+
+            entity.Property(n => n.Message)
+                  .IsRequired()
+                  .HasMaxLength(1000);
+        }
+
+        // ============================
+        // Configuration Tournament
+        // ============================
+
+        private static void ConfigureTournament(ModelBuilder modelBuilder)
+        {
+            var tournamentEntity = modelBuilder.Entity<Tournament>();
+            tournamentEntity.ToTable("Tournaments");
+            tournamentEntity.HasKey(t => t.Id);
+            tournamentEntity.HasIndex(t => t.Status);
+            tournamentEntity.HasIndex(t => t.GameType);
+            tournamentEntity.HasIndex(t => t.StartDate);
+
+            tournamentEntity.Property(t => t.CreatedAt)
+                  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            tournamentEntity.Property(t => t.Name)
+                  .IsRequired()
+                  .HasMaxLength(200);
+
+            tournamentEntity.Property(t => t.Description)
+                  .HasMaxLength(1000);
+
+            var participantEntity = modelBuilder.Entity<TournamentParticipant>();
+            participantEntity.ToTable("TournamentParticipants");
+            participantEntity.HasKey(tp => tp.Id);
+            participantEntity.HasIndex(tp => tp.TournamentId);
+            participantEntity.HasIndex(tp => tp.UserId);
+            participantEntity.HasIndex(tp => new { tp.TournamentId, tp.UserId }).IsUnique();
+
+            participantEntity.HasOne(tp => tp.Tournament)
+                  .WithMany(t => t.Participants)
+                  .HasForeignKey(tp => tp.TournamentId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            participantEntity.HasOne(tp => tp.User)
+                  .WithMany()
+                  .HasForeignKey(tp => tp.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            participantEntity.Property(tp => tp.JoinedAt)
+                  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            var matchEntity = modelBuilder.Entity<TournamentMatch>();
+            matchEntity.ToTable("TournamentMatches");
+            matchEntity.HasKey(tm => tm.Id);
+            matchEntity.HasIndex(tm => tm.TournamentId);
+            matchEntity.HasIndex(tm => tm.Round);
+
+            matchEntity.HasOne(tm => tm.Tournament)
+                  .WithMany(t => t.Matches)
+                  .HasForeignKey(tm => tm.TournamentId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            matchEntity.HasOne(tm => tm.Participant1)
+                  .WithMany()
+                  .HasForeignKey(tm => tm.Participant1Id)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            matchEntity.HasOne(tm => tm.Participant2)
+                  .WithMany()
+                  .HasForeignKey(tm => tm.Participant2Id)
+                  .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

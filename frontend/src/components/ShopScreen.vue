@@ -22,11 +22,14 @@
               Chaque achat te rapproche d'un style unique.
             </p>
           </div>
-          <!-- Affichage des coins -->
+          <!-- Affichage des Babayuni -->
           <div v-if="userStore.isLoggedIn" class="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 backdrop-blur-sm flex-shrink-0">
-            <IconDiamond class="h-6 w-6 sm:h-8 sm:w-8 text-cyan-400" />
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="currentColor" opacity="0.2"/>
+              <circle cx="12" cy="12" r="5" fill="currentColor"/>
+            </svg>
             <div>
-              <p class="text-[10px] sm:text-xs text-zinc-400">Tes coins</p>
+              <p class="text-[10px] sm:text-xs text-zinc-400">Tes Babayuni</p>
               <p class="text-xl sm:text-2xl font-bold text-cyan-400">{{ userStore.coins }}</p>
             </div>
           </div>
@@ -65,65 +68,88 @@
             <h3 class="text-xl font-bold text-zinc-50">{{ type }}</h3>
             <span class="text-sm text-zinc-400">{{ filteredItems.filter(i => i.itemType === type).length }} items</span>
           </div>
-          <div class="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-zinc-900">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" style="perspective: 1000px;">
             <div
               v-for="item in filteredItems.filter(i => selectedType === 'Tous' ? i.itemType === type : i.itemType === selectedType)"
               :key="item.id"
-              @click="openItemDetails(item)"
-              class="group relative flex-shrink-0 w-64 rounded-xl bg-gradient-to-br from-zinc-900/95 to-zinc-800/95 border border-zinc-700/50 overflow-hidden shadow-xl hover:shadow-cyan-500/20 hover:border-cyan-500/30 transition-all duration-300 hover:scale-[1.02] cursor-pointer"
+              class="group relative rounded-2xl bg-zinc-900 border border-zinc-800 overflow-hidden shadow-lg hover:shadow-2xl hover:border-zinc-700 transition-all duration-500 cursor-pointer transform-style-3d"
+              @mouseenter="(e) => handleCardEnter(e, item.id)"
+              @mouseleave="(e) => handleCardLeave(e, item.id)"
+              @mousemove="(e) => handleCardMove(e, item.id)"
+              :style="{ transform: `rotateX(${cardRotations[item.id]?.x || 0}deg) rotateY(${cardRotations[item.id]?.y || 0}deg) translateZ(${cardRotations[item.id]?.z || 0}px)` }"
             >
-              <!-- Image/Icone de l'item avec effet glow -->
-              <div class="relative h-40 bg-gradient-to-br from-cyan-600/20 via-zinc-900 to-zinc-800 flex items-center justify-center overflow-hidden">
-                <div class="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent z-10"></div>
-                <div class="text-5xl opacity-50 group-hover:scale-110 transition-transform duration-500 z-0">{{ item.icon }}</div>
-                <div v-if="item.isOwned" class="absolute top-2 right-2 z-20">
-                  <span class="px-2 py-1 rounded-lg text-[10px] font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/50">
-                    Possédé
-                  </span>
-                </div>
-                <div class="absolute top-2 left-2 z-20">
-                  <span class="px-2 py-1 rounded-lg text-[10px] font-bold bg-zinc-900/90 backdrop-blur-sm text-zinc-100 border border-zinc-700/50">
-                    {{ item.rarity }}
-                  </span>
-                </div>
-                <!-- Badge de type en bas -->
-                <div class="absolute bottom-2 left-2 z-20">
-                  <span class="px-2 py-1 rounded-lg text-[10px] font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                    {{ item.itemType }}
-                  </span>
+              <!-- Image avec fond beige/jaune dégradé -->
+              <div class="relative h-64 bg-gradient-to-b from-amber-50/50 via-amber-100/40 to-amber-50/50">
+                <img
+                  v-if="item.imageUrl"
+                  :src="item.imageUrl"
+                  :alt="item.name"
+                  class="w-full h-full object-contain p-6 transition-transform duration-500"
+                />
+                <div v-else class="w-full h-full flex items-center justify-center">
+                  <div class="text-6xl opacity-40">{{ item.icon }}</div>
                 </div>
               </div>
 
-              <!-- Contenu compact -->
-              <div class="p-4 bg-zinc-900/50">
-                <h3 class="text-base font-bold text-zinc-50 mb-1 truncate">{{ item.name }}</h3>
-                <p class="text-xs text-zinc-400 mb-3 line-clamp-1">{{ item.description }}</p>
+              <!-- Section inférieure sombre -->
+              <div class="bg-zinc-900 p-5">
+                <!-- Titre -->
+                <h3 class="text-base font-bold text-white mb-3 truncate">{{ item.name }}</h3>
                 
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-1.5">
-                    <IconDiamond class="h-4 w-4 text-cyan-400" />
-                    <span class="text-lg font-bold text-cyan-400">{{ item.price }}</span>
-                  </div>
-                  <button
-                    v-if="!item.isOwned"
-                    @click.stop="handlePurchase(item)"
-                    :disabled="!userStore.isLoggedIn || userStore.coins < item.price || isPurchasing"
-                    class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-purple-500 text-white text-xs font-bold hover:from-cyan-400 hover:to-purple-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                    <span v-if="!isPurchasing">Acheter</span>
-                    <span v-else class="animate-spin">⏳</span>
-                  </button>
-                  <button
-                    v-else
-                    @click.stop="uiStore.goToCollection()"
-                    class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold hover:from-emerald-400 hover:to-teal-400 transition-all duration-200"
-                  >
-                    Possédé
-                  </button>
+                <!-- Type avec icône circulaire -->
+                <div class="flex items-center gap-2 mb-4">
+                  <div 
+                    :class="[
+                      'h-4 w-4 rounded-full',
+                      item.itemType === 'Avatar' ? 'bg-purple-500' :
+                      item.itemType === 'Theme' ? 'bg-pink-500' :
+                      item.itemType === 'PowerUp' ? 'bg-blue-500' :
+                      'bg-cyan-500'
+                    ]"
+                  ></div>
+                  <span class="text-xs text-zinc-400 uppercase tracking-wider font-medium">{{ item.itemType }}</span>
                 </div>
+                
+                <!-- Statistiques alignées -->
+                <div class="flex items-center justify-between mb-4">
+                  <!-- Rating à gauche -->
+                  <div class="flex items-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                    <span 
+                      :class="[
+                        'text-sm font-semibold',
+                        item.rarity === 'Legendary' ? 'text-yellow-400' :
+                        item.rarity === 'Epic' ? 'text-purple-400' :
+                        item.rarity === 'Rare' ? 'text-blue-400' :
+                        'text-white'
+                      ]"
+                    >
+                      {{ item.rarity === 'Legendary' ? '96%' : item.rarity === 'Epic' ? '85%' : item.rarity === 'Rare' ? '72%' : '50%' }}
+                    </span>
+                  </div>
+                  
+                  <!-- Prix à droite avec icône très petite -->
+                  <div class="flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-2 w-2 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="currentColor" opacity="0.2"/>
+                      <circle cx="12" cy="12" r="5" fill="currentColor"/>
+                    </svg>
+                    <span class="text-base font-bold text-cyan-400">{{ item.price }}</span>
+                  </div>
+                </div>
+                
+                <!-- Bouton gradient -->
+                <button
+                  @click.stop="openItemDetails(item)"
+                  class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:shadow-emerald-500/30"
+                >
+                  <span>Voir détails</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
@@ -131,110 +157,140 @@
       </div>
     </div>
 
-    <!-- Modal de détails d'item -->
+    <!-- Modal de détails style Magic: The Gathering -->
     <div
       v-if="selectedItem"
       @click.self="closeItemDetails"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 overflow-y-auto"
     >
-      <div class="relative w-full max-w-2xl rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 shadow-2xl overflow-hidden">
-        <!-- Header avec gradient -->
-        <div class="relative h-64 bg-gradient-to-br from-indigo-600/30 via-slate-900 to-slate-800 flex items-center justify-center overflow-hidden">
-          <div class="text-6xl opacity-30">{{ selectedItem.icon }}</div>
-          <button
-            @click="closeItemDetails"
-            class="absolute top-4 right-4 w-10 h-10 rounded-full bg-slate-900/80 backdrop-blur-sm text-slate-300 hover:text-white hover:bg-slate-800 transition-all flex items-center justify-center"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-          <div v-if="selectedItem.isOwned" class="absolute top-4 left-4">
-            <span class="px-4 py-2 rounded-full text-sm font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30">
-              Possédé
-            </span>
-          </div>
-          <div class="absolute bottom-4 left-4">
-            <span class="px-4 py-2 rounded-full text-sm font-bold bg-slate-900/80 backdrop-blur-sm text-slate-100">
-              {{ selectedItem.rarity }}
-            </span>
-          </div>
-        </div>
+      <div class="relative w-full max-w-6xl rounded-lg bg-zinc-900/95 shadow-2xl overflow-hidden min-h-[600px]">
+        <!-- Fond avec image floutée -->
+        <div 
+          v-if="selectedItem.imageUrl"
+          class="absolute inset-0 opacity-10 blur-3xl scale-150"
+          :style="{ backgroundImage: `url(${selectedItem.imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }"
+        ></div>
+        
+        <!-- Bouton fermer -->
+        <button
+          @click="closeItemDetails"
+          class="absolute top-4 right-4 w-10 h-10 rounded-full bg-zinc-800/90 backdrop-blur-sm text-zinc-300 hover:text-white hover:bg-zinc-700 transition-all flex items-center justify-center z-30 border border-zinc-700/50"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
 
-        <!-- Contenu -->
-        <div class="p-8">
-          <div class="flex items-start justify-between mb-6">
-            <div>
-              <h2 class="text-3xl font-bold text-slate-50 mb-2">{{ selectedItem.name }}</h2>
-              <span class="px-4 py-1.5 rounded-full text-sm font-medium bg-slate-700/50 text-slate-300">
-                {{ selectedItem.itemType }}
+        <!-- Contenu principal en deux colonnes -->
+        <div class="relative z-10 flex flex-col lg:flex-row min-h-[600px]">
+          <!-- Colonne gauche : Grande image de la carte -->
+          <div class="lg:w-2/5 p-8 lg:p-12 flex items-center justify-center bg-zinc-950/50">
+            <div class="relative w-full max-w-sm">
+              <img
+                v-if="selectedItem.imageUrl"
+                :src="selectedItem.imageUrl"
+                :alt="selectedItem.name"
+                class="w-full h-auto object-contain rounded-lg shadow-2xl"
+                loading="eager"
+                decoding="async"
+                style="filter: none;"
+              />
+              <div v-else class="w-full aspect-[3/4] bg-zinc-800 rounded-lg flex items-center justify-center">
+                <div class="text-8xl opacity-30">{{ selectedItem.icon }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Colonne droite : Informations détaillées -->
+          <div class="lg:w-3/5 p-8 lg:p-12 bg-zinc-900/80 backdrop-blur-sm">
+            <!-- Titre principal -->
+            <h1 class="text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight">
+              {{ selectedItem.name }}
+            </h1>
+
+            <!-- Badge Possédé -->
+            <div v-if="selectedItem.isOwned" class="mb-6">
+              <span class="inline-block px-4 py-2 rounded-lg text-sm font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/50">
+                ✓ Possédé
               </span>
             </div>
-            <div class="text-right">
-              <p class="text-sm text-slate-400 mb-1">Prix</p>
+
+            <!-- Type et Rareté -->
+            <div class="mb-8 space-y-3">
+              <div>
+                <p class="text-xs uppercase tracking-wider text-zinc-400 mb-1">TYPE</p>
+                <p class="text-lg font-semibold text-white">{{ selectedItem.itemType }}</p>
+              </div>
+              <div>
+                <p class="text-xs uppercase tracking-wider text-zinc-400 mb-1">RARETÉ</p>
+                <p 
+                  :class="[
+                    'text-lg font-bold',
+                    selectedItem.rarity === 'Legendary' ? 'text-yellow-400' :
+                    selectedItem.rarity === 'Epic' ? 'text-purple-400' :
+                    selectedItem.rarity === 'Rare' ? 'text-blue-400' :
+                    'text-zinc-300'
+                  ]"
+                >
+                  {{ selectedItem.rarity }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Prix -->
+            <div class="mb-8">
+              <p class="text-xs uppercase tracking-wider text-zinc-400 mb-2">PRIX</p>
               <div class="flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd" />
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="currentColor" opacity="0.2"/>
+                  <circle cx="12" cy="12" r="5" fill="currentColor"/>
                 </svg>
-                <span class="text-3xl font-bold text-yellow-400">{{ selectedItem.price }}</span>
+                <span class="text-4xl font-bold text-cyan-400">{{ selectedItem.price }}</span>
+                <span class="text-zinc-400 text-sm ml-2">Babayuni</span>
               </div>
             </div>
-          </div>
 
-          <div class="mb-6">
-            <h3 class="text-lg font-semibold text-slate-300 mb-3">Description</h3>
-            <p class="text-slate-200 leading-relaxed">{{ selectedItem.description }}</p>
-          </div>
-
-          <div class="mb-6 p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
-            <h3 class="text-sm font-semibold text-slate-400 mb-2">Informations</h3>
-            <div class="space-y-2 text-sm">
-              <div class="flex justify-between">
-                <span class="text-slate-400">Type:</span>
-                <span class="text-slate-200 font-medium">{{ selectedItem.itemType }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-slate-400">Rareté:</span>
-                <span class="text-slate-200 font-medium">{{ selectedItem.rarity }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-slate-400">Statut:</span>
-                <span class="text-slate-200 font-medium">{{ selectedItem.isOwned ? 'Possédé' : 'Non possédé' }}</span>
+            <!-- Description -->
+            <div class="mb-8">
+              <p class="text-xs uppercase tracking-wider text-zinc-400 mb-3">DESCRIPTION</p>
+              <div class="bg-zinc-800/60 border border-zinc-700/50 rounded-lg p-5">
+                <p class="text-base text-zinc-200 leading-relaxed">{{ selectedItem.description }}</p>
               </div>
             </div>
-          </div>
 
-          <!-- Actions -->
-          <div class="flex gap-4">
-            <button
-              v-if="!selectedItem.isOwned"
-              @click="handlePurchase(selectedItem)"
-              :disabled="!userStore.isLoggedIn || userStore.coins < selectedItem.price || isPurchasing"
-              class="flex-1 px-6 py-4 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 text-slate-900 text-base font-bold tracking-wide hover:from-yellow-400 hover:to-orange-400 transition-all duration-300 shadow-lg shadow-yellow-500/30 hover:shadow-xl hover:shadow-yellow-500/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              <span v-if="!isPurchasing">Acheter maintenant</span>
-              <span v-else class="animate-spin">⏳</span>
-            </button>
-            <button
-              v-else
-              @click="uiStore.goToCollection()"
-              class="flex-1 px-6 py-4 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white text-base font-bold hover:from-green-400 hover:to-emerald-400 transition-all duration-300 flex items-center justify-center gap-2"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              Voir dans ma Collection
-            </button>
-            <button
-              @click="closeItemDetails"
-              class="px-6 py-4 rounded-xl bg-slate-700/50 text-slate-300 hover:bg-slate-700 text-base font-medium transition-all"
-            >
-              Fermer
-            </button>
+            <!-- Statut -->
+            <div class="mb-8">
+              <p class="text-xs uppercase tracking-wider text-zinc-400 mb-2">STATUT</p>
+              <p :class="selectedItem.isOwned ? 'text-emerald-400 font-semibold text-lg' : 'text-zinc-300 text-lg'">
+                {{ selectedItem.isOwned ? 'Possédé' : 'Non possédé' }}
+              </p>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex flex-col sm:flex-row gap-3 mt-8 pt-8 border-t border-zinc-700/50">
+              <button
+                v-if="!selectedItem.isOwned"
+                @click="handlePurchase(selectedItem)"
+                :disabled="!userStore.isLoggedIn || userStore.coins < selectedItem.price || isPurchasing"
+                class="flex-1 px-6 py-4 rounded-lg bg-gradient-to-r from-cyan-500 to-purple-500 text-white text-base font-bold hover:from-cyan-400 hover:to-purple-400 transition-all duration-300 shadow-lg shadow-cyan-500/30 hover:shadow-xl hover:shadow-cyan-500/50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <span v-if="!isPurchasing">Acheter maintenant</span>
+                <span v-else class="animate-spin">⏳</span>
+              </button>
+              <button
+                v-else
+                @click="uiStore.goToCollection()"
+                class="flex-1 px-6 py-4 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-base font-bold hover:from-emerald-400 hover:to-teal-400 transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/30"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Voir dans ma Collection
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -249,7 +305,6 @@ import { useUiStore } from '@/stores/ui'
 import { getAllItems, purchaseItem, getUserCoins } from '@/services/shopApi'
 import type { Item } from '@/types'
 import IconShop from '@/components/icons/IconShop.vue'
-import IconDiamond from '@/components/icons/IconDiamond.vue'
 
 const userStore = useUserStore()
 const uiStore = useUiStore()
@@ -260,6 +315,10 @@ const error = ref<string | null>(null)
 const isPurchasing = ref(false)
 const selectedType = ref<string>('Tous')
 const selectedItem = ref<Item | null>(null)
+
+// Effets 3D pour les cartes
+const cardRotations = ref<Record<number, { x: number; y: number; z: number }>>({})
+const cardHovered = ref<Record<number, boolean>>({})
 
 const itemTypes = ['Tous', 'Avatar', 'Theme', 'PowerUp', 'Decoration']
 
@@ -302,7 +361,7 @@ async function handlePurchase(item: Item) {
   }
 
   if (userStore.coins < item.price) {
-    error.value = 'Tu n\'as pas assez de coins pour cet item'
+    error.value = 'Tu n\'as pas assez de Babayuni pour cet item'
     return
   }
 
@@ -324,8 +383,121 @@ async function handlePurchase(item: Item) {
   }
 }
 
+// Fonctions pour les effets 3D
+function handleCardEnter(event: MouseEvent, itemId: number) {
+  cardHovered.value[itemId] = true
+  if (!cardRotations.value[itemId]) {
+    cardRotations.value[itemId] = { x: 0, y: 0, z: 0 }
+  }
+  cardRotations.value[itemId].z = 20
+}
+
+function handleCardLeave(event: MouseEvent, itemId: number) {
+  cardHovered.value[itemId] = false
+  if (cardRotations.value[itemId]) {
+    cardRotations.value[itemId] = { x: 0, y: 0, z: 0 }
+  }
+}
+
+function handleCardMove(event: MouseEvent, itemId: number) {
+  if (!cardHovered.value[itemId]) return
+  
+  const card = event.currentTarget as HTMLElement
+  const rect = card.getBoundingClientRect()
+  const centerX = rect.left + rect.width / 2
+  const centerY = rect.top + rect.height / 2
+  
+  const mouseX = event.clientX - centerX
+  const mouseY = event.clientY - centerY
+  
+  const rotateX = (mouseY / rect.height) * -15 // Rotation verticale limitée à 15 degrés
+  const rotateY = (mouseX / rect.width) * 15 // Rotation horizontale limitée à 15 degrés
+  
+  if (!cardRotations.value[itemId]) {
+    cardRotations.value[itemId] = { x: 0, y: 0, z: 0 }
+  }
+  cardRotations.value[itemId].x = rotateX
+  cardRotations.value[itemId].y = rotateY
+  cardRotations.value[itemId].z = 20
+}
+
 onMounted(() => {
   loadItems()
 })
 </script>
+
+<style scoped>
+.transform-style-3d {
+  transform-style: preserve-3d;
+  transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  will-change: transform;
+}
+
+.group:hover {
+  animation: cardFloat 2s ease-in-out infinite;
+}
+
+@keyframes cardFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* Amélioration de l'image avec effet 3D */
+.group:hover img {
+  transform: scale(1.1) translateZ(10px);
+  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Effet de brillance sur hover */
+.group::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transition: left 0.5s;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.group:hover::before {
+  left: 100%;
+}
+
+/* Animation d'entrée pour les cartes */
+@keyframes cardEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(20px) rotateX(-10deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotateX(0deg);
+  }
+}
+
+.grid > div {
+  animation: cardEntrance 0.6s ease-out backwards;
+}
+
+.grid > div:nth-child(1) { animation-delay: 0.1s; }
+.grid > div:nth-child(2) { animation-delay: 0.2s; }
+.grid > div:nth-child(3) { animation-delay: 0.3s; }
+.grid > div:nth-child(4) { animation-delay: 0.4s; }
+.grid > div:nth-child(5) { animation-delay: 0.5s; }
+.grid > div:nth-child(6) { animation-delay: 0.6s; }
+.grid > div:nth-child(7) { animation-delay: 0.7s; }
+.grid > div:nth-child(8) { animation-delay: 0.8s; }
+</style>
 

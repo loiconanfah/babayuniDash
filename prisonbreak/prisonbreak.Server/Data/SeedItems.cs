@@ -13,138 +13,213 @@ public static class SeedItems
     /// </summary>
     public static async Task SeedAsync(HashiDbContext context)
     {
-        if (await context.Items.AnyAsync())
+        // Supprimer tous les items existants pour les remplacer
+        var existingItems = await context.Items.ToListAsync();
+        if (existingItems.Any())
         {
-            return; // Les items existent déjà
+            context.Items.RemoveRange(existingItems);
+            await context.SaveChangesAsync();
         }
 
         var items = new List<Item>
         {
-            // Avatars
+            // Avatars - Images Unsplash
             new Item
             {
-                Name = "Avatar Classique",
-                Description = "Un avatar élégant et intemporel",
-                Price = 50,
+                Name = "Avatar Élégant",
+                Description = "Un avatar sophistiqué et raffiné pour votre profil",
+                Price = 75,
                 ItemType = "Avatar",
                 Rarity = "Common",
-                Icon = "👤",
+                ImageUrl = "/assets/items/unsplash_OlTjeydUpQw.png",
                 IsAvailable = true
             },
             new Item
             {
-                Name = "Avatar Guerrier",
-                Description = "Un avatar de guerrier courageux",
-                Price = 150,
+                Name = "Avatar Moderne",
+                Description = "Un style moderne et contemporain",
+                Price = 120,
                 ItemType = "Avatar",
                 Rarity = "Rare",
-                Icon = "⚔️",
+                ImageUrl = "/assets/items/unsplash_pVq6YhmDPtk.png",
                 IsAvailable = true
             },
             new Item
             {
-                Name = "Avatar Mage",
-                Description = "Un avatar de mage puissant",
-                Price = 300,
+                Name = "Avatar Premium",
+                Description = "Un avatar premium exclusif",
+                Price = 250,
                 ItemType = "Avatar",
                 Rarity = "Epic",
-                Icon = "🧙",
+                ImageUrl = "/assets/items/unsplash_tMbQpdguDVQ.png",
                 IsAvailable = true
             },
             new Item
             {
                 Name = "Avatar Légendaire",
-                Description = "Un avatar légendaire très rare",
-                Price = 1000,
+                Description = "L'avatar le plus rare et prestigieux",
+                Price = 800,
                 ItemType = "Avatar",
                 Rarity = "Legendary",
-                Icon = "👑",
+                ImageUrl = "/assets/items/unsplash_tZCrFpSNiIQ.png",
                 IsAvailable = true
             },
 
-            // Themes
+            // Thèmes - Images génériques
             new Item
             {
-                Name = "Thème Sombre",
-                Description = "Un thème sombre pour une ambiance mystérieuse",
+                Name = "Thème Classique",
+                Description = "Un thème intemporel et élégant",
                 Price = 100,
                 ItemType = "Theme",
                 Rarity = "Common",
-                Icon = "🌙",
+                ImageUrl = "/assets/items/image 2.png",
                 IsAvailable = true
             },
             new Item
             {
-                Name = "Thème Arc-en-ciel",
-                Description = "Un thème coloré et joyeux",
+                Name = "Thème Vibrant",
+                Description = "Des couleurs vives pour égayer votre expérience",
+                Price = 180,
+                ItemType = "Theme",
+                Rarity = "Rare",
+                ImageUrl = "/assets/items/image 2 (1).png",
+                IsAvailable = true
+            },
+            new Item
+            {
+                Name = "Thème Mystique",
+                Description = "Une ambiance mystérieuse et envoûtante",
+                Price = 350,
+                ItemType = "Theme",
+                Rarity = "Epic",
+                ImageUrl = "/assets/items/image 2 (2).png",
+                IsAvailable = true
+            },
+            new Item
+            {
+                Name = "Thème Futuriste",
+                Description = "Plongez dans le futur avec ce thème high-tech",
+                Price = 600,
+                ItemType = "Theme",
+                Rarity = "Legendary",
+                ImageUrl = "/assets/items/image 7.png",
+                IsAvailable = true
+            },
+
+            // Équipements Électroniques
+            new Item
+            {
+                Name = "Console de Jeu",
+                Description = "Une console rétro pour votre collection",
                 Price = 200,
-                ItemType = "Theme",
+                ItemType = "Decoration",
                 Rarity = "Rare",
-                Icon = "🌈",
+                ImageUrl = "/assets/items/Property 1=Console.png",
                 IsAvailable = true
             },
             new Item
             {
-                Name = "Thème Néon",
-                Description = "Un thème futuriste avec des effets néon",
-                Price = 500,
-                ItemType = "Theme",
+                Name = "Écran Gaming",
+                Description = "Un écran gaming haute performance",
+                Price = 400,
+                ItemType = "Decoration",
                 Rarity = "Epic",
-                Icon = "💡",
-                IsAvailable = true
-            },
-
-            // PowerUps
-            new Item
-            {
-                Name = "Indice Bonus",
-                Description = "Gagnez un indice gratuit pour vos puzzles",
-                Price = 75,
-                ItemType = "PowerUp",
-                Rarity = "Common",
-                Icon = "💡",
+                ImageUrl = "/assets/items/Property 1=Gaming.png",
                 IsAvailable = true
             },
             new Item
             {
-                Name = "Temps Bonus",
-                Description = "Gagnez 30 secondes supplémentaires",
-                Price = 100,
-                ItemType = "PowerUp",
-                Rarity = "Rare",
-                Icon = "⏰",
-                IsAvailable = true
-            },
-            new Item
-            {
-                Name = "Récompense Double",
-                Description = "Doublez vos coins gagnés pendant 1 heure",
-                Price = 250,
-                ItemType = "PowerUp",
-                Rarity = "Epic",
-                Icon = "💰",
-                IsAvailable = true
-            },
-
-            // Decorations
-            new Item
-            {
-                Name = "Cadre Or",
-                Description = "Un cadre doré pour votre profil",
+                Name = "iPod Vintage",
+                Description = "Un iPod classique pour les nostalgiques",
                 Price = 150,
                 ItemType = "Decoration",
                 Rarity = "Rare",
-                Icon = "🖼️",
+                ImageUrl = "/assets/items/Property 1=iPod.png",
                 IsAvailable = true
             },
             new Item
             {
-                Name = "Badge Premium",
-                Description = "Affichez votre statut premium",
+                Name = "Téléphone Rétro",
+                Description = "Un téléphone vintage pour votre profil",
+                Price = 120,
+                ItemType = "Decoration",
+                Rarity = "Common",
+                ImageUrl = "/assets/items/Property 1=Landline.png",
+                IsAvailable = true
+            },
+            new Item
+            {
+                Name = "Radio Antique",
+                Description = "Une radio vintage pour une ambiance rétro",
+                Price = 100,
+                ItemType = "Decoration",
+                Rarity = "Common",
+                ImageUrl = "/assets/items/Property 1=Radio.png",
+                IsAvailable = true
+            },
+            new Item
+            {
+                Name = "Télévision Vintage",
+                Description = "Une télévision rétro pour votre collection",
+                Price = 180,
+                ItemType = "Decoration",
+                Rarity = "Rare",
+                ImageUrl = "/assets/items/Property 1=Television.png",
+                IsAvailable = true
+            },
+
+            // PowerUps - Images rectangulaires
+            new Item
+            {
+                Name = "Boost d'Énergie",
+                Description = "Gagnez un boost d'énergie pour vos parties",
+                Price = 80,
+                ItemType = "PowerUp",
+                Rarity = "Common",
+                ImageUrl = "/assets/items/Rectangle 8.png",
+                IsAvailable = true
+            },
+            new Item
+            {
+                Name = "Multiplicateur x2",
+                Description = "Doublez vos gains pendant 30 minutes",
+                Price = 200,
+                ItemType = "PowerUp",
+                Rarity = "Rare",
+                ImageUrl = "/assets/items/Rectangle 8 (1).png",
+                IsAvailable = true
+            },
+            new Item
+            {
+                Name = "Multiplicateur x3",
+                Description = "Triplez vos gains pendant 15 minutes",
+                Price = 450,
+                ItemType = "PowerUp",
+                Rarity = "Epic",
+                ImageUrl = "/assets/items/Rectangle 8 (2).png",
+                IsAvailable = true
+            },
+
+            // Items spéciaux
+            new Item
+            {
+                Name = "Badge Top Player",
+                Description = "Affichez votre statut de meilleur joueur",
                 Price = 500,
                 ItemType = "Decoration",
                 Rarity = "Epic",
-                Icon = "⭐",
+                ImageUrl = "/assets/items/Top.png",
+                IsAvailable = true
+            },
+            new Item
+            {
+                Name = "Pack Premium",
+                Description = "Un pack exclusif avec des bonus",
+                Price = 1000,
+                ItemType = "PowerUp",
+                Rarity = "Legendary",
+                ImageUrl = "/assets/items/image 7 (1).png",
                 IsAvailable = true
             }
         };

@@ -174,5 +174,25 @@ public class ShopController : ControllerBase
             return StatusCode(500, "Erreur serveur");
         }
     }
+
+    /// <summary>
+    /// Récupère l'avatar équipé d'un utilisateur
+    /// </summary>
+    [HttpGet("users/{userId}/avatar")]
+    public async Task<ActionResult<ItemDto>> GetEquippedAvatar(int userId)
+    {
+        try
+        {
+            var avatar = await _itemService.GetEquippedAvatarAsync(userId);
+            if (avatar == null)
+                return NotFound(new { message = "Aucun avatar équipé" });
+            return Ok(avatar);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération de l'avatar équipé pour l'utilisateur {UserId}", userId);
+            return StatusCode(500, "Erreur serveur");
+        }
+    }
 }
 

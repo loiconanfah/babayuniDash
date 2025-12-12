@@ -57,6 +57,38 @@ export default defineConfig({
         },
         timeout: 10000,
         ws: false
+      },
+      // Proxy pour les assets statiques (images d'items)
+      '/assets': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path,
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            if (err.code !== 'ECONNREFUSED' && err.code !== 'ETIMEDOUT') {
+              console.error('Proxy error (assets):', err)
+            }
+          })
+        },
+        timeout: 10000,
+        ws: false
+      },
+      // Proxy pour SignalR (WebSockets)
+      '/hubs': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path,
+        ws: true,
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            if (err.code !== 'ECONNREFUSED' && err.code !== 'ETIMEDOUT') {
+              console.error('Proxy error (SignalR):', err)
+            }
+          })
+        },
+        timeout: 10000
       }
     }
     // Note: open: true est désactivé car nous gérons l'ouverture des navigateurs via le script PowerShell
