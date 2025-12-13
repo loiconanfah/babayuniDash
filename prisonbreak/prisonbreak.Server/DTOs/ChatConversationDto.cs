@@ -11,6 +11,11 @@ namespace prisonbreak.Server.DTOs
         public DateTime? LastMessageAt { get; set; }
         public int UnreadCount { get; set; }
         public bool IsOnline { get; set; }
+        
+        /// <summary>
+        /// Items équipés par l'autre utilisateur (avatar, thème, décoration)
+        /// </summary>
+        public EquippedItemsDto? EquippedItems { get; set; }
     }
 }
 

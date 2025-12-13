@@ -25,6 +25,7 @@ export interface Notification {
   message: string
   invitation?: GameInvitation
   read: boolean
+  isRead?: boolean // Pour compatibilité avec l'API (NotificationDto utilise isRead)
   createdAt: Date | string
   dataJson?: string | null
 }
@@ -37,12 +38,12 @@ export const useNotificationsStore = defineStore('notifications', () => {
   const lastFetchTime = ref<Date | null>(null)
 
   const unreadCount = computed(() => {
-    return notifications.value.filter(n => !n.read).length
+    return notifications.value.filter(n => !(n.read || n.isRead)).length
   })
 
   const unreadInvitations = computed(() => {
     return notifications.value.filter(
-      n => (n.type === 'invitation' || n.type === notificationsApi.NotificationType.GameInvitation) && !n.read && n.invitation
+      n => (n.type === 'invitation' || n.type === notificationsApi.NotificationType.GameInvitation) && !(n.read || n.isRead) && n.invitation
     ) as Array<Notification & { invitation: GameInvitation }>
   })
 
@@ -115,16 +116,18 @@ export const useNotificationsStore = defineStore('notifications', () => {
       message: apiNotif.message,
       invitation,
       read: apiNotif.isRead,
+      isRead: apiNotif.isRead, // Pour compatibilité
       createdAt: apiNotif.createdAt,
       dataJson: apiNotif.dataJson
     }
   }
 
-  function addNotification(notification: Omit<Notification, 'id' | 'read' | 'createdAt'>) {
+  function addNotification(notification: Omit<Notification, 'id' | 'read' | 'isRead' | 'createdAt'>) {
     const newNotification: Notification = {
       ...notification,
       id: `notif-${Date.now()}-${Math.random()}`,
       read: false,
+      isRead: false,
       createdAt: new Date()
     }
     notifications.value.unshift(newNotification)
@@ -151,6 +154,7 @@ export const useNotificationsStore = defineStore('notifications', () => {
     const notification = notifications.value.find(n => n.id === notificationId)
     if (notification) {
       notification.read = true
+      notification.isRead = true
     }
 
     // Si c'est une notification API, mettre à jour côté serveur
@@ -162,6 +166,7 @@ export const useNotificationsStore = defineStore('notifications', () => {
         // Revert local change
         if (notification) {
           notification.read = false
+          notification.isRead = false
         }
       }
     }
@@ -170,7 +175,10 @@ export const useNotificationsStore = defineStore('notifications', () => {
   async function markAllAsRead() {
     if (!userStore.userId) return
 
-    notifications.value.forEach(n => (n.read = true))
+    notifications.value.forEach(n => {
+      n.read = true
+      n.isRead = true
+    })
 
     try {
       await notificationsApi.markAllNotificationsAsRead(userStore.userId)

@@ -14,6 +14,24 @@ export interface ChatMessage {
   readAt: string | null;
 }
 
+export interface Item {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  itemType: string;
+  rarity: string;
+  imageUrl: string;
+  icon: string;
+  isAvailable: boolean;
+}
+
+export interface EquippedItems {
+  avatar?: Item | null;
+  theme?: Item | null;
+  decoration?: Item | null;
+}
+
 export interface ChatConversation {
   otherUserId: number;
   otherUserName: string;
@@ -21,6 +39,7 @@ export interface ChatConversation {
   lastMessageAt: string | null;
   unreadCount: number;
   isOnline: boolean;
+  equippedItems?: EquippedItems | null;
 }
 
 export const useChatStore = defineStore('chat', () => {
@@ -166,6 +185,15 @@ export const useChatStore = defineStore('chat', () => {
         // Mettre à jour le compteur de non lus
         if (currentUserId.value === message.receiverId) {
           unreadCount.value++
+        }
+        
+        // Recharger les notifications si c'est un message reçu
+        if (currentUserId.value === message.receiverId) {
+          // Importer dynamiquement pour éviter les dépendances circulaires
+          import('@/stores/notifications').then(({ useNotificationsStore }) => {
+            const notificationsStore = useNotificationsStore()
+            notificationsStore.loadNotifications(true)
+          })
         }
       })
 

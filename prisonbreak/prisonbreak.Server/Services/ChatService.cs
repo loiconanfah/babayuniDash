@@ -4,6 +4,8 @@ using prisonbreak.Server.Data;
 using prisonbreak.Server.DTOs;
 using prisonbreak.Server.Hubs;
 using prisonbreak.Server.Models;
+using System.Linq;
+using System.Text.Json;
 
 namespace prisonbreak.Server.Services
 {
@@ -15,15 +17,18 @@ namespace prisonbreak.Server.Services
         private readonly HashiDbContext _context;
         private readonly IFriendshipService _friendshipService;
         private readonly IHubContext<ChatHub>? _hubContext;
+        private readonly INotificationService? _notificationService;
 
         public ChatService(
             HashiDbContext context, 
             IFriendshipService friendshipService,
-            IHubContext<ChatHub>? hubContext = null)
+            IHubContext<ChatHub>? hubContext = null,
+            INotificationService? notificationService = null)
         {
             _context = context;
             _friendshipService = friendshipService;
             _hubContext = hubContext;
+            _notificationService = notificationService;
         }
 
         public async Task<ChatMessageDto> SendMessageAsync(int senderId, int receiverId, string content)
@@ -65,6 +70,36 @@ namespace prisonbreak.Server.Services
                 SentAt = message.SentAt,
                 IsRead = false
             };
+
+            // Créer une notification pour le destinataire
+            if (_notificationService != null)
+            {
+                try
+                {
+                    var notificationData = new
+                    {
+                        messageId = message.Id,
+                        senderId = senderId,
+                        senderName = sender.Name,
+                        content = content.Length > 50 ? content.Substring(0, 50) + "..." : content
+                    };
+                    
+                    var dataJson = JsonSerializer.Serialize(notificationData);
+                    
+                    await _notificationService.CreateNotificationAsync(
+                        receiverId,
+                        Models.NotificationType.FriendMessage,
+                        $"💬 Nouveau message de {sender.Name}",
+                        content.Length > 50 ? content.Substring(0, 50) + "..." : content,
+                        dataJson
+                    );
+                }
+                catch (Exception ex)
+                {
+                    // Log l'erreur mais ne bloque pas l'envoi du message
+                    System.Diagnostics.Debug.WriteLine($"Erreur lors de la création de la notification: {ex.Message}");
+                }
+            }
 
             // Envoyer le message via SignalR en temps réel
             if (_hubContext != null)
@@ -128,9 +163,30 @@ namespace prisonbreak.Server.Services
                 .Distinct()
                 .ToListAsync();
 
+            // Récupérer les items équipés pour tous les autres utilisateurs en une seule requête
+            var equippedItems = await _context.UserItems
+                .Where(ui => otherUserIds.Contains(ui.UserId) && ui.IsEquipped)
+                .Include(ui => ui.Item)
+                .ToListAsync();
+
+            // Grouper les items équipés par utilisateur
+            var equippedItemsByUser = equippedItems
+                .GroupBy(ui => ui.UserId)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
             return conversations.Select(c =>
             {
                 var otherUser = otherUsers[c.OtherUserId];
+                
+                // Récupérer les items équipés de l'autre utilisateur
+                var otherUserEquippedItems = equippedItemsByUser.ContainsKey(c.OtherUserId)
+                    ? equippedItemsByUser[c.OtherUserId]
+                    : new List<Models.UserItem>();
+
+                var avatar = otherUserEquippedItems.FirstOrDefault(ui => ui.Item.ItemType == "Avatar")?.Item;
+                var theme = otherUserEquippedItems.FirstOrDefault(ui => ui.Item.ItemType == "Theme")?.Item;
+                var decoration = otherUserEquippedItems.FirstOrDefault(ui => ui.Item.ItemType == "Decoration")?.Item;
+
                 return new ChatConversationDto
                 {
                     OtherUserId = c.OtherUserId,
@@ -138,7 +194,46 @@ namespace prisonbreak.Server.Services
                     LastMessage = c.LastMessage.Content,
                     LastMessageAt = c.LastMessage.SentAt,
                     UnreadCount = c.UnreadCount,
-                    IsOnline = activeSessions.Contains(c.OtherUserId)
+                    IsOnline = activeSessions.Contains(c.OtherUserId),
+                    EquippedItems = new DTOs.EquippedItemsDto
+                    {
+                        Avatar = avatar != null ? new DTOs.ItemDto
+                        {
+                            Id = avatar.Id,
+                            Name = avatar.Name,
+                            Description = avatar.Description,
+                            Price = avatar.Price,
+                            ItemType = avatar.ItemType,
+                            Rarity = avatar.Rarity,
+                            ImageUrl = avatar.ImageUrl,
+                            Icon = avatar.Icon,
+                            IsAvailable = avatar.IsAvailable
+                        } : null,
+                        Theme = theme != null ? new DTOs.ItemDto
+                        {
+                            Id = theme.Id,
+                            Name = theme.Name,
+                            Description = theme.Description,
+                            Price = theme.Price,
+                            ItemType = theme.ItemType,
+                            Rarity = theme.Rarity,
+                            ImageUrl = theme.ImageUrl,
+                            Icon = theme.Icon,
+                            IsAvailable = theme.IsAvailable
+                        } : null,
+                        Decoration = decoration != null ? new DTOs.ItemDto
+                        {
+                            Id = decoration.Id,
+                            Name = decoration.Name,
+                            Description = decoration.Description,
+                            Price = decoration.Price,
+                            ItemType = decoration.ItemType,
+                            Rarity = decoration.Rarity,
+                            ImageUrl = decoration.ImageUrl,
+                            Icon = decoration.Icon,
+                            IsAvailable = decoration.IsAvailable
+                        } : null
+                    }
                 };
             }).OrderByDescending(c => c.LastMessageAt).ToList();
         }

@@ -256,6 +256,9 @@ namespace prisonbreak.Server.Data
 
             // Index sur UserId pour accélérer les requêtes par utilisateur
             entity.HasIndex(s => s.UserId);
+            
+            // Index composite pour optimiser les requêtes de statut en ligne
+            entity.HasIndex(s => new { s.UserId, s.IsActive, s.ExpiresAt });
 
             // Relation Session -> User (N -> 1)
             entity.HasOne(s => s.User)
@@ -730,9 +733,18 @@ namespace prisonbreak.Server.Data
 
             entity.HasKey(f => f.Id);
 
+            // Index unique pour éviter les doublons
             entity.HasIndex(f => new { f.UserId, f.FriendId }).IsUnique();
+            
+            // Index simples pour les requêtes fréquentes
             entity.HasIndex(f => f.UserId);
             entity.HasIndex(f => f.FriendId);
+            
+            // Index composite pour optimiser GetFriendsAsync (UserId + Status)
+            entity.HasIndex(f => new { f.UserId, f.Status });
+            
+            // Index sur Status seul pour les requêtes de filtrage
+            entity.HasIndex(f => f.Status);
 
             entity.HasOne(f => f.User)
                   .WithMany()

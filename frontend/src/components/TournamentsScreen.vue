@@ -23,6 +23,15 @@
               Participe à des tournois de Pierre-Papier-Ciseaux et gagne des récompenses en Babayuni !
             </p>
           </div>
+          <button
+            @click="openCreateTournamentModal"
+            class="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-base font-bold hover:from-emerald-400 hover:to-teal-400 transition-all duration-300 shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Créer un tournoi
+          </button>
         </div>
       </header>
 
@@ -186,6 +195,105 @@
         <p class="text-zinc-400">Aucun tournoi disponible</p>
       </div>
     </div>
+
+    <!-- Modal de création de tournoi -->
+    <div
+      v-if="showCreateModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      @click.self="closeCreateTournamentModal"
+    >
+      <div class="bg-zinc-900 rounded-2xl border border-zinc-800 shadow-2xl max-w-md w-full p-6">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-bold text-white">Créer un tournoi</h3>
+          <button
+            @click="closeCreateTournamentModal"
+            class="p-2 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <form @submit.prevent="createTournament" class="space-y-4">
+          <div>
+            <label class="block text-sm font-semibold text-zinc-300 mb-2">Nom du tournoi</label>
+            <input
+              v-model="createForm.name"
+              type="text"
+              required
+              placeholder="Ex: Championnat de Pierre-Papier-Ciseaux"
+              class="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-zinc-300 mb-2">Description</label>
+            <textarea
+              v-model="createForm.description"
+              required
+              rows="3"
+              placeholder="Décrivez votre tournoi..."
+              class="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 resize-none"
+            ></textarea>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-zinc-300 mb-2">Participants max</label>
+              <input
+                v-model.number="createForm.maxParticipants"
+                type="number"
+                min="2"
+                max="32"
+                required
+                class="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-zinc-300 mb-2">Mise d'entrée</label>
+              <input
+                v-model.number="createForm.entryFee"
+                type="number"
+                min="0"
+                required
+                class="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-zinc-300 mb-2">Date de début</label>
+            <input
+              v-model="createForm.startDate"
+              type="datetime-local"
+              required
+              class="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+            />
+          </div>
+
+          <div v-if="error" class="text-red-400 text-sm">{{ error }}</div>
+
+          <div class="flex gap-3 pt-4">
+            <button
+              type="button"
+              @click="closeCreateTournamentModal"
+              class="flex-1 px-4 py-3 rounded-xl bg-zinc-800 text-zinc-300 font-semibold hover:bg-zinc-700 transition-all duration-300"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              :disabled="isCreating"
+              class="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold hover:from-emerald-400 hover:to-teal-400 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {{ isCreating ? 'Création...' : 'Créer' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </section>
 </template>
 
@@ -203,6 +311,15 @@ const error = ref<string | null>(null)
 const selectedFilter = ref<'all' | 'registration' | 'in_progress' | 'completed'>('all')
 const isRegistering = ref(false)
 const isUnregistering = ref(false)
+const showCreateModal = ref(false)
+const isCreating = ref(false)
+const createForm = ref({
+  name: '',
+  description: '',
+  maxParticipants: 8,
+  entryFee: 0,
+  startDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16) // Demain par défaut
+})
 
 const filteredTournaments = computed(() => {
   let filtered = tournaments.value.filter(t => t.gameType === tournamentsApi.TournamentGameType.RockPaperScissors)
@@ -269,6 +386,59 @@ async function handleUnregister(tournamentId: number) {
 function viewTournament(tournamentId: number) {
   // TODO: Naviguer vers la page de détail du tournoi
   console.log('Voir le tournoi', tournamentId)
+}
+
+function openCreateTournamentModal() {
+  showCreateModal.value = true
+  createForm.value = {
+    name: '',
+    description: '',
+    maxParticipants: 8,
+    entryFee: 0,
+    startDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16)
+  }
+}
+
+function closeCreateTournamentModal() {
+  showCreateModal.value = false
+}
+
+async function createTournament() {
+  if (!createForm.value.name.trim() || !createForm.value.description.trim()) {
+    error.value = 'Veuillez remplir tous les champs'
+    return
+  }
+
+  if (createForm.value.maxParticipants < 2 || createForm.value.maxParticipants > 32) {
+    error.value = 'Le nombre de participants doit être entre 2 et 32'
+    return
+  }
+
+  if (createForm.value.entryFee < 0) {
+    error.value = 'La mise d\'entrée ne peut pas être négative'
+    return
+  }
+
+  isCreating.value = true
+  error.value = null
+
+  try {
+    await tournamentsApi.createTournament({
+      name: createForm.value.name.trim(),
+      description: createForm.value.description.trim(),
+      gameType: tournamentsApi.TournamentGameType.RockPaperScissors,
+      maxParticipants: createForm.value.maxParticipants,
+      entryFee: createForm.value.entryFee,
+      startDate: new Date(createForm.value.startDate).toISOString()
+    })
+    
+    await loadTournaments()
+    closeCreateTournamentModal()
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Erreur lors de la création du tournoi'
+  } finally {
+    isCreating.value = false
+  }
 }
 
 function getStatusText(status: number): string {

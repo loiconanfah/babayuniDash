@@ -106,6 +106,42 @@ var app = builder.Build();
 // Pas besoin de script PowerShell supplémentaire
 
 // ====================================================
+// LANCEMENT AUTOMATIQUE DE LA 2ÈME INSTANCE DU FRONTEND (MULTIJOUEUR)
+// ====================================================
+// En mode développement, lancer automatiquement une 2ème instance sur le port 5174
+if (app.Environment.IsDevelopment())
+{
+    try
+    {
+        var frontendPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "frontend");
+        frontendPath = Path.GetFullPath(frontendPath);
+        
+        if (Directory.Exists(frontendPath))
+        {
+            var logger = app.Services.GetRequiredService<ILogger<Program>>();
+            logger.LogInformation("🚀 Lancement de l'instance 2 du frontend sur le port 5174...");
+            
+            var processInfo = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "powershell.exe",
+                Arguments = $"-NoExit -Command \"cd '{frontendPath}'; Write-Host '=== INSTANCE 2 - PORT 5174 ===' -ForegroundColor Blue; npm run dev:port2\"",
+                UseShellExecute = true,
+                CreateNoWindow = false,
+                WorkingDirectory = frontendPath
+            };
+            
+            System.Diagnostics.Process.Start(processInfo);
+            logger.LogInformation("✅ Instance 2 du frontend lancée sur http://localhost:5174");
+        }
+    }
+    catch (Exception ex)
+    {
+        var logger = app.Services.GetRequiredService<ILogger<Program>>();
+        logger.LogWarning(ex, "⚠️ Impossible de lancer l'instance 2 du frontend. Lancez-la manuellement : cd frontend && npm run dev:port2");
+    }
+}
+
+// ====================================================
 // INITIALISATION DE LA BASE DE DONNÉES
 // ====================================================
 

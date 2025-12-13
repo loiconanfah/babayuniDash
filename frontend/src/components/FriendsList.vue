@@ -75,13 +75,18 @@
     <div v-if="friendsStore.friends.length > 0" class="space-y-2 max-h-96 overflow-y-auto">
       <div
         v-for="friend in friendsStore.friends"
-        :key="friend.id"
+        :key="`friend-${friend.id}`"
         @click="openChat(friend.id)"
         class="p-3 rounded-xl bg-zinc-800/60 border border-zinc-700/50 hover:border-cyan-500/50 cursor-pointer transition-all duration-200 flex items-center gap-3 group"
       >
         <div class="relative">
-          <div class="h-10 w-10 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
-            {{ friend.name.charAt(0).toUpperCase() }}
+          <div class="h-10 w-10 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm overflow-hidden">
+            <span v-if="friend.equippedItems?.avatar?.icon">
+              {{ friend.equippedItems.avatar.icon }}
+            </span>
+            <span v-else>
+              {{ friend.name.charAt(0).toUpperCase() }}
+            </span>
           </div>
           <div
             v-if="friend.isOnline"
@@ -172,7 +177,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch, onActivated } from 'vue';
 import { useFriendsStore } from '@/stores/friends';
 import { useUserStore } from '@/stores/user';
 import { useChatStore } from '@/stores/chat';
@@ -188,18 +193,62 @@ const friendEmail = ref('');
 const userSuggestions = ref<Array<{ id: number; name: string; email: string }>>([]);
 const searchTimeout = ref<number | null>(null);
 
-onMounted(async () => {
+async function loadFriendsData() {
   if (userStore.user) {
     await friendsStore.fetchFriends(userStore.user.id);
     await friendsStore.fetchPendingRequests(userStore.user.id);
     await friendsStore.fetchSentRequests(userStore.user.id);
   }
+}
+
+onMounted(async () => {
+  await loadFriendsData();
+});
+
+// Rafraîchir quand le composant est activé (si utilisé avec keep-alive)
+onActivated(async () => {
+  await loadFriendsData();
+});
+
+// Surveiller les changements de l'utilisateur connecté
+watch(() => userStore.user?.id, async (newUserId, oldUserId) => {
+  if (newUserId && newUserId !== oldUserId) {
+    await loadFriendsData();
+  }
+}, { immediate: false });
+
+// Surveiller quand on revient à l'écran d'accueil pour rafraîchir la liste
+watch(() => uiStore.currentScreen, async (newScreen) => {
+  if (newScreen === 'home' && userStore.user) {
+    // Rafraîchir la liste quand on revient à l'accueil
+    await loadFriendsData();
+  }
 });
 
 async function acceptRequest(requestId: number) {
-  if (userStore.user) {
-    await friendsStore.acceptFriendRequest(requestId, userStore.user.id);
-    await friendsStore.fetchFriends(userStore.user.id);
+  if (!userStore.user) return;
+  
+  try {
+    const success = await friendsStore.acceptFriendRequest(requestId, userStore.user.id);
+    if (success) {
+      // Attendre un peu pour que le backend sauvegarde
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Rafraîchir toutes les listes
+      await Promise.all([
+        friendsStore.fetchFriends(userStore.user.id),
+        friendsStore.fetchPendingRequests(userStore.user.id),
+        friendsStore.fetchSentRequests(userStore.user.id)
+      ]);
+      
+      console.log('Liste des amis après acceptation:', friendsStore.friends.length);
+    } else {
+      console.error('Échec de l\'acceptation de la demande d\'amitié');
+      alert('Impossible d\'accepter la demande d\'amitié');
+    }
+  } catch (error) {
+    console.error('Erreur lors de l\'acceptation:', error);
+    alert('Erreur lors de l\'acceptation de la demande d\'amitié');
   }
 }
 

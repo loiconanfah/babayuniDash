@@ -32,13 +32,15 @@ public class MatchesController : ControllerBase
         {
             var matches = new List<ActiveMatchDto>();
 
-            // TicTacToe games
+            // TicTacToe games - seulement ceux en cours (InProgress) et multijoueurs (pas contre IA)
             var ticTacToeGames = await _context.TicTacToeGames
                 .Include(g => g.Player1Session)
                     .ThenInclude(s => s!.User)
                 .Include(g => g.Player2Session)
                     .ThenInclude(s => s!.User)
-                .Where(g => g.Status == TicTacToeGameStatus.InProgress || g.Status == TicTacToeGameStatus.WaitingForPlayer)
+                .Where(g => g.Status == TicTacToeGameStatus.InProgress && 
+                           g.GameMode == TicTacToeGameMode.Player && 
+                           g.Player2Session != null)
                 .ToListAsync();
 
             foreach (var game in ticTacToeGames)
@@ -55,18 +57,20 @@ public class MatchesController : ControllerBase
                     Player2Avatar = game.GameMode == TicTacToeGameMode.AI ? "🤖" : "👤",
                     Player2Wager = game.Player2Wager,
                     TotalWager = game.TotalWager,
-                    Status = game.Status == TicTacToeGameStatus.WaitingForPlayer ? "En attente" : "En cours",
+                    Status = "En cours",
                     CreatedAt = game.CreatedAt
                 });
             }
 
-            // ConnectFour games
+            // ConnectFour games - seulement ceux en cours (InProgress) et multijoueurs (pas contre IA)
             var connectFourGames = await _context.ConnectFourGames
                 .Include(g => g.Player1Session)
                     .ThenInclude(s => s!.User)
                 .Include(g => g.Player2Session)
                     .ThenInclude(s => s!.User)
-                .Where(g => g.Status == ConnectFourGameStatus.InProgress || g.Status == ConnectFourGameStatus.WaitingForPlayer)
+                .Where(g => g.Status == ConnectFourGameStatus.InProgress && 
+                           g.GameMode == ConnectFourGameMode.Player && 
+                           g.Player2Session != null)
                 .ToListAsync();
 
             foreach (var game in connectFourGames)
@@ -83,20 +87,21 @@ public class MatchesController : ControllerBase
                     Player2Avatar = game.GameMode == ConnectFourGameMode.AI ? "🤖" : "👤",
                     Player2Wager = game.Player2Wager,
                     TotalWager = game.TotalWager,
-                    Status = game.Status == ConnectFourGameStatus.WaitingForPlayer ? "En attente" : "En cours",
+                    Status = "En cours",
                     CreatedAt = game.CreatedAt
                 });
             }
 
-            // RockPaperScissors games
+            // RockPaperScissors games - seulement ceux en cours (WaitingForChoices ou RoundCompleted) et multijoueurs (pas contre IA)
             var rpsGames = await _context.RockPaperScissorsGames
                 .Include(g => g.Player1Session)
                     .ThenInclude(s => s!.User)
                 .Include(g => g.Player2Session)
                     .ThenInclude(s => s!.User)
-                .Where(g => g.Status == RPSGameStatus.WaitingForPlayer || 
-                           g.Status == RPSGameStatus.WaitingForChoices || 
-                           g.Status == RPSGameStatus.RoundCompleted)
+                .Where(g => (g.Status == RPSGameStatus.WaitingForChoices || 
+                            g.Status == RPSGameStatus.RoundCompleted) &&
+                           g.GameMode == RPSGameMode.Player && 
+                           g.Player2Session != null)
                 .ToListAsync();
 
             foreach (var game in rpsGames)
@@ -113,9 +118,7 @@ public class MatchesController : ControllerBase
                     Player2Avatar = game.GameMode == RPSGameMode.AI ? "🤖" : "👤",
                     Player2Wager = game.Player2Wager,
                     TotalWager = game.TotalWager,
-                    Status = game.Status == RPSGameStatus.WaitingForPlayer ? "En attente" : 
-                            game.Status == RPSGameStatus.WaitingForChoices ? "En attente des choix" :
-                            game.Status == RPSGameStatus.RoundCompleted ? "Round terminé" : "En cours",
+                    Status = "En cours",
                     CreatedAt = game.CreatedAt
                 });
             }

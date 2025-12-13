@@ -167,26 +167,104 @@ namespace prisonbreak.Server.Services
 
         public async Task<List<FriendDto>> GetFriendsAsync(int userId)
         {
+            // Optimisation : projection directe vers DTO pour éviter de charger toutes les données
+            var now = DateTime.UtcNow;
+            
+            // Récupérer les amitiés avec projection optimisée (pas de Include, juste les champs nécessaires)
             var friendships = await _context.Friendships
-                .Include(f => f.Friend)
                 .Where(f => f.UserId == userId && f.Status == FriendshipStatus.Active)
+                .Select(f => new
+                {
+                    FriendId = f.FriendId,
+                    FriendName = f.Friend.Name,
+                    FriendEmail = f.Friend.Email,
+                    FriendLastLoginAt = f.Friend.LastLoginAt,
+                    CreatedAt = f.CreatedAt
+                })
                 .ToListAsync();
 
+            if (!friendships.Any())
+                return new List<FriendDto>();
+
             var friendIds = friendships.Select(f => f.FriendId).ToList();
+            
+            // Requête optimisée pour les sessions actives (uniquement les UserIds)
             var activeSessions = await _context.Sessions
-                .Where(s => friendIds.Contains(s.UserId) && s.IsActive && s.ExpiresAt > DateTime.UtcNow)
+                .Where(s => friendIds.Contains(s.UserId) && s.IsActive && s.ExpiresAt > now)
                 .Select(s => s.UserId)
                 .Distinct()
                 .ToListAsync();
 
-            return friendships.Select(f => new FriendDto
+            // Récupérer les items équipés pour tous les amis en une seule requête
+            var equippedItems = await _context.UserItems
+                .Where(ui => friendIds.Contains(ui.UserId) && ui.IsEquipped)
+                .Include(ui => ui.Item)
+                .ToListAsync();
+
+            // Grouper les items équipés par utilisateur
+            var equippedItemsByUser = equippedItems
+                .GroupBy(ui => ui.UserId)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            // Mapper directement vers DTO avec les items équipés
+            return friendships.Select(f => 
             {
-                Id = f.Friend.Id,
-                Name = f.Friend.Name,
-                Email = f.Friend.Email,
-                LastLoginAt = f.Friend.LastLoginAt,
-                IsOnline = activeSessions.Contains(f.FriendId),
-                FriendsSince = f.CreatedAt
+                var friendEquippedItems = equippedItemsByUser.ContainsKey(f.FriendId)
+                    ? equippedItemsByUser[f.FriendId]
+                    : new List<Models.UserItem>();
+
+                var avatar = friendEquippedItems.FirstOrDefault(ui => ui.Item.ItemType == "Avatar")?.Item;
+                var theme = friendEquippedItems.FirstOrDefault(ui => ui.Item.ItemType == "Theme")?.Item;
+                var decoration = friendEquippedItems.FirstOrDefault(ui => ui.Item.ItemType == "Decoration")?.Item;
+
+                return new FriendDto
+                {
+                    Id = f.FriendId,
+                    Name = f.FriendName,
+                    Email = f.FriendEmail,
+                    LastLoginAt = f.FriendLastLoginAt,
+                    IsOnline = activeSessions.Contains(f.FriendId),
+                    FriendsSince = f.CreatedAt,
+                    EquippedItems = new DTOs.EquippedItemsDto
+                    {
+                        Avatar = avatar != null ? new DTOs.ItemDto
+                        {
+                            Id = avatar.Id,
+                            Name = avatar.Name,
+                            Description = avatar.Description,
+                            Price = avatar.Price,
+                            ItemType = avatar.ItemType,
+                            Rarity = avatar.Rarity,
+                            ImageUrl = avatar.ImageUrl,
+                            Icon = avatar.Icon,
+                            IsAvailable = avatar.IsAvailable
+                        } : null,
+                        Theme = theme != null ? new DTOs.ItemDto
+                        {
+                            Id = theme.Id,
+                            Name = theme.Name,
+                            Description = theme.Description,
+                            Price = theme.Price,
+                            ItemType = theme.ItemType,
+                            Rarity = theme.Rarity,
+                            ImageUrl = theme.ImageUrl,
+                            Icon = theme.Icon,
+                            IsAvailable = theme.IsAvailable
+                        } : null,
+                        Decoration = decoration != null ? new DTOs.ItemDto
+                        {
+                            Id = decoration.Id,
+                            Name = decoration.Name,
+                            Description = decoration.Description,
+                            Price = decoration.Price,
+                            ItemType = decoration.ItemType,
+                            Rarity = decoration.Rarity,
+                            ImageUrl = decoration.ImageUrl,
+                            Icon = decoration.Icon,
+                            IsAvailable = decoration.IsAvailable
+                        } : null
+                    }
+                };
             }).ToList();
         }
 
@@ -259,4 +337,3 @@ namespace prisonbreak.Server.Services
         }
     }
 }
-

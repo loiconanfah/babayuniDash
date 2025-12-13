@@ -8,9 +8,14 @@
       <div class="flex items-center gap-3">
         <div
           v-if="currentOtherUser"
-          class="h-10 w-10 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm"
+          class="h-10 w-10 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm overflow-hidden"
         >
-          {{ currentOtherUser?.name?.charAt(0).toUpperCase() || '?' }}
+          <span v-if="currentOtherUser.equippedItems?.avatar?.icon">
+            {{ currentOtherUser.equippedItems.avatar.icon }}
+          </span>
+          <span v-else>
+            {{ currentOtherUser?.name?.charAt(0).toUpperCase() || '?' }}
+          </span>
         </div>
         <div>
           <h3 class="text-sm font-bold text-zinc-50">
@@ -40,7 +45,7 @@
     </div>
 
     <!-- Messages -->
-    <div ref="messagesContainer" class="flex-1 overflow-y-auto p-4 space-y-4 bg-zinc-950">
+    <div ref="messagesContainer" class="flex-1 overflow-y-auto p-4 bg-zinc-950">
       <div v-if="chatStore.currentConversation.length === 0" class="flex items-center justify-center h-full">
         <div class="text-center">
           <div class="text-4xl mb-4 opacity-50">💬</div>
@@ -51,31 +56,48 @@
       <div
         v-for="message in chatStore.currentConversation"
         :key="message.id"
-        :class="[
-          'flex',
-          message.senderId === userStore.user?.id ? 'justify-end' : 'justify-start'
-        ]"
+        class="flex items-end gap-2 mb-3"
+        :class="isMessageFromMe(message) ? 'justify-end' : 'justify-start'"
       >
+        <!-- Avatar pour les messages reçus (gauche) -->
         <div
-          :class="[
-            'max-w-[80%] rounded-2xl px-4 py-2 transition-all duration-200',
-            message.senderId === userStore.user?.id
-              ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg'
-              : 'bg-zinc-800 text-zinc-50 shadow-md'
-          ]"
+          v-if="!isMessageFromMe(message) && currentOtherUser"
+          class="h-8 w-8 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
         >
-          <p class="text-sm break-words">{{ message.content }}</p>
-          <div class="flex items-center gap-2 mt-1">
+          <span v-if="currentOtherUser.equippedItems?.avatar?.icon">
+            {{ currentOtherUser.equippedItems.avatar.icon }}
+          </span>
+          <span v-else>
+            {{ currentOtherUser.name?.charAt(0).toUpperCase() || '?' }}
+          </span>
+        </div>
+        
+        <!-- Bulle de message -->
+        <div
+          class="max-w-[75%] rounded-2xl px-4 py-2.5 transition-all duration-200"
+          :class="isMessageFromMe(message)
+            ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg'
+            : 'bg-zinc-800 text-zinc-50 shadow-md border border-zinc-700/50'"
+        >
+          <!-- Nom de l'expéditeur pour les messages reçus -->
+          <p
+            v-if="!isMessageFromMe(message)"
+            class="text-xs font-semibold text-cyan-400 mb-1"
+          >
+            {{ message.senderName }}
+          </p>
+          <p class="text-sm break-words leading-relaxed">{{ message.content }}</p>
+          <div class="flex items-center gap-2 mt-1.5">
             <p
               :class="[
                 'text-xs',
-                message.senderId === userStore.user?.id ? 'text-white/70' : 'text-zinc-400'
+                isMessageFromMe(message) ? 'text-white/70' : 'text-zinc-400'
               ]"
             >
               {{ formatTime(message.sentAt) }}
             </p>
             <svg
-              v-if="message.senderId === userStore.user?.id"
+              v-if="isMessageFromMe(message)"
               xmlns="http://www.w3.org/2000/svg"
               class="h-3 w-3"
               :class="message.isRead ? 'text-blue-300' : 'text-white/50'"
@@ -85,6 +107,22 @@
               <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
             </svg>
           </div>
+        </div>
+        
+        <!-- Avatar pour les messages envoyés (droite) -->
+        <div
+          v-if="isMessageFromMe(message) && userStore.user"
+          class="h-8 w-8 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
+        >
+          <img
+            v-if="userStore.equippedAvatarUrl"
+            :src="userStore.equippedAvatarUrl"
+            :alt="userStore.user.name"
+            class="w-full h-full object-cover rounded-full"
+          />
+          <span v-else>
+            {{ userStore.user.name?.charAt(0).toUpperCase() || 'U' }}
+          </span>
         </div>
       </div>
     </div>
@@ -199,6 +237,20 @@ async function sendMessage() {
 
 function closeChat() {
   uiStore.closeChat();
+}
+
+// Fonction helper pour déterminer si un message est de l'utilisateur actuel
+function isMessageFromMe(message: any): boolean {
+  const currentUserId = userStore.userId || userStore.user?.id;
+  if (!currentUserId || !message.senderId) {
+    return false;
+  }
+  
+  // Comparaison stricte avec conversion en nombre
+  const senderId = Number(message.senderId);
+  const userId = Number(currentUserId);
+  
+  return senderId === userId;
 }
 </script>
 

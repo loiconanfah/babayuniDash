@@ -1,103 +1,104 @@
 <template>
   <div
     v-if="showPanel"
-    class="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 pointer-events-none"
-    @click.self="closePanel"
+    class="absolute right-0 mt-2 w-[calc(100vw-4rem)] sm:w-96 max-w-[calc(100vw-4rem)] sm:max-w-none bg-gradient-to-br from-zinc-800 to-zinc-900 rounded-2xl shadow-2xl border border-zinc-700/50 overflow-hidden z-[70] max-h-[calc(100vh-6rem)] flex flex-col backdrop-blur-xl animate-fadeIn"
+    @click.stop
   >
-    <!-- Overlay -->
-    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto" @click="closePanel"></div>
-
-    <!-- Panneau de notifications -->
-    <div
-      class="relative w-full max-w-md h-[80vh] sm:h-[600px] bg-zinc-900 rounded-t-2xl sm:rounded-2xl shadow-2xl border border-zinc-800 flex flex-col pointer-events-auto overflow-hidden"
-    >
-      <!-- En-tête -->
-      <div class="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-900/95 backdrop-blur-sm">
+    <!-- En-tête -->
+    <div class="px-5 py-4 border-b border-zinc-700/50 bg-gradient-to-r from-cyan-500/10 to-purple-500/10">
+      <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-cyan-500 via-purple-500 to-pink-500 flex items-center justify-center">
+          <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-cyan-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
           </div>
           <div>
-            <h2 class="text-lg font-bold text-white">Notifications</h2>
-            <p v-if="unreadCount > 0" class="text-xs text-cyan-400">{{ unreadCount }} non lue(s)</p>
+            <h3 class="text-sm font-bold text-zinc-50">Notifications</h3>
+            <p v-if="unreadCount > 0" class="text-xs text-cyan-400 mt-0.5">
+              {{ unreadCount }} non lue{{ unreadCount > 1 ? 's' : '' }}
+            </p>
+            <p v-else class="text-xs text-zinc-400 mt-0.5">Tout est à jour</p>
           </div>
         </div>
         <div class="flex items-center gap-2">
           <button
             v-if="unreadCount > 0"
             @click="handleMarkAllAsRead"
-            class="px-3 py-1.5 text-xs font-medium text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 rounded-lg transition-colors"
+            class="px-3 py-1.5 text-xs font-medium text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 rounded-lg transition-all duration-200"
           >
-            Tout marquer comme lu
+            Tout marquer
           </button>
           <button
             @click="closePanel"
-            class="p-2 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+            class="p-1.5 rounded-lg hover:bg-zinc-700/50 text-zinc-400 hover:text-white transition-all duration-200"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
       </div>
+    </div>
 
-      <!-- Liste des notifications -->
-      <div class="flex-1 overflow-y-auto">
-        <div v-if="isLoading" class="flex items-center justify-center py-12">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
+    <!-- Liste des notifications -->
+    <div class="flex-1 overflow-y-auto">
+      <div v-if="isLoading" class="flex items-center justify-center py-12">
+        <div class="animate-spin rounded-full h-8 w-8 border-2 border-cyan-500 border-t-transparent"></div>
+      </div>
+      <div v-else-if="notifications.length === 0" class="flex flex-col items-center justify-center py-12 px-4">
+        <div class="h-16 w-16 rounded-xl bg-gradient-to-br from-cyan-500/20 via-purple-500/20 to-pink-500/20 flex items-center justify-center mb-3 shadow-lg">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+          </svg>
         </div>
-        <div v-else-if="notifications.length === 0" class="flex flex-col items-center justify-center py-12 px-4">
-          <div class="h-16 w-16 rounded-full bg-zinc-800 flex items-center justify-center mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-            </svg>
-          </div>
-          <p class="text-zinc-400 text-center">Aucune notification</p>
-        </div>
-        <div v-else class="divide-y divide-zinc-800">
-          <div
-            v-for="notification in notifications"
-            :key="notification.id"
-            @click="handleNotificationClick(notification)"
-            class="p-4 hover:bg-zinc-800/50 transition-colors cursor-pointer"
-            :class="{ 'bg-cyan-500/10 border-l-4 border-cyan-500': !notification.read }"
-          >
-            <div class="flex items-start gap-3">
-              <!-- Icône selon le type -->
-              <div
-                class="h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                :class="getNotificationIconClass(notification.type)"
-              >
-                <span class="text-xl">{{ getNotificationIcon(notification.type) }}</span>
-              </div>
+        <p class="text-zinc-400 text-center text-sm font-medium">Aucune notification</p>
+        <p class="text-xs text-zinc-500 mt-1 text-center">Vous serez notifié des nouveaux événements</p>
+      </div>
+      <div v-else class="divide-y divide-zinc-700/50">
+        <div
+          v-for="notification in notifications"
+          :key="notification.id"
+          @click="handleNotificationClick(notification)"
+          class="p-4 hover:bg-zinc-800/60 transition-all duration-200 cursor-pointer group"
+          :class="{ 
+            'bg-cyan-500/10 border-l-4 border-cyan-500': !notification.read && !notification.isRead,
+            'bg-zinc-800/30': notification.read || notification.isRead
+          }"
+        >
+          <div class="flex items-start gap-3">
+            <!-- Icône selon le type -->
+            <div
+              class="h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0 shadow-md transition-transform duration-200 group-hover:scale-110"
+              :class="getNotificationIconClass(notification.type)"
+            >
+              <span class="text-xl">{{ getNotificationIcon(notification.type) }}</span>
+            </div>
 
-              <!-- Contenu -->
-              <div class="flex-1 min-w-0">
-                <div class="flex items-start justify-between gap-2">
-                  <div class="flex-1">
-                    <h3 class="font-semibold text-white mb-1">{{ notification.title }}</h3>
-                    <p class="text-sm text-zinc-400 line-clamp-2">{{ notification.message }}</p>
-                    <p class="text-xs text-zinc-500 mt-2">{{ formatTime(notification.createdAt) }}</p>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <button
-                      v-if="!notification.read"
-                      @click.stop="handleMarkAsRead(notification.id)"
-                      class="h-2 w-2 rounded-full bg-cyan-500 flex-shrink-0"
-                      title="Marquer comme lu"
-                    ></button>
-                    <button
-                      @click.stop="handleDelete(notification.id)"
-                      class="p-1 rounded hover:bg-zinc-700 text-zinc-500 hover:text-red-400 transition-colors"
-                      title="Supprimer"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
+            <!-- Contenu -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-start justify-between gap-2">
+                <div class="flex-1">
+                  <h3 class="font-semibold text-zinc-50 mb-1 text-sm">{{ notification.title }}</h3>
+                  <p class="text-xs text-zinc-300 line-clamp-2 leading-relaxed mb-1">{{ notification.message }}</p>
+                  <p class="text-[10px] text-zinc-500">{{ formatTime(notification.createdAt) }}</p>
+                </div>
+                <div class="flex items-center gap-1.5 flex-shrink-0">
+                  <button
+                    v-if="!notification.read && !notification.isRead"
+                    @click.stop="handleMarkAsRead(notification.id)"
+                    class="h-2 w-2 rounded-full bg-cyan-500 flex-shrink-0 shadow-lg shadow-cyan-500/50 animate-pulse"
+                    title="Marquer comme lu"
+                  ></button>
+                  <button
+                    @click.stop="handleDelete(notification.id)"
+                    class="p-1 rounded hover:bg-red-500/20 text-zinc-400 hover:text-red-400 transition-all duration-200"
+                    title="Supprimer"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
               </div>
             </div>
@@ -111,10 +112,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useNotificationsStore } from '@/stores/notifications'
+import { useUiStore } from '@/stores/ui'
 import { NotificationType } from '@/services/notificationsApi'
 import type { Notification } from '@/stores/notifications'
 
 const notificationsStore = useNotificationsStore()
+const uiStore = useUiStore()
 
 const showPanel = computed(() => notificationsStore.showNotificationsPanel)
 const notifications = computed(() => notificationsStore.notifications)
@@ -138,10 +141,44 @@ function handleDelete(notificationId: string | number) {
 }
 
 function handleNotificationClick(notification: Notification) {
-  if (!notification.read) {
+  const isRead = notification.read || (notification as any).isRead;
+  if (!isRead) {
     handleMarkAsRead(notification.id)
   }
-  // TODO: Naviguer vers la page appropriée selon le type de notification
+  
+  // Naviguer vers la page appropriée selon le type de notification
+  if (typeof notification.type === 'number') {
+    if (notification.type === NotificationType.GameInvitation && notification.dataJson) {
+      try {
+        const data = JSON.parse(notification.dataJson);
+        if (data.gameType) {
+          switch (data.gameType) {
+            case 'TicTacToe':
+              uiStore.goToTicTacToe();
+              break;
+            case 'ConnectFour':
+              uiStore.goToConnectFour();
+              break;
+            case 'RockPaperScissors':
+              uiStore.goToRockPaperScissors();
+              break;
+          }
+        }
+      } catch (e) {
+        console.error('Erreur lors du parsing de la notification:', e);
+      }
+    } else if (notification.type === NotificationType.FriendRequestAccepted) {
+      uiStore.goToProfile();
+    } else if (notification.type === NotificationType.PostComment || 
+               notification.type === NotificationType.PostLike) {
+      uiStore.goToCommunity();
+    } else if (notification.type === NotificationType.TournamentStarted || 
+               notification.type === NotificationType.TournamentEnded) {
+      uiStore.goToTournaments();
+    }
+  }
+  
+  notificationsStore.closeNotificationsPanel();
 }
 
 function getNotificationIcon(type: string | number): string {
@@ -180,23 +217,23 @@ function getNotificationIconClass(type: string | number): string {
       case NotificationType.GameInvitation:
       case NotificationType.GameStarted:
       case NotificationType.GameEnded:
-        return 'bg-purple-500/20 text-purple-400'
+        return 'bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/40'
       case NotificationType.FriendMessage:
       case NotificationType.FriendRequestAccepted:
-        return 'bg-blue-500/20 text-blue-400'
+        return 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/40'
       case NotificationType.PostComment:
       case NotificationType.PostLike:
-        return 'bg-pink-500/20 text-pink-400'
+        return 'bg-gradient-to-br from-pink-500 to-pink-600 text-white shadow-lg shadow-pink-500/40'
       case NotificationType.TournamentStarted:
       case NotificationType.TournamentEnded:
-        return 'bg-yellow-500/20 text-yellow-400'
+        return 'bg-gradient-to-br from-yellow-500 to-yellow-600 text-white shadow-lg shadow-yellow-500/40'
       case NotificationType.AchievementUnlocked:
-        return 'bg-cyan-500/20 text-cyan-400'
+        return 'bg-gradient-to-br from-cyan-500 to-cyan-600 text-white shadow-lg shadow-cyan-500/40'
       default:
-        return 'bg-zinc-800 text-zinc-400'
+        return 'bg-gradient-to-br from-zinc-500 to-zinc-600 text-white shadow-lg'
     }
   }
-  return 'bg-zinc-800 text-zinc-400'
+  return 'bg-gradient-to-br from-zinc-500 to-zinc-600 text-white shadow-lg'
 }
 
 function formatTime(date: Date | string): string {
@@ -230,4 +267,3 @@ function formatTime(date: Date | string): string {
   overflow: hidden;
 }
 </style>
-

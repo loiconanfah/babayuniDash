@@ -27,13 +27,19 @@ if (-not (Test-Path "node_modules")) {
 Set-Location ..
 
 Write-Host ""
-Write-Host "🌐 Lancement de l'instance 1 sur le port 5173..." -ForegroundColor Cyan
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$PWD\frontend'; Write-Host 'Instance 1 - Port 5173' -ForegroundColor Green; npm run dev:port1"
+# Obtenir le chemin absolu du dossier frontend
+$frontendPath = Join-Path $PWD "frontend"
+$frontendPath = (Resolve-Path $frontendPath).Path
 
-Start-Sleep -Seconds 3
+Write-Host "🌐 Lancement de l'instance 1 sur le port 5173..." -ForegroundColor Cyan
+$command1 = "cd '$frontendPath'; Write-Host '=== Instance 1 - Port 5173 ===' -ForegroundColor Green; Write-Host ''; npm run dev:port1"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", $command1
+
+Start-Sleep -Seconds 5
 
 Write-Host "🌐 Lancement de l'instance 2 sur le port 5174..." -ForegroundColor Cyan
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$PWD\frontend'; Write-Host 'Instance 2 - Port 5174' -ForegroundColor Blue; npm run dev:port2"
+$command2 = "cd '$frontendPath'; Write-Host '=== Instance 2 - Port 5174 ===' -ForegroundColor Blue; Write-Host ''; npm run dev:port2"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", $command2
 
 Write-Host ""
 Write-Host "✅ Deux instances du frontend ont été lancées !" -ForegroundColor Green
