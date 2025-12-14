@@ -573,6 +573,11 @@ onMounted(async () => {
 onUnmounted(() => {
   stopRefreshInterval();
   stopInvitationCheck();
+  // Nettoyer le timer de passage automatique au round suivant
+  if (autoNextRoundTimer.value) {
+    clearTimeout(autoNextRoundTimer.value);
+    autoNextRoundTimer.value = null;
+  }
 });
 
 function startRefreshInterval() {
@@ -662,6 +667,8 @@ const requiredWager = ref(0)
 const pendingAction = ref<{ type: 'create' | 'join', gameId?: number, player2SessionId?: number } | null>(null)
 const showAnimation = ref(false)
 const animationKey = ref(0)
+const showVictoryModal = ref(false)
+const autoNextRoundTimer = ref<number | null>(null)
 
 function openWagerModal(action: { type: 'create' | 'join', gameId?: number, player2SessionId?: number }, requiredWagerAmount: number = 0) {
   pendingAction.value = action
@@ -892,7 +899,7 @@ function getAnimationVideo(): string {
 }
 
 // Observer les changements de round pour déclencher l'animation (une seule fois par round)
-let lastRoundNumber = ref<number | null>(null);
+const lastRoundNumber = ref<number | null>(null);
 watch(
   () => [rpsStore.isRoundCompleted, currentGame.value?.roundWinner, currentGame.value?.roundNumber],
   ([isCompleted, roundWinner, roundNumber]) => {
