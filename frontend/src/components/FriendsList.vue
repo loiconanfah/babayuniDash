@@ -177,6 +177,8 @@
 </template>
 
 <script setup lang="ts">
+// Utiliser VITE_API_URL si disponible (pour Render), sinon utiliser /api (pour le proxy Vite en développement)
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 import { ref, onMounted, watch, onActivated } from 'vue';
 import { useFriendsStore } from '@/stores/friends';
 import { useUserStore } from '@/stores/user';
@@ -270,7 +272,7 @@ async function searchUsers() {
 
   searchTimeout.value = window.setTimeout(async () => {
     try {
-      const response = await fetch(`/api/users/search?email=${encodeURIComponent(friendEmail.value)}&limit=5`);
+      const response = await fetch(`${API_BASE_URL}/users/search?email=${encodeURIComponent(friendEmail.value)}&limit=5`);
       if (response.ok) {
         const users = await response.json();
         // Filtrer l'utilisateur actuel
@@ -293,7 +295,7 @@ async function sendFriendRequest() {
 
   try {
     // Chercher l'utilisateur par email
-    const response = await fetch(`/api/users/search?email=${encodeURIComponent(friendEmail.value)}&limit=1`);
+    const response = await fetch(`${API_BASE_URL}/users/search?email=${encodeURIComponent(friendEmail.value)}&limit=1`);
     if (!response.ok) {
       throw new Error('Erreur lors de la recherche');
     }
