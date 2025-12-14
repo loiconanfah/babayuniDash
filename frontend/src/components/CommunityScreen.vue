@@ -658,9 +658,9 @@ async function uploadImage() {
     const formData = new FormData();
     formData.append('file', selectedFile.value);
     
-    // Utiliser l'URL relative pour le proxy en développement
-    // Le proxy Vite redirige /api vers http://localhost:5000
-    const uploadUrl = '/api/community/upload';
+    // Utiliser VITE_API_URL si disponible (pour Render), sinon utiliser /api (pour le proxy Vite en développement)
+    const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+    const uploadUrl = `${API_BASE_URL}/community/upload`;
     console.log('Upload URL:', uploadUrl);
     console.log('File:', selectedFile.value.name, 'Size:', selectedFile.value.size);
     
@@ -668,7 +668,10 @@ async function uploadImage() {
       method: 'POST',
       body: formData,
       credentials: 'include',
-      // Ne pas définir Content-Type pour FormData, le navigateur le fait automatiquement avec la boundary
+      headers: {
+        'ngrok-skip-browser-warning': 'true'
+        // Ne pas définir Content-Type pour FormData, le navigateur le fait automatiquement avec la boundary
+      }
     });
     
     console.log('Response status:', response.status, response.statusText);
