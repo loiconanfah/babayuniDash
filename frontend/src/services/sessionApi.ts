@@ -21,11 +21,9 @@ export interface CreateSessionRequest {
 
 /**
  * URL de base de l'API backend.
- * En développement avec SPA Proxy : utilise /api (URL relative, proxyfiée)
- * IMPORTANT: Utiliser toujours des URLs relatives pour que le proxy Vite fonctionne correctement
- * Le proxy Vite redirige automatiquement /api/* vers http://localhost:5000/api/*
+ * Utiliser VITE_API_URL si disponible (pour Render), sinon utiliser /api (pour le proxy Vite en développement)
  */
-const API_BASE_URL = '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 /**
  * Appelle l'API backend pour créer une nouvelle session.

@@ -5,9 +5,8 @@
 import * as signalR from '@microsoft/signalr'
 import type { ChatMessage } from '@/stores/chat'
 
-// IMPORTANT: Utiliser toujours des URLs relatives pour que le proxy Vite fonctionne correctement
-// Pour SignalR, utiliser directement /hubs/chat (le proxy Vite gère le WebSocket)
-const API_BASE_URL = ''
+// Utiliser VITE_API_URL si disponible (pour Render), sinon utiliser /hubs/chat (pour le proxy Vite en développement)
+const API_BASE_URL = import.meta.env.VITE_API_URL || ''
 
 class SignalRService {
   private connection: signalR.HubConnection | null = null
@@ -30,9 +29,9 @@ class SignalRService {
     this.isConnecting = true
 
     try {
-      // IMPORTANT: Utiliser toujours une URL relative pour que le proxy Vite fonctionne correctement
-      // Le proxy Vite redirige automatiquement /hubs/* vers http://localhost:5000/hubs/*
-      const hubUrl = '/hubs/chat'
+      // Construire l'URL du hub SignalR
+      // Si VITE_API_URL est défini (Render), utiliser cette URL, sinon utiliser /hubs/chat (proxy Vite)
+      const hubUrl = API_BASE_URL ? `${API_BASE_URL.replace('/api', '')}/hubs/chat` : '/hubs/chat'
       
       this.connection = new signalR.HubConnectionBuilder()
         .withUrl(hubUrl, {

@@ -1,6 +1,9 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
+// Utiliser VITE_API_URL si disponible (pour Render), sinon utiliser /api (pour le proxy Vite en développement)
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+
 export interface Item {
   id: number;
   name: string;
@@ -50,7 +53,7 @@ export const useFriendsStore = defineStore('friends', () => {
   async function fetchFriends(userId: number) {
     isLoading.value = true;
     try {
-      const response = await fetch(`/api/friends/${userId}`);
+      const response = await fetch(`${API_BASE_URL}/friends/${userId}`);
       if (response.ok) {
         const fetchedFriends = await response.json();
         friends.value = fetchedFriends || [];
@@ -69,7 +72,7 @@ export const useFriendsStore = defineStore('friends', () => {
 
   async function fetchPendingRequests(userId: number) {
     try {
-      const response = await fetch(`/api/friends/${userId}/requests/pending`);
+      const response = await fetch(`${API_BASE_URL}/friends/${userId}/requests/pending`);
       if (response.ok) {
         pendingRequests.value = await response.json();
       }
@@ -80,7 +83,7 @@ export const useFriendsStore = defineStore('friends', () => {
 
   async function fetchSentRequests(userId: number) {
     try {
-      const response = await fetch(`/api/friends/${userId}/requests/sent`);
+      const response = await fetch(`${API_BASE_URL}/friends/${userId}/requests/sent`);
       if (response.ok) {
         sentRequests.value = await response.json();
       }
@@ -91,7 +94,7 @@ export const useFriendsStore = defineStore('friends', () => {
 
   async function sendFriendRequest(requesterId: number, receiverId: number) {
     try {
-      const response = await fetch('/api/friends/request', {
+      const response = await fetch(`${API_BASE_URL}/friends/request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ requesterId, receiverId }),
@@ -109,7 +112,7 @@ export const useFriendsStore = defineStore('friends', () => {
 
   async function acceptFriendRequest(requestId: number, userId: number) {
     try {
-      const response = await fetch(`/api/friends/request/${requestId}/accept`, {
+      const response = await fetch(`${API_BASE_URL}/friends/request/${requestId}/accept`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId }),
@@ -132,7 +135,7 @@ export const useFriendsStore = defineStore('friends', () => {
 
   async function rejectFriendRequest(requestId: number, userId: number) {
     try {
-      const response = await fetch(`/api/friends/request/${requestId}/reject`, {
+      const response = await fetch(`${API_BASE_URL}/friends/request/${requestId}/reject`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId }),
