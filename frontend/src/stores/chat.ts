@@ -55,7 +55,14 @@ export const useChatStore = defineStore('chat', () => {
   async function fetchConversations(userId: number) {
     isLoading.value = true;
     try {
-      const response = await fetch(`/api/chat/conversations/${userId}`);
+      const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+      const response = await fetch(`${API_BASE_URL}/chat/conversations/${userId}`, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        }
+      });
       if (response.ok) {
         conversations.value = await response.json();
       }
@@ -69,7 +76,14 @@ export const useChatStore = defineStore('chat', () => {
   async function fetchConversation(userId1: number, userId2: number) {
     isLoading.value = true;
     try {
-      const response = await fetch(`/api/chat/conversation/${userId1}/${userId2}`);
+      const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+      const response = await fetch(`${API_BASE_URL}/chat/conversation/${userId1}/${userId2}`, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        }
+      });
       if (response.ok) {
         currentConversation.value = await response.json();
         currentUserId.value = userId1;
@@ -85,9 +99,14 @@ export const useChatStore = defineStore('chat', () => {
   async function sendMessage(senderId: number, receiverId: number, content: string) {
     try {
       // Envoyer via l'API REST (qui enverra aussi via SignalR)
-      const response = await fetch('/api/chat/send', {
+      const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+      const response = await fetch(`${API_BASE_URL}/chat/send`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        },
         body: JSON.stringify({ senderId, receiverId, content }),
       });
       
@@ -116,9 +135,14 @@ export const useChatStore = defineStore('chat', () => {
       const senderId = message?.senderId;
       
       // Marquer via l'API REST
-      await fetch(`/api/chat/message/${messageId}/read`, {
+      const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+      await fetch(`${API_BASE_URL}/chat/message/${messageId}/read`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        },
         body: JSON.stringify({ userId }),
       });
 
@@ -140,7 +164,14 @@ export const useChatStore = defineStore('chat', () => {
 
   async function fetchUnreadCount(userId: number) {
     try {
-      const response = await fetch(`/api/chat/unread/${userId}`);
+      const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+      const response = await fetch(`${API_BASE_URL}/chat/unread/${userId}`, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        }
+      });
       if (response.ok) {
         const data = await response.json();
         unreadCount.value = data.count;
