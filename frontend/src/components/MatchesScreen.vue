@@ -153,6 +153,8 @@
 </template>
 
 <script setup lang="ts">
+// Utiliser VITE_API_URL si disponible (pour Render), sinon utiliser /api (pour le proxy Vite en développement)
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { useUiStore } from '@/stores/ui'
@@ -198,7 +200,7 @@ async function loadMatches() {
   isLoading.value = true
   error.value = null
   try {
-    const response = await fetch('/api/Matches/active')
+    const response = await fetch(`${API_BASE_URL}/Matches/active`)
     if (!response.ok) throw new Error('Erreur lors du chargement')
     matches.value = await response.json()
   } catch (err) {

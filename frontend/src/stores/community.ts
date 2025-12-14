@@ -1,6 +1,9 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
+// Utiliser VITE_API_URL si disponible (pour Render), sinon utiliser /api (pour le proxy Vite en développement)
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+
 export interface CommunityPost {
   id: number;
   authorId: number;
@@ -35,9 +38,11 @@ export const useCommunityStore = defineStore('community', () => {
   async function fetchPosts(limit?: number, postType?: string) {
     isLoading.value = true;
     try {
-      let url = '/api/community/posts?';
-      if (limit) url += `limit=${limit}&`;
-      if (postType) url += `postType=${postType}&`;
+      const params = new URLSearchParams();
+      if (limit) params.append('limit', limit.toString());
+      if (postType) params.append('postType', postType);
+      const queryString = params.toString();
+      const url = `${API_BASE_URL}/community/posts${queryString ? `?${queryString}` : ''}`;
       const response = await fetch(url);
       if (response.ok) {
         posts.value = await response.json();
@@ -52,7 +57,7 @@ export const useCommunityStore = defineStore('community', () => {
   async function fetchPost(postId: number) {
     isLoading.value = true;
     try {
-      const response = await fetch(`/api/community/posts/${postId}`);
+      const response = await fetch(`${API_BASE_URL}/community/posts/${postId}`);
       if (response.ok) {
         currentPost.value = await response.json();
       }
@@ -65,7 +70,7 @@ export const useCommunityStore = defineStore('community', () => {
 
   async function createPost(authorId: number, title: string, content: string, imageUrl: string | null, postType: string) {
     try {
-      const response = await fetch('/api/community/posts', {
+      const response = await fetch(`${API_BASE_URL}/community/posts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -91,7 +96,7 @@ export const useCommunityStore = defineStore('community', () => {
 
   async function likePost(postId: number, userId: number) {
     try {
-      const response = await fetch(`/api/community/posts/${postId}/like`, {
+      const response = await fetch(`${API_BASE_URL}/community/posts/${postId}/like`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId }),
@@ -113,7 +118,7 @@ export const useCommunityStore = defineStore('community', () => {
 
   async function unlikePost(postId: number, userId: number) {
     try {
-      const response = await fetch(`/api/community/posts/${postId}/like`, {
+      const response = await fetch(`${API_BASE_URL}/community/posts/${postId}/like`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId }),
@@ -135,7 +140,7 @@ export const useCommunityStore = defineStore('community', () => {
 
   async function fetchComments(postId: number) {
     try {
-      const response = await fetch(`/api/community/posts/${postId}/comments`);
+      const response = await fetch(`${API_BASE_URL}/community/posts/${postId}/comments`);
       if (response.ok) {
         comments.value = await response.json();
       }
@@ -146,7 +151,7 @@ export const useCommunityStore = defineStore('community', () => {
 
   async function addComment(postId: number, authorId: number, content: string) {
     try {
-      const response = await fetch(`/api/community/posts/${postId}/comments`, {
+      const response = await fetch(`${API_BASE_URL}/community/posts/${postId}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ authorId, content }),
@@ -169,7 +174,7 @@ export const useCommunityStore = defineStore('community', () => {
 
   async function deletePost(postId: number, userId: number) {
     try {
-      const response = await fetch(`/api/community/posts/${postId}`, {
+      const response = await fetch(`${API_BASE_URL}/community/posts/${postId}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId }),
