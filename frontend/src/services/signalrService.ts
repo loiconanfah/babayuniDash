@@ -30,8 +30,13 @@ class SignalRService {
 
     try {
       // Construire l'URL du hub SignalR
-      // Si VITE_API_URL est défini (Render), utiliser cette URL, sinon utiliser /hubs/chat (proxy Vite)
-      const hubUrl = API_BASE_URL ? `${API_BASE_URL.replace('/api', '')}/hubs/chat` : '/hubs/chat'
+      // Si VITE_API_URL est défini (Render), construire l'URL complète, sinon utiliser /hubs/chat (proxy Vite)
+      let hubUrl = '/hubs/chat'
+      if (API_BASE_URL && API_BASE_URL !== '/api') {
+        // Si VITE_API_URL est défini (ex: https://babagame.onrender.com/api)
+        // Construire l'URL du hub en remplaçant /api par /hubs/chat
+        hubUrl = API_BASE_URL.replace('/api', '') + '/hubs/chat'
+      }
       
       this.connection = new signalR.HubConnectionBuilder()
         .withUrl(hubUrl, {
