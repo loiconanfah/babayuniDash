@@ -66,11 +66,14 @@ builder.Services.AddScoped<ITournamentService, TournamentService>();
 // Configuration SignalR pour le chat en temps réel
 builder.Services.AddSignalR();
 
-// Configuration des contrôleurs API avec limite de taille augmentée pour les uploads
-builder.Services.AddControllers(options =>
+// Configuration des contrôleurs API
+builder.Services.AddControllers();
+
+// Configuration de la limite de taille des formulaires pour permettre les images de plus de 10MB
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
 {
-    // Augmenter la limite de taille des requêtes pour permettre les images de plus de 10MB
-    options.RequestFormLimits.MaxRequestBodySize = 20 * 1024 * 1024; // 20MB
+    options.MultipartBodyLengthLimit = 20 * 1024 * 1024; // 20MB
+    options.ValueLengthLimit = 20 * 1024 * 1024; // 20MB
 });
 
 // Configuration de Swagger pour la documentation API
