@@ -32,16 +32,26 @@
         <!-- Carte de profil principale -->
         <div class="lg:col-span-2">
           <div class="rounded-3xl bg-gradient-to-br from-slate-900/90 to-slate-800/90 border border-slate-700/50 overflow-hidden shadow-2xl">
-            <!-- Header avec gradient -->
-            <div class="relative h-48 bg-gradient-to-br from-purple-600/30 via-pink-600/30 to-slate-900 flex items-center justify-center overflow-hidden">
-              <div class="absolute inset-0 opacity-10" style="background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(156, 146, 172, 0.1) 10px, rgba(156, 146, 172, 0.1) 20px);"></div>
+            <!-- Header avec gradient - applique l'effet du thème équipé -->
+            <div 
+              class="relative h-48 flex items-center justify-center overflow-hidden transition-all duration-500"
+              :style="themeHeaderStyle"
+            >
+              <div class="absolute inset-0 opacity-10" :style="themePatternStyle"></div>
               
               <!-- Avatar équipé -->
               <div class="relative z-10">
-                <div class="h-32 w-32 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-6xl shadow-2xl border-4 border-white/20">
+                <div 
+                  class="h-32 w-32 rounded-full flex items-center justify-center text-6xl shadow-2xl border-4 transition-all duration-500"
+                  :style="avatarStyle"
+                >
                   {{ equippedAvatar?.icon || '👤' }}
                 </div>
-                <div v-if="equippedAvatar" class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 px-3 py-1 rounded-full bg-slate-900/90 backdrop-blur-sm text-xs text-slate-200 border border-purple-500/30">
+                <div 
+                  v-if="equippedAvatar" 
+                  class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 px-3 py-1 rounded-full backdrop-blur-sm text-xs text-slate-200 transition-all duration-500"
+                  :style="avatarBadgeStyle"
+                >
                   {{ equippedAvatar.name }}
                 </div>
               </div>
@@ -314,6 +324,8 @@ import { getUserItems } from '@/services/shopApi'
 import * as tournamentsApi from '@/services/tournamentsApi'
 import type { UserItem } from '@/types'
 import type { TournamentDto } from '@/services/tournamentsApi'
+import { PuzzleTheme } from '@/types'
+import { getThemeConfig } from '@/utils/themeConfig'
 
 const userStore = useUserStore()
 const uiStore = useUiStore()
@@ -342,6 +354,108 @@ const equippedItemsCount = computed(() => {
 const totalSpent = computed(() => {
   return userItems.value.reduce((sum, ui) => sum + ui.item.price, 0)
 })
+
+// Mapper le nom du thème équipé vers un PuzzleTheme pour obtenir les couleurs
+function getThemeFromItem(themeItem: any): PuzzleTheme | null {
+  if (!themeItem) return null
+  
+  const themeName = themeItem.name?.toLowerCase() || ''
+  const themeMap: Record<string, PuzzleTheme> = {
+    'classic': PuzzleTheme.Classic,
+    'classique': PuzzleTheme.Classic,
+    'medieval': PuzzleTheme.Medieval,
+    'futuristic': PuzzleTheme.Futuristic,
+    'futuriste': PuzzleTheme.Futuristic,
+    'underwater': PuzzleTheme.Underwater,
+    'aquatique': PuzzleTheme.Underwater,
+    'desert': PuzzleTheme.Desert,
+    'forest': PuzzleTheme.Forest,
+    'jungle': PuzzleTheme.Forest,
+    'ice': PuzzleTheme.Ice,
+    'glacier': PuzzleTheme.Ice,
+    'volcano': PuzzleTheme.Volcano,
+    'volcan': PuzzleTheme.Volcano,
+    'neon': PuzzleTheme.Neon,
+    'cyberpunk': PuzzleTheme.Neon,
+    'steampunk': PuzzleTheme.Steampunk,
+    'pirate': PuzzleTheme.Pirate,
+    'zombie': PuzzleTheme.Zombie,
+    'apocalypse': PuzzleTheme.Zombie,
+    'ninja': PuzzleTheme.Ninja,
+    'magic': PuzzleTheme.Magic,
+    'magie': PuzzleTheme.Magic,
+    'western': PuzzleTheme.Western,
+    'far west': PuzzleTheme.Western,
+  }
+  
+  for (const [key, theme] of Object.entries(themeMap)) {
+    if (themeName.includes(key)) {
+      return theme
+    }
+  }
+  
+  return PuzzleTheme.Classic // Par défaut
+}
+
+// Styles dynamiques basés sur le thème équipé
+const themeConfig = computed(() => {
+  if (!equippedTheme.value) {
+    // Thème par défaut (purple/pink)
+    return {
+      background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.3) 0%, rgba(219, 39, 119, 0.3) 50%, rgba(15, 23, 42, 1) 100%)',
+      pattern: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(156, 146, 172, 0.1) 10px, rgba(156, 146, 172, 0.1) 20px)',
+      avatarGradient: 'linear-gradient(135deg, rgb(168, 85, 247) 0%, rgb(236, 72, 153) 100%)',
+      avatarBorder: 'rgba(255, 255, 255, 0.2)',
+      badgeBg: 'rgba(15, 23, 42, 0.9)',
+      badgeBorder: 'rgba(168, 85, 247, 0.3)'
+    }
+  }
+  
+  const puzzleTheme = getThemeFromItem(equippedTheme.value)
+  if (!puzzleTheme) {
+    return {
+      background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.3) 0%, rgba(219, 39, 119, 0.3) 50%, rgba(15, 23, 42, 1) 100%)',
+      pattern: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(156, 146, 172, 0.1) 10px, rgba(156, 146, 172, 0.1) 20px)',
+      avatarGradient: 'linear-gradient(135deg, rgb(168, 85, 247) 0%, rgb(236, 72, 153) 100%)',
+      avatarBorder: 'rgba(255, 255, 255, 0.2)',
+      badgeBg: 'rgba(15, 23, 42, 0.9)',
+      badgeBorder: 'rgba(168, 85, 247, 0.3)'
+    }
+  }
+  
+  const config = getThemeConfig(puzzleTheme)
+  
+  // Extraire les couleurs principales du thème
+  const primaryColor = config.colors.islandGradient[1] || config.colors.islandSelected[1] || '#667eea'
+  const secondaryColor = config.colors.islandGradient[2] || config.colors.islandSelected[2] || '#764ba2'
+  
+  return {
+    background: `linear-gradient(135deg, ${primaryColor}40 0%, ${secondaryColor}40 50%, rgba(15, 23, 42, 1) 100%)`,
+    pattern: `repeating-linear-gradient(45deg, transparent, transparent 10px, ${primaryColor}20 10px, ${primaryColor}20 20px)`,
+    avatarGradient: `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%)`,
+    avatarBorder: `${primaryColor}80`,
+    badgeBg: 'rgba(15, 23, 42, 0.9)',
+    badgeBorder: `${primaryColor}50`
+  }
+})
+
+const themeHeaderStyle = computed(() => ({
+  background: themeConfig.value.background
+}))
+
+const themePatternStyle = computed(() => ({
+  background: themeConfig.value.pattern
+}))
+
+const avatarStyle = computed(() => ({
+  background: themeConfig.value.avatarGradient,
+  borderColor: themeConfig.value.avatarBorder
+}))
+
+const avatarBadgeStyle = computed(() => ({
+  background: themeConfig.value.badgeBg,
+  border: `1px solid ${themeConfig.value.badgeBorder}`
+}))
 
 async function loadUserItems() {
   if (!userStore.userId) return

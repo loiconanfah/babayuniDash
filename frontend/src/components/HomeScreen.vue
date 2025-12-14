@@ -1,5 +1,5 @@
 <template>
-  <section class="w-full h-full px-4 lg:px-10 py-8 relative overflow-y-auto">
+  <section class="w-full h-full px-4 lg:px-10 py-8 relative overflow-y-auto bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950">
     <!-- Effet de barreaux en arrière-plan -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none opacity-5">
       <div class="absolute inset-0" style="background-image: repeating-linear-gradient(90deg, transparent, transparent 60px, rgba(6, 182, 212, 0.15) 60px, rgba(6, 182, 212, 0.15) 62px);"></div>

@@ -30,7 +30,7 @@
 
       <!-- Stats de la communauté -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <div class="p-6 rounded-2xl bg-gradient-to-br from-slate-800/95 via-slate-700/95 to-slate-800/95 border border-slate-600/50 backdrop-blur-sm shadow-lg">
+        <div class="p-6 rounded-2xl bg-gradient-to-br from-zinc-900/90 to-zinc-800/90 border border-zinc-700/50 backdrop-blur-sm">
           <div class="flex items-center gap-3 mb-2">
             <div class="h-10 w-10 rounded-xl bg-cyan-500/20 flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -43,7 +43,7 @@
             </div>
           </div>
         </div>
-        <div class="p-6 rounded-2xl bg-gradient-to-br from-slate-800/95 via-slate-700/95 to-slate-800/95 border border-slate-600/50 backdrop-blur-sm shadow-lg">
+        <div class="p-6 rounded-2xl bg-gradient-to-br from-zinc-900/90 to-zinc-800/90 border border-zinc-700/50 backdrop-blur-sm">
           <div class="flex items-center gap-3 mb-2">
             <div class="h-10 w-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -105,29 +105,35 @@
       </div>
 
       <div v-else-if="filteredPosts.length === 0" class="text-center py-12 text-zinc-400">
-        <p>Aucun post pour le moment</p>
-        <p class="text-xs mt-2">Soyez le premier à partager quelque chose !</p>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-zinc-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <p class="text-zinc-300 text-lg font-semibold">Aucun post pour le moment</p>
+        <p class="text-sm text-zinc-400 mt-2">Soyez le premier à partager quelque chose !</p>
       </div>
 
       <div v-else class="space-y-6">
         <div
           v-for="post in filteredPosts"
           :key="post.id"
-          class="p-6 rounded-2xl bg-gradient-to-br from-zinc-900/90 to-zinc-800/90 border border-zinc-700/50 hover:border-cyan-500/30 transition-all duration-200"
+          class="group relative p-6 rounded-2xl bg-gradient-to-br from-zinc-900/90 to-zinc-800/90 border border-zinc-700/50 hover:border-cyan-500/30 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-cyan-500/10 backdrop-blur-sm overflow-hidden"
         >
+          <!-- Effet de brillance au survol -->
+          <div class="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 -translate-x-full group-hover:translate-x-full"></div>
+          
           <!-- Header du post -->
-          <div class="flex items-center gap-3 mb-4">
-            <div class="h-12 w-12 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+          <div class="flex items-center gap-3 mb-4 relative z-10">
+            <div class="h-12 w-12 rounded-full bg-gradient-to-br from-cyan-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-lg ring-2 ring-zinc-700/50 group-hover:ring-cyan-500/50 transition-all duration-300">
               {{ post.authorName?.charAt(0)?.toUpperCase() || '?' }}
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-bold text-zinc-50 truncate">{{ post.authorName || 'Utilisateur' }}</p>
+              <p class="text-sm font-bold text-zinc-50 truncate group-hover:text-cyan-300 transition-colors">{{ post.authorName || 'Utilisateur' }}</p>
               <p class="text-xs text-zinc-400">{{ formatTime(post.createdAt) }}</p>
             </div>
             <div class="flex items-center gap-2 flex-shrink-0">
               <span
                 :class="[
-                  'px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap',
+                  'px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap shadow-sm',
                   getPostTypeClass(post.postType)
                 ]"
               >
@@ -138,43 +144,43 @@
                 v-if="userStore.isLoggedIn && post.authorId === userStore.userId"
                 @click.stop="handleDeletePost(post.id)"
                 :disabled="isDeletingPost === post.id"
-                class="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                class="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 hover:scale-110 active:scale-95"
                 title="Supprimer le post"
               >
                 <svg v-if="isDeletingPost !== post.id" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
-                <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
+                <div v-else class="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-red-400"></div>
               </button>
             </div>
           </div>
 
           <!-- Contenu du post -->
-          <h4 class="text-xl font-bold text-zinc-50 mb-3">{{ post.title }}</h4>
-          <p class="text-sm text-zinc-300 mb-4 whitespace-pre-wrap leading-relaxed">{{ post.content }}</p>
+          <div class="relative z-10">
+            <h4 class="text-xl font-bold text-zinc-50 mb-3 group-hover:text-cyan-100 transition-colors">{{ post.title }}</h4>
+            <p class="text-sm text-zinc-300 mb-4 whitespace-pre-wrap leading-relaxed">{{ post.content }}</p>
 
-          <!-- Image si présente -->
-          <div v-if="post.imageUrl" class="mb-4">
-            <img
-              :src="getImageUrl(post.imageUrl)"
-              :alt="post.title"
-              class="w-full rounded-xl object-cover max-h-96"
-              @error="handleImageError"
-              @load="console.log('Image chargée:', getImageUrl(post.imageUrl))"
-            />
+            <!-- Image si présente -->
+            <div v-if="post.imageUrl" class="mb-4 rounded-xl overflow-hidden border border-zinc-700/50 group-hover:border-cyan-500/30 transition-all duration-300">
+              <img
+                :src="getImageUrl(post.imageUrl)"
+                :alt="post.title"
+                class="w-full rounded-xl object-cover max-h-96 group-hover:scale-[1.02] transition-transform duration-500"
+                @error="handleImageError"
+                @load="console.log('Image chargée:', getImageUrl(post.imageUrl))"
+              />
+            </div>
           </div>
 
           <!-- Actions -->
-          <div class="flex items-center gap-4 pt-4 border-t border-zinc-800">
+          <div class="flex items-center gap-4 pt-4 border-t border-zinc-800/50 relative z-10">
             <button
               @click="toggleLike(post.id)"
               :class="[
-                'flex items-center gap-2 px-4 py-2 rounded-lg transition-colors',
+                'flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95',
                 post.isLikedByCurrentUser
-                  ? 'bg-pink-500/20 text-pink-400'
-                  : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                  ? 'bg-pink-500/20 text-pink-400 border border-pink-500/30 shadow-lg shadow-pink-500/20'
+                  : 'bg-zinc-800/50 text-zinc-400 hover:bg-zinc-700/50 border border-zinc-700/30'
               ]"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
@@ -184,7 +190,7 @@
             </button>
             <button
               @click="toggleComments(post.id)"
-              class="flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700 transition-colors"
+              class="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-zinc-800/50 text-zinc-400 hover:bg-zinc-700/50 transition-all duration-200 hover:scale-105 active:scale-95 border border-zinc-700/30 hover:border-cyan-500/30"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -194,7 +200,7 @@
           </div>
 
           <!-- Section commentaires -->
-          <div v-if="expandedComments === post.id" class="mt-4 pt-4 border-t border-zinc-800">
+          <div v-if="expandedComments === post.id" class="mt-4 pt-4 border-t border-zinc-800/50 relative z-10">
             <div v-if="postComments[post.id]?.length === 0" class="text-center py-4 text-zinc-500 text-sm">
               Aucun commentaire pour le moment
             </div>
@@ -202,10 +208,10 @@
               <div
                 v-for="comment in postComments[post.id]"
                 :key="comment.id"
-                class="p-3 rounded-xl bg-zinc-800/50 border border-zinc-700/30"
+                class="p-3 rounded-xl bg-zinc-800/50 border border-zinc-700/30 hover:border-cyan-500/20 transition-all duration-200 hover:bg-zinc-800/70"
               >
                 <div class="flex items-center gap-2 mb-2">
-                  <div class="h-8 w-8 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center text-white font-bold text-xs">
+                  <div class="h-8 w-8 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center text-white font-bold text-xs shadow-md">
                     {{ comment.authorName.charAt(0).toUpperCase() }}
                   </div>
                   <div>
@@ -213,7 +219,7 @@
                     <p class="text-[10px] text-zinc-500">{{ formatTime(comment.createdAt) }}</p>
                   </div>
                 </div>
-                <p class="text-sm text-zinc-300 ml-10">{{ comment.content }}</p>
+                <p class="text-sm text-zinc-300 ml-10 leading-relaxed">{{ comment.content }}</p>
               </div>
             </div>
             <!-- Formulaire de commentaire -->
@@ -223,16 +229,66 @@
                 @keyup.enter="addComment(post.id)"
                 type="text"
                 placeholder="Écris un commentaire..."
-                class="flex-1 px-4 py-2 rounded-xl bg-zinc-800 border border-zinc-700 text-zinc-50 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                class="flex-1 px-4 py-2 rounded-xl bg-zinc-800 border border-zinc-700 text-zinc-50 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
               />
               <button
                 @click="addComment(post.id)"
-                class="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-semibold hover:from-cyan-400 hover:to-purple-400 transition-all duration-200"
+                class="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-semibold hover:from-cyan-400 hover:to-purple-400 transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg shadow-cyan-500/20"
               >
                 Envoyer
               </button>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de confirmation de suppression -->
+    <div
+      v-if="showDeleteConfirm"
+      class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
+      @click.self="showDeleteConfirm = false; postToDelete = null"
+    >
+      <div class="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 rounded-2xl p-6 max-w-md w-full border border-red-500/30 shadow-2xl shadow-red-500/20 animate-fade-in">
+        <!-- Icône d'avertissement -->
+        <div class="flex justify-center mb-4">
+          <div class="h-16 w-16 rounded-full bg-red-500/20 flex items-center justify-center border-2 border-red-500/50">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+        </div>
+        
+        <!-- Titre -->
+        <h3 class="text-xl font-bold text-zinc-50 text-center mb-2">
+          Confirmer la suppression
+        </h3>
+        
+        <!-- Message -->
+        <p class="text-sm text-zinc-300 text-center mb-6 leading-relaxed">
+          Êtes-vous sûr de vouloir supprimer ce post ?<br>
+          <span class="text-red-400 font-semibold">Cette action est irréversible.</span>
+        </p>
+        
+        <!-- Boutons d'action -->
+        <div class="flex gap-3">
+          <button
+            @click="showDeleteConfirm = false; postToDelete = null"
+            class="flex-1 px-4 py-3 rounded-xl bg-zinc-800 text-zinc-300 font-semibold hover:bg-zinc-700 transition-all duration-200 border border-zinc-700/50"
+          >
+            Annuler
+          </button>
+          <button
+            @click="confirmDelete"
+            :disabled="isDeletingPost === postToDelete"
+            class="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold hover:from-red-400 hover:to-red-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-500/30 flex items-center justify-center gap-2"
+          >
+            <svg v-if="isDeletingPost !== postToDelete" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            <div v-else class="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+            <span>{{ isDeletingPost === postToDelete ? 'Suppression...' : 'Supprimer' }}</span>
+          </button>
         </div>
       </div>
     </div>
@@ -363,6 +419,8 @@ const expandedComments = ref<number | null>(null);
 const isDeletingPost = ref<number | null>(null);
 const postComments = ref<Record<number, any[]>>({});
 const newComments = ref<Record<number, string>>({});
+const showDeleteConfirm = ref(false);
+const postToDelete = ref<number | null>(null);
 
 const fileInput = ref<HTMLInputElement | null>(null);
 const selectedFile = ref<File | null>(null);
@@ -405,7 +463,13 @@ watch(selectedPostType, (newType) => {
 });
 
 onMounted(async () => {
-  await communityStore.fetchPosts(50);
+  console.log('CommunityScreen monté, chargement des posts...');
+  try {
+    await communityStore.fetchPosts(50);
+    console.log('Posts chargés:', communityStore.posts.length);
+  } catch (error) {
+    console.error('Erreur lors du chargement des posts:', error);
+  }
 });
 
 function formatTime(dateString: string) {
@@ -460,18 +524,21 @@ function getPostTypeClass(type: string) {
   return classMap[type] || 'bg-zinc-800 text-zinc-400';
 }
 
-async function handleDeletePost(postId: number) {
+function handleDeletePost(postId: number) {
   if (!userStore.userId) return;
+  postToDelete.value = postId;
+  showDeleteConfirm.value = true;
+}
+
+async function confirmDelete() {
+  if (!postToDelete.value || !userStore.userId) return;
   
-  // Demander confirmation
-  if (!confirm('Êtes-vous sûr de vouloir supprimer ce post ? Cette action est irréversible.')) {
-    return;
-  }
-  
-  isDeletingPost.value = postId;
+  isDeletingPost.value = postToDelete.value;
   try {
-    await communityStore.deletePost(postId, userStore.userId);
+    await communityStore.deletePost(postToDelete.value, userStore.userId);
     // Le post sera automatiquement retiré de la liste par le store
+    showDeleteConfirm.value = false;
+    postToDelete.value = null;
   } catch (error) {
     console.error('Erreur lors de la suppression:', error);
     alert(error instanceof Error ? error.message : 'Erreur lors de la suppression du post');
@@ -546,7 +613,27 @@ async function addComment(postId: number) {
 async function handleFileSelect(event: Event) {
   const input = event.target as HTMLInputElement;
   if (input.files && input.files[0]) {
-    selectedFile.value = input.files[0];
+    const file = input.files[0];
+    
+    // Vérifier la taille du fichier (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      uploadError.value = `Le fichier est trop volumineux (${(file.size / 1024 / 1024).toFixed(2)}MB). Taille maximale: 5MB`;
+      selectedFile.value = null;
+      imagePreview.value = null;
+      return;
+    }
+    
+    // Vérifier le type de fichier
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      uploadError.value = 'Type de fichier non autorisé. Utilisez JPG, PNG, GIF ou WEBP.';
+      selectedFile.value = null;
+      imagePreview.value = null;
+      return;
+    }
+    
+    selectedFile.value = file;
     uploadError.value = null;
     
     // Créer un aperçu
@@ -571,25 +658,39 @@ async function uploadImage() {
     const formData = new FormData();
     formData.append('file', selectedFile.value);
     
-    const API_BASE_URL = import.meta.env.VITE_API_URL || 
-      (import.meta.env.DEV ? '/api' : 'https://localhost:5001/api')
+    // Utiliser l'URL relative pour le proxy en développement
+    // Le proxy Vite redirige /api vers http://localhost:5000
+    const uploadUrl = '/api/community/upload';
+    console.log('Upload URL:', uploadUrl);
+    console.log('File:', selectedFile.value.name, 'Size:', selectedFile.value.size);
     
-    const response = await fetch(`${API_BASE_URL}/community/upload`, {
+    const response = await fetch(uploadUrl, {
       method: 'POST',
       body: formData,
-      credentials: 'include'
+      credentials: 'include',
+      // Ne pas définir Content-Type pour FormData, le navigateur le fait automatiquement avec la boundary
     });
     
+    console.log('Response status:', response.status, response.statusText);
+    
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Erreur lors de l\'upload' }));
-      throw new Error(error.message || 'Erreur lors de l\'upload');
+      const errorText = await response.text();
+      console.error('Error response:', errorText);
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { message: errorText || `Erreur HTTP ${response.status}` };
+      }
+      throw new Error(errorData.message || `Erreur HTTP ${response.status}`);
     }
     
     const result = await response.json();
     newPost.value.imageUrl = result.url;
+    console.log('Upload réussi, URL:', result.url);
   } catch (error) {
     console.error('Erreur upload:', error);
-    uploadError.value = error instanceof Error ? error.message : 'Erreur lors de l\'upload';
+    uploadError.value = error instanceof Error ? error.message : 'Erreur lors de l\'upload. Vérifiez que le serveur backend est démarré.';
     selectedFile.value = null;
     imagePreview.value = null;
   } finally {
@@ -658,6 +759,21 @@ async function createPost() {
 
 .scrollbar-thin::-webkit-scrollbar-track {
   background-color: rgb(24 24 27);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
 }
 </style>
 

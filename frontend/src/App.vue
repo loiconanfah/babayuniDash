@@ -19,15 +19,15 @@
       <!-- Logo / icône prisonnier -->
       <div class="flex items-center gap-3 mb-8 group cursor-pointer" @click="ui.goToHome()">
         <div
-          class="h-12 w-12 rounded-2xl bg-gradient-to-br from-cyan-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-cyan-500/40 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-xl group-hover:shadow-cyan-500/60"
+          class="h-14 w-14 sm:h-12 sm:w-12 rounded-2xl bg-gradient-to-br from-cyan-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-cyan-500/40 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-xl group-hover:shadow-cyan-500/60 ring-2 ring-cyan-500/30"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
           </svg>
         </div>
-        <div class="flex flex-col">
-          <span class="text-sm font-semibold text-zinc-50 group-hover:text-cyan-400 transition-colors duration-300">Prison Break</span>
-          <span class="text-[11px] text-zinc-400 group-hover:text-zinc-300 transition-colors duration-300">Évasion de cellule</span>
+        <div class="flex flex-col min-w-0">
+          <span class="text-base sm:text-sm font-semibold text-zinc-50 group-hover:text-cyan-400 transition-colors duration-300 truncate">Prison Break</span>
+          <span class="text-xs sm:text-[11px] text-zinc-400 group-hover:text-zinc-300 transition-colors duration-300 truncate">Évasion de cellule</span>
         </div>
       </div>
 
@@ -49,7 +49,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
           </div>
-          <span class="font-medium hidden sm:inline">Accueil</span>
+          <span class="font-medium">Accueil</span>
           <div v-if="ui.currentScreen === 'home'" class="absolute right-2 w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div>
         </button>
 
@@ -66,7 +66,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
             </svg>
           </div>
-          <span class="font-medium hidden sm:inline">Niveaux</span>
+          <span class="font-medium">Niveaux</span>
           <div v-if="ui.currentScreen === 'levels'" class="absolute right-2 w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div>
         </button>
 
@@ -83,7 +83,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
             </svg>
           </div>
-          <span class="font-medium hidden sm:inline">Classement</span>
+          <span class="font-medium">Classement</span>
           <div v-if="ui.currentScreen === 'leaderboard'" class="absolute right-2 w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div>
         </button>
 
@@ -100,7 +100,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
           </div>
-          <span class="font-medium hidden sm:inline">Statistiques</span>
+          <span class="font-medium">Statistiques</span>
           <div v-if="ui.currentScreen === 'stats'" class="absolute right-2 w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div>
         </button>
 
@@ -117,7 +117,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M14.751 9.75l3.501 3.75m0 0l3.499-3.75M18.252 13.5H21m-2.25 0v6.75m-9-9.75H5.25A2.25 2.25 0 003 12.75v6.75A2.25 2.25 0 005.25 22h13.5A2.25 2.25 0 0021 19.5v-6.75a2.25 2.25 0 00-2.25-2.25h-4.752m-9 0H3m2.25 0h4.752M9.75 3v3m0 0v3m0-3h3m-3 0H6.75" />
             </svg>
           </div>
-          <span class="font-medium hidden sm:inline">Jeux</span>
+          <span class="font-medium">Jeux</span>
           <div v-if="ui.currentScreen === 'games'" class="absolute right-2 w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div>
         </button>
 
@@ -134,7 +134,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
             </svg>
           </div>
-          <span class="font-medium hidden sm:inline">Boutique</span>
+          <span class="font-medium">Boutique</span>
           <div v-if="ui.currentScreen === 'shop'" class="absolute right-2 w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div>
         </button>
 
@@ -151,7 +151,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
           </div>
-          <span class="font-medium hidden sm:inline">Collection</span>
+          <span class="font-medium">Collection</span>
           <div v-if="ui.currentScreen === 'collection'" class="absolute right-2 w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div>
         </button>
 
@@ -168,7 +168,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
           </div>
-          <span class="font-medium hidden sm:inline">Matchs VS</span>
+          <span class="font-medium">Matchs VS</span>
           <div v-if="ui.currentScreen === 'matches'" class="absolute right-2 w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div>
         </button>
 
@@ -185,7 +185,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
           </div>
-          <span class="font-medium hidden sm:inline">Communauté</span>
+          <span class="font-medium">Communauté</span>
           <div v-if="ui.currentScreen === 'community'" class="absolute right-2 w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div>
         </button>
 
@@ -203,7 +203,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
           </div>
-          <span class="font-medium hidden sm:inline">Mon Profil</span>
+          <span class="font-medium">Mon Profil</span>
           <div v-if="ui.currentScreen === 'profile'" class="absolute right-2 w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div>
         </button>
 
@@ -388,9 +388,12 @@
       </header>
 
       <!-- Main - Scrollable -->
-      <main class="flex-1 overflow-y-auto overflow-x-hidden relative z-10">
+      <main class="flex-1 overflow-y-auto overflow-x-hidden relative z-10 bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950">
         <transition name="fade" mode="out-in">
-          <component :is="currentComponent" :key="ui.currentScreen" />
+          <component 
+            :is="currentComponent" 
+            :key="ui.currentScreen" 
+          />
         </transition>
       </main>
 
@@ -538,6 +541,11 @@ onUnmounted(() => {
 
 // Charger l'utilisateur si stocké en local et récupérer ses statistiques
 onMounted(async () => {
+  // S'assurer que l'écran par défaut est 'home'
+  if (!ui.currentScreen) {
+    ui.goToHome();
+  }
+  
   userStore.loadFromLocalStorage();
   
   // Si un utilisateur est déjà connecté, charger ses statistiques automatiquement

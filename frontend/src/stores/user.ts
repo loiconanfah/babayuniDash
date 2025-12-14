@@ -161,7 +161,14 @@ export const useUserStore = defineStore('user', {
         const { getUserItems } = await import('@/services/shopApi');
         const userItems = await getUserItems(this.user.id);
         const equippedAvatar = userItems.find(ui => ui.item.itemType === 'Avatar' && ui.isEquipped);
-        this.equippedAvatarUrl = equippedAvatar?.item.imageUrl || null;
+        const newAvatarUrl = equippedAvatar?.item.imageUrl || null;
+        
+        // Forcer la mise à jour même si l'URL est la même
+        this.equippedAvatarUrl = null;
+        await new Promise(resolve => setTimeout(resolve, 10));
+        this.equippedAvatarUrl = newAvatarUrl;
+        
+        console.log('Avatar équipé chargé:', newAvatarUrl);
       } catch (err) {
         console.warn('Impossible de charger l\'avatar équipé:', err);
         this.equippedAvatarUrl = null;

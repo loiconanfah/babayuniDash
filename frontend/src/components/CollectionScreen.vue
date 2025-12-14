@@ -161,6 +161,8 @@ async function handleEquip(userItem: UserItem) {
     // Si on équipe un item, le backend devrait automatiquement déséquiper les autres du même type
     const newEquippedState = !userItem.isEquipped
     
+    console.log(`Équipement de l'item ${userItem.id}, nouveau état: ${newEquippedState}`);
+    
     await equipItem(userItem.id, {
       userItemId: userItem.id,
       isEquipped: newEquippedState
@@ -169,18 +171,24 @@ async function handleEquip(userItem: UserItem) {
     // Recharger la collection pour avoir l'état à jour
     await loadUserItems()
     
-    // Si c'est un avatar, recharger l'avatar équipé dans le store
-    if (userItem.item.itemType === 'Avatar') {
-      await userStore.loadEquippedAvatar()
-    }
+    // Toujours recharger l'avatar équipé, même si ce n'est pas un avatar
+    // car équiper un autre type d'item pourrait avoir déséquipé un avatar
+    await userStore.loadEquippedAvatar()
     
     // Recharger aussi les coins au cas où
     await userStore.loadCoins()
+    
+    // Forcer un rafraîchissement de l'UI en déclenchant un update
+    // Cela garantit que le profil se met à jour
+    await new Promise(resolve => setTimeout(resolve, 100))
+    
+    console.log('Avatar équipé mis à jour:', userStore.equippedAvatarUrl);
   } catch (err) {
     console.error('Erreur lors de l\'équipement:', err)
     error.value = err instanceof Error ? err.message : 'Erreur lors de l\'équipement'
     // Recharger quand même pour avoir l'état actuel
     await loadUserItems()
+    await userStore.loadEquippedAvatar()
   } finally {
     isEquipping.value = false
   }

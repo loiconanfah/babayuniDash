@@ -167,6 +167,25 @@ export const useCommunityStore = defineStore('community', () => {
     }
   }
 
+  async function deletePost(postId: number, userId: number) {
+    try {
+      const response = await fetch(`/api/community/posts/${postId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+      if (response.ok) {
+        posts.value = posts.value.filter(p => p.id !== postId);
+        return true;
+      }
+      const errorData = await response.json().catch(() => ({ message: 'Erreur lors de la suppression du post' }));
+      throw new Error(errorData.message || 'Erreur lors de la suppression du post');
+    } catch (error) {
+      console.error('Erreur lors de la suppression du post:', error);
+      throw error;
+    }
+  }
+
   return {
     posts,
     currentPost,
