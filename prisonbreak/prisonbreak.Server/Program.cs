@@ -116,29 +116,38 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod()
               .AllowCredentials();
         
-        // En développement, autoriser aussi toutes les URLs ngrok (format *.ngrok.io, *.ngrok-free.app, etc.)
-        if (builder.Environment.IsDevelopment())
+        // Autoriser les domaines Render en production
+        var renderFrontendUrl = Environment.GetEnvironmentVariable("RENDER_FRONTEND_URL");
+        if (!string.IsNullOrEmpty(renderFrontendUrl))
         {
-            policy.SetIsOriginAllowed(origin =>
-            {
-                if (string.IsNullOrEmpty(origin)) return false;
-                
-                // Autoriser localhost
-                if (origin.Contains("localhost") || origin.Contains("127.0.0.1"))
-                    return true;
-                
-                // Autoriser les domaines ngrok
-                if (origin.Contains(".ngrok.io") || 
-                    origin.Contains(".ngrok-free.app") ||
-                    origin.Contains(".ngrok.app") ||
-                    origin.Contains("ngrok.io") ||
-                    origin.Contains("ngrok-free.app") ||
-                    origin.Contains("ngrok.app"))
-                    return true;
-                
-                return false;
-            });
+            allowedOrigins.Add(renderFrontendUrl.Trim());
         }
+        
+        // En développement, autoriser aussi toutes les URLs ngrok (format *.ngrok.io, *.ngrok-free.app, etc.)
+        // En production, autoriser aussi les domaines Render (.onrender.com)
+        policy.SetIsOriginAllowed(origin =>
+        {
+            if (string.IsNullOrEmpty(origin)) return false;
+            
+            // Autoriser localhost
+            if (origin.Contains("localhost") || origin.Contains("127.0.0.1"))
+                return true;
+            
+            // Autoriser les domaines ngrok
+            if (origin.Contains(".ngrok.io") || 
+                origin.Contains(".ngrok-free.app") ||
+                origin.Contains(".ngrok.app") ||
+                origin.Contains("ngrok.io") ||
+                origin.Contains("ngrok-free.app") ||
+                origin.Contains("ngrok.app"))
+                return true;
+            
+            // Autoriser les domaines Render (production)
+            if (origin.Contains(".onrender.com"))
+                return true;
+            
+            return false;
+        });
     });
 });
 
@@ -229,6 +238,17 @@ using (var scope = app.Services.CreateScope())
     {
         var errorLogger = services.GetRequiredService<ILogger<Program>>();
         errorLogger.LogError(ex, "Erreur lors de l'application des migrations de base de données");
+        // En production, on continue même si les migrations échouent
+        // pour permettre à l'application de démarrer
+        if (!app.Environment.IsDevelopment())
+        {
+            errorLogger.LogWarning("L'application continue malgré l'erreur de migration.");
+        }
+        else
+        {
+            // En développement, on peut relancer l'exception pour voir l'erreur
+            throw;
+        }
     }
 }
 
