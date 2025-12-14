@@ -82,6 +82,7 @@ function flipCard(index: number) {
 
   if (flippedCards.value.length === 2) {
     const [first, second] = flippedCards.value;
+    if (first === undefined || second === undefined) return;
     const firstCard = cards.value[first];
     const secondCard = cards.value[second];
     if (firstCard && secondCard && firstCard.value === secondCard.value) {

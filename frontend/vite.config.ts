@@ -57,7 +57,7 @@ export default defineConfig({
         secure: false,
         rewrite: (path) => path,
         configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
+          proxy.on('error', (err: any, _req, _res) => {
             if (err.code !== 'ECONNREFUSED' && err.code !== 'ETIMEDOUT') {
               console.error('Proxy error (uploads):', err)
             }
@@ -73,7 +73,7 @@ export default defineConfig({
         secure: false,
         rewrite: (path) => path,
         configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
+          proxy.on('error', (err: any, _req, _res) => {
             if (err.code !== 'ECONNREFUSED' && err.code !== 'ETIMEDOUT') {
               console.error('Proxy error (assets):', err)
             }
@@ -90,7 +90,7 @@ export default defineConfig({
         rewrite: (path) => path,
         ws: true,
         configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
+          proxy.on('error', (err: any, _req, _res) => {
             if (err.code !== 'ECONNREFUSED' && err.code !== 'ETIMEDOUT') {
               console.error('Proxy error (SignalR):', err)
             }

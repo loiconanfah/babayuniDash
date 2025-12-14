@@ -68,7 +68,7 @@
             {{ currentOtherUser.equippedItems.avatar.icon }}
           </span>
           <span v-else>
-            {{ currentOtherUser.otherUsername?.charAt(0).toUpperCase() || '?' }}
+            {{ currentOtherUser.otherUserName?.charAt(0).toUpperCase() || '?' }}
           </span>
         </div>
         
