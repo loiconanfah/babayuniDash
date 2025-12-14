@@ -4,8 +4,8 @@
 
 import type { Item, UserItem, UserCoins, PurchaseItemRequest, EquipItemRequest } from '@/types'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? '/api' : 'https://localhost:5001/api')
+// IMPORTANT: Utiliser toujours des URLs relatives pour que le proxy Vite fonctionne correctement
+const API_BASE_URL = '/api'
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {

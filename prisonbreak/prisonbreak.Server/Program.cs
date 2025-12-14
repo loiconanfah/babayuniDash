@@ -241,23 +241,33 @@ if (app.Environment.IsDevelopment())
 // Redirection HTTPS pour la sécurité (avant CORS)
 app.UseHttpsRedirection();
 
-// Activer CORS pour le frontend (après UseRouting si utilisé, avant UseEndpoints)
+// IMPORTANT: UseRouting() doit être appelé avant MapControllers() et UseStaticFiles()
+// pour que le routing fonctionne correctement
+app.UseRouting();
+
+// Activer CORS pour le frontend (après UseRouting, avant les endpoints)
 app.UseCors("AllowVueFrontend");
 
 // Configuration SignalR
 app.MapHub<prisonbreak.Server.Hubs.ChatHub>("/hubs/chat");
 
+// Utiliser les contrôleurs API (AVANT UseStaticFiles pour éviter les conflits)
+// IMPORTANT: Les routes API doivent être mappées avant les fichiers statiques
+// pour éviter que les requêtes /api/* soient interceptées et retournent du HTML
+app.MapControllers();
+
 // Servir les fichiers statiques (nécessaire pour les uploads d'images même en développement)
-app.UseStaticFiles();
+// IMPORTANT: Utiliser MapWhen pour mapper les fichiers statiques SEULEMENT pour les routes non-API
+// Cela garantit que les requêtes /api/* ne seront jamais interceptées par UseStaticFiles
+app.MapWhen(context => !(context.Request.Path.Value ?? "").StartsWith("/api/", StringComparison.OrdinalIgnoreCase) &&
+                       !(context.Request.Path.Value ?? "").StartsWith("/hubs/", StringComparison.OrdinalIgnoreCase),
+    appBuilder => appBuilder.UseStaticFiles());
 
 // En production, servir aussi les fichiers par défaut (index.html)
 if (!app.Environment.IsDevelopment())
 {
     app.UseDefaultFiles();
 }
-
-// Utiliser les contrôleurs API
-app.MapControllers();
 
 // En développement, le SPA Proxy (configuré dans .csproj) redirige automatiquement
 // les requêtes non-API vers le serveur Vite qui tourne sur http://localhost:5173

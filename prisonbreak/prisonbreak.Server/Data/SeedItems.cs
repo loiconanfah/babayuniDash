@@ -13,12 +13,12 @@ public static class SeedItems
     /// </summary>
     public static async Task SeedAsync(HashiDbContext context)
     {
-        // Supprimer tous les items existants pour les remplacer
+        // Vérifier si des items existent déjà pour éviter les erreurs de foreign key
         var existingItems = await context.Items.ToListAsync();
         if (existingItems.Any())
         {
-            context.Items.RemoveRange(existingItems);
-            await context.SaveChangesAsync();
+            // Les items existent déjà, ne rien faire
+            return;
         }
 
         var items = new List<Item>

@@ -2,8 +2,8 @@
  * Service API pour les notifications
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? '/api' : 'https://localhost:5001/api')
+// IMPORTANT: Utiliser toujours des URLs relatives pour que le proxy Vite fonctionne correctement
+const API_BASE_URL = '/api'
 
 export interface NotificationDto {
   id: number

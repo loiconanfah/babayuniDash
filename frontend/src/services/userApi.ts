@@ -13,16 +13,10 @@ export interface UserDto {
 
 /**
  * URL de base de l'API backend.
- *
- * ⚠ IMPORTANT :
- * En développement avec SPA Proxy (Visual Studio) : utilise /api (URL relative)
- * Le SPA Proxy redirige automatiquement /api/* vers le backend ASP.NET Core
- * 
- * En développement sans proxy : utilise http://localhost:5000/api
- * En production : utilise la variable d'environnement VITE_API_URL ou https://localhost:5001/api
+ * IMPORTANT: Utiliser toujours des URLs relatives pour que le proxy Vite fonctionne correctement
+ * Le proxy Vite redirige automatiquement /api/* vers http://localhost:5000/api/*
  */
-const API_BASE_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? '/api' : 'https://localhost:5001/api');
+const API_BASE_URL = '/api';
 
 /**
  * Appelle l'API backend pour créer ou connecter un joueur.

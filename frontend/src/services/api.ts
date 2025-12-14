@@ -35,11 +35,9 @@ import type {
 } from '@/types'
 
 // URL de base de l'API
-// En développement avec SPA Proxy : utilise /api (URL relative, proxyfiée automatiquement)
-// En développement sans proxy : utilise http://localhost:5000/api
-// En production : utilise la variable d'environnement VITE_API_URL ou https://localhost:5001/api
-const API_BASE_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? '/api' : 'https://localhost:5001/api')
+// IMPORTANT: Utiliser toujours des URLs relatives pour que le proxy Vite fonctionne correctement
+// Le proxy Vite redirige automatiquement /api/* vers http://localhost:5000/api/*
+const API_BASE_URL = '/api'
 
 /**
  * Classe de gestion des erreurs API
