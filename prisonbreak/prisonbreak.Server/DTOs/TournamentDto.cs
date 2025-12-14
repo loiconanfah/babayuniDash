@@ -22,9 +22,12 @@ public class TournamentDto
     public DateTime StartDate { get; set; }
     public DateTime? EndDate { get; set; }
     public DateTime CreatedAt { get; set; }
+    public string? ImageUrl { get; set; }
     public List<TournamentParticipantDto> Participants { get; set; } = new();
     public List<TournamentMatchDto> Matches { get; set; } = new();
     public bool IsUserRegistered { get; set; }
+    public int? UserPosition { get; set; } // Position de l'utilisateur dans le tournoi
+    public TournamentParticipantDto? UserParticipant { get; set; } // Informations du participant de l'utilisateur
 }
 
 /// <summary>
@@ -73,5 +76,6 @@ public class CreateTournamentRequest
     public int MaxParticipants { get; set; } = 16;
     public int EntryFee { get; set; } = 0;
     public DateTime StartDate { get; set; }
+    public string? ImageUrl { get; set; }
 }
 

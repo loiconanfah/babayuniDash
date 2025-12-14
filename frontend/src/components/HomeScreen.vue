@@ -46,6 +46,122 @@
         </p>
       </header>
 
+      <!-- Carrousel Tournois Pierre-Papier-Ciseaux -->
+      <section class="mb-10 animate-slide-up" style="animation-delay: 0.05s">
+        <div class="relative rounded-3xl overflow-hidden bg-gradient-to-br from-zinc-900/95 to-zinc-800/95 border border-zinc-700/50 shadow-2xl backdrop-blur-xl">
+          <!-- Carrousel Container -->
+          <div class="relative h-64 sm:h-80 md:h-96 overflow-hidden">
+            <!-- Images du carrousel -->
+            <div 
+              v-for="(image, index) in carouselImages" 
+              :key="index"
+              class="absolute inset-0 transition-all duration-1000 ease-in-out carousel-slide"
+              :class="{
+                'opacity-100 translate-x-0 scale-100 z-10': currentSlide === index,
+                'opacity-0 translate-x-full scale-105 z-0': currentSlide < index,
+                'opacity-0 -translate-x-full scale-105 z-0': currentSlide > index
+              }"
+            >
+              <img 
+                :src="image" 
+                :alt="`Tournoi Pierre-Papier-Ciseaux ${index + 1}`"
+                class="w-full h-full object-cover transition-transform duration-[2000ms] ease-out"
+                :class="currentSlide === index ? 'scale-100' : 'scale-110'"
+              />
+              <!-- Effet de brillance animé -->
+              <div 
+                v-if="currentSlide === index"
+                class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shine pointer-events-none"
+              ></div>
+              <!-- Overlay avec gradient -->
+              <div class="absolute inset-0 bg-gradient-to-r from-zinc-900/80 via-zinc-900/60 to-transparent"></div>
+              
+              <!-- Contenu textuel sur l'image -->
+              <div class="absolute inset-0 flex items-center justify-center sm:justify-start px-6 sm:px-12 md:px-16 z-20">
+                <div class="max-w-2xl transition-opacity duration-500" :class="currentSlide === index ? 'opacity-100 animate-fade-in-up' : 'opacity-0'">
+                  <div class="flex items-center gap-2 mb-3">
+                    <div class="h-1 w-12 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-full animate-pulse"></div>
+                    <span class="px-4 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-500/90 to-orange-500/90 text-white shadow-lg shadow-yellow-500/40 uppercase tracking-wider animate-bounce-subtle">
+                      🏆 Tournoi en cours
+                    </span>
+                  </div>
+                  <h2 class="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-3 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 bg-clip-text text-transparent drop-shadow-2xl" :class="currentSlide === index ? 'animate-slide-in-left' : ''">
+                    Pierre-Papier-Ciseaux
+                  </h2>
+                  <p class="text-base sm:text-lg md:text-xl text-zinc-200 mb-4 font-semibold drop-shadow-lg" :class="currentSlide === index ? 'animate-slide-in-right' : ''">
+                    Participez aux tournois et gagnez des récompenses en Babayuni !
+                  </p>
+                  <div class="flex flex-wrap items-center gap-3 mb-6">
+                    <div class="flex items-center gap-2 px-4 py-2 rounded-xl bg-yellow-500/20 border border-yellow-500/30 backdrop-blur-sm">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd" />
+                      </svg>
+                      <span class="text-sm font-bold text-yellow-300">Récompenses</span>
+                    </div>
+                    <div class="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500/20 border border-orange-500/30 backdrop-blur-sm">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span class="text-sm font-bold text-orange-300">24/7</span>
+                    </div>
+                  </div>
+                  <button
+                    @click="uiStore.goToTournaments()"
+                    class="px-6 py-3 rounded-xl bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 text-white font-bold text-sm sm:text-base hover:from-yellow-400 hover:via-orange-400 hover:to-red-400 transition-all duration-300 shadow-lg shadow-yellow-500/40 hover:shadow-xl hover:shadow-yellow-500/60 hover:scale-105 flex items-center gap-2"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                    </svg>
+                    Voir les tournois
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Indicateurs de slide -->
+            <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-30 flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-900/60 backdrop-blur-sm border border-zinc-700/30">
+              <button
+                v-for="(image, index) in carouselImages"
+                :key="index"
+                @click="goToSlide(index)"
+                @mouseenter="stopCarousel"
+                @mouseleave="startCarousel"
+                class="h-2.5 rounded-full transition-all duration-300 hover:scale-125"
+                :class="currentSlide === index 
+                  ? 'w-8 bg-gradient-to-r from-yellow-400 to-orange-500 shadow-lg shadow-yellow-500/50 ring-2 ring-yellow-400/30' 
+                  : 'w-2.5 bg-zinc-600/60 hover:bg-zinc-500/80 hover:w-3'"
+                :aria-label="`Aller à la slide ${index + 1}`"
+              ></button>
+            </div>
+
+            <!-- Boutons de navigation -->
+            <button
+              @click="previousSlide"
+              @mouseenter="stopCarousel"
+              @mouseleave="startCarousel"
+              class="absolute left-4 top-1/2 transform -translate-y-1/2 z-30 p-3 rounded-full bg-zinc-900/80 backdrop-blur-sm border border-zinc-700/50 text-zinc-300 hover:text-white hover:bg-zinc-800/90 transition-all duration-300 hover:scale-110 shadow-lg hover:shadow-yellow-500/30 group"
+              aria-label="Slide précédent"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transition-transform duration-300 group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button
+              @click="nextSlide"
+              @mouseenter="stopCarousel"
+              @mouseleave="startCarousel"
+              class="absolute right-4 top-1/2 transform -translate-y-1/2 z-30 p-3 rounded-full bg-zinc-900/80 backdrop-blur-sm border border-zinc-700/50 text-zinc-300 hover:text-white hover:bg-zinc-800/90 transition-all duration-300 hover:scale-110 shadow-lg hover:shadow-yellow-500/30 group"
+              aria-label="Slide suivant"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
       <!-- Featured Game Section -->
       <section class="mb-10 animate-slide-up" style="animation-delay: 0.1s">
         <div class="relative rounded-3xl overflow-hidden bg-gradient-to-br from-zinc-900/95 to-zinc-800/95 border border-zinc-700/50 shadow-2xl backdrop-blur-xl">
@@ -493,7 +609,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { useUserStore } from '@/stores/user';
 import { useUiStore } from '@/stores/ui';
 import { useStatsStore } from '@/stores/stats';
@@ -506,6 +622,12 @@ import IconConnectFour from '@/components/icons/IconConnectFour.vue';
 import IconKey from '@/components/icons/IconKey.vue';
 import FriendsList from '@/components/FriendsList.vue';
 
+// Import des images du carrousel
+import carouselImage1 from '@/assets/croussel/Gemini_Generated_Image_548z3i548z3i548z.png';
+import carouselImage2 from '@/assets/croussel/Gemini_Generated_Image_kev1ggkev1ggkev1.png';
+import carouselImage3 from '@/assets/croussel/Gemini_Generated_Image_t3pc0bt3pc0bt3pc.png';
+import carouselImage4 from '@/assets/croussel/Gemini_Generated_Image_wuu2x0wuu2x0wuu2.png';
+
 const userStore = useUserStore();
 const uiStore = useUiStore();
 const statsStore = useStatsStore();
@@ -513,6 +635,47 @@ const communityStore = useCommunityStore();
 
 const isLoggedIn = computed(() => userStore.isLoggedIn);
 const selectedCategory = ref<string>('Tous les jeux');
+
+// Carrousel pour les tournois
+const carouselImages = [
+  carouselImage1,
+  carouselImage2,
+  carouselImage3,
+  carouselImage4
+];
+
+const currentSlide = ref(0);
+let carouselInterval: number | null = null;
+
+function nextSlide() {
+  currentSlide.value = (currentSlide.value + 1) % carouselImages.length;
+}
+
+function previousSlide() {
+  currentSlide.value = (currentSlide.value - 1 + carouselImages.length) % carouselImages.length;
+}
+
+function goToSlide(index: number) {
+  currentSlide.value = index;
+  // Réinitialiser l'intervalle après un clic manuel
+  if (carouselInterval) {
+    clearInterval(carouselInterval);
+    startCarousel();
+  }
+}
+
+function startCarousel() {
+  carouselInterval = window.setInterval(() => {
+    nextSlide();
+  }, 5000); // Change de slide toutes les 5 secondes
+}
+
+function stopCarousel() {
+  if (carouselInterval) {
+    clearInterval(carouselInterval);
+    carouselInterval = null;
+  }
+}
 
 const gameCategories = [
   { name: 'Tous les jeux', icon: '🎮' },
@@ -579,6 +742,12 @@ onMounted(async () => {
   }
   // Charger les derniers posts de la communauté
   await communityStore.fetchPosts(3);
+  // Démarrer le carrousel automatique
+  startCarousel();
+});
+
+onUnmounted(() => {
+  stopCarousel();
 });
 </script>
 
@@ -638,5 +807,81 @@ onMounted(async () => {
 
 .animate-slide-up {
   animation: slide-up 0.8s ease-out both;
+}
+
+/* Animations du carrousel */
+.carousel-slide {
+  will-change: transform, opacity;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes bounce-subtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.8s ease-out 0.2s both;
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.8s ease-out 0.3s both;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.8s ease-out 0.4s both;
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s ease-in-out infinite;
+}
+
+@keyframes shine {
+  0% {
+    transform: translateX(-100%) skewX(-15deg);
+  }
+  100% {
+    transform: translateX(200%) skewX(-15deg);
+  }
+}
+
+.animate-shine {
+  animation: shine 3s ease-in-out infinite;
 }
 </style>

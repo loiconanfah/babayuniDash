@@ -1,0 +1,25 @@
+version: "2"
+# Remplacez YOUR_AUTH_TOKEN par votre token ngrok
+# Obtenez-le sur : https://dashboard.ngrok.com/get-started/your-authtoken
+authtoken: YOUR_AUTH_TOKEN
+
+tunnels:
+  backend:
+    addr: 5000
+    proto: http
+    # Optionnel : utilisez un domaine statique si vous avez un plan payant
+    # domain: votre-domaine-backend.ngrok.io
+    
+  frontend1:
+    addr: 5173
+    proto: http
+    # Optionnel : utilisez un domaine statique si vous avez un plan payant
+    # domain: votre-domaine-frontend1.ngrok.io
+    
+  frontend2:
+    addr: 5174
+    proto: http
+    # Optionnel : utilisez un domaine statique si vous avez un plan payant
+    # domain: votre-domaine-frontend2.ngrok.io
+
+

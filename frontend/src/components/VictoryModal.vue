@@ -1,234 +1,107 @@
 <template>
-  <div class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+  <Teleport to="body">
     <div
-      class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl shadow-2xl w-full max-w-md border-2 border-amber-500/50 overflow-hidden animate-scale-in"
+      v-if="isOpen"
+      class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+      @click.self="close"
     >
-      <!-- En-tête avec effet de lumière -->
-      <div class="relative bg-gradient-to-r from-amber-600 via-orange-500 to-amber-600 p-6 text-center overflow-hidden">
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.3)_0%,_transparent_70%)]"></div>
-        <div class="relative z-10">
+      <div class="relative bg-gradient-to-br from-yellow-500/95 via-orange-500/95 to-red-500/95 rounded-3xl shadow-2xl border-2 border-yellow-400/50 max-w-md w-full p-8 animate-scale-in">
+        <!-- Confettis animés -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none rounded-3xl">
+          <div
+            v-for="i in 20"
+            :key="i"
+            class="confetti"
+            :style="{
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 2}s`,
+              animationDuration: `${2 + Math.random() * 2}s`
+            }"
+          ></div>
+        </div>
+
+        <!-- Contenu -->
+        <div class="relative z-10 text-center">
           <!-- Icône de victoire -->
-          <div class="mb-4 flex justify-center">
-            <div class="relative">
-              <div class="absolute inset-0 bg-amber-400 rounded-full blur-xl opacity-50 animate-pulse"></div>
-              <div class="relative bg-amber-500 rounded-full w-20 h-20 flex items-center justify-center text-4xl shadow-lg">
-                🎉
-              </div>
-            </div>
+          <div class="mb-6 animate-bounce">
+            <div class="inline-block text-8xl">🎉</div>
           </div>
-          <h2 class="text-3xl font-bold text-white mb-2 drop-shadow-lg">
-            Évasion Réussie !
+
+          <!-- Titre -->
+          <h2 class="text-4xl font-extrabold text-white mb-4 drop-shadow-lg">
+            {{ title }}
           </h2>
-          <p class="text-amber-100 text-sm">
-            Tous les verrous ont été déverrouillés
-          </p>
-        </div>
-      </div>
 
-      <!-- Contenu -->
-      <div class="p-6 space-y-4">
-        <!-- Statistiques -->
-        <div class="grid grid-cols-2 gap-4">
-          <div class="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-            <p class="text-xs uppercase tracking-wider text-slate-400 mb-1">
-              Temps
-            </p>
-            <p class="text-2xl font-bold text-amber-400 font-mono">
-              {{ formattedTime }}
-            </p>
-          </div>
-          <div class="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-            <p class="text-xs uppercase tracking-wider text-slate-400 mb-1">
-              Score
-            </p>
-            <p class="text-2xl font-bold text-green-400">
-              {{ score }}
-            </p>
-          </div>
-        </div>
-
-        <!-- Message de félicitations -->
-        <div class="bg-slate-800/30 rounded-xl p-4 border border-slate-700/50">
-          <p class="text-slate-200 text-center text-sm leading-relaxed">
+          <!-- Message -->
+          <p class="text-lg text-white/90 mb-6 font-semibold">
             {{ message }}
           </p>
-        </div>
 
-        <!-- Boutons d'action -->
-        <div class="flex flex-col gap-3 pt-2">
-          <button
-            class="w-full px-6 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold hover:from-amber-500 hover:to-orange-500 transition-all transform hover:scale-105 shadow-lg"
-            @click="handleNextLevel"
-          >
-            Niveau Suivant
-          </button>
-          <button
-            class="w-full px-6 py-3 rounded-xl bg-slate-700 text-slate-200 font-semibold hover:bg-slate-600 transition-colors"
-            @click="handleChangeLevel"
-          >
-            Changer de Niveau
-          </button>
-          <button
-            class="w-full px-6 py-3 rounded-xl bg-slate-800/50 text-slate-400 font-medium hover:bg-slate-700/50 hover:text-slate-300 transition-colors"
-            @click="handleGoHome"
-          >
-            Retour à l'Accueil
-          </button>
+          <!-- Récompense si applicable -->
+          <div v-if="reward > 0" class="mb-6 p-4 rounded-2xl bg-white/20 backdrop-blur-sm border border-white/30">
+            <p class="text-sm text-white/80 mb-2">Récompense gagnée</p>
+            <div class="flex items-center justify-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-yellow-300" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd" />
+              </svg>
+              <span class="text-3xl font-bold text-white">{{ reward }}</span>
+              <span class="text-lg text-white/80">Babayuni</span>
+            </div>
+          </div>
+
+          <!-- Boutons d'action -->
+          <div class="flex gap-3">
+            <button
+              v-if="showNewGame"
+              @click="handleNewGame"
+              class="flex-1 px-6 py-3 rounded-xl bg-white text-orange-600 font-bold hover:bg-orange-50 transition-all duration-300 shadow-lg"
+            >
+              Nouvelle partie
+            </button>
+            <button
+              @click="close"
+              class="flex-1 px-6 py-3 rounded-xl bg-white/20 backdrop-blur-sm text-white font-bold hover:bg-white/30 transition-all duration-300 border border-white/30"
+            >
+              Fermer
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useGameStore } from '@/stores/game';
-import { useUiStore } from '@/stores/ui';
-import { useUserStore } from '@/stores/user';
-import { useStatsStore } from '@/stores/stats';
-import { puzzleApi } from '@/services/api';
-import { DifficultyLevel } from '@/types';
-import { formatTime } from '@/utils/helpers';
+import { Teleport } from 'vue'
 
-const gameStore = useGameStore();
-const uiStore = useUiStore();
-const userStore = useUserStore();
-const statsStore = useStatsStore();
-
-/**
- * Temps formaté
- */
-const formattedTime = computed(() => {
-  return formatTime(gameStore.elapsedTime);
-});
-
-/**
- * Score calculé (basé sur le temps et les erreurs)
- */
-const score = computed(() => {
-  // Utiliser le score de la partie si disponible
-  if (gameStore.currentGame?.score) {
-    return gameStore.currentGame.score;
-  }
-  // Fallback : calcul basé sur le temps (plus rapide = meilleur score)
-  const timeBonus = Math.max(0, 10000 - gameStore.elapsedTime * 10);
-  return Math.floor(timeBonus);
-});
-
-/**
- * Recharger les statistiques après une victoire
- */
-async function reloadStats() {
-  if (userStore.user?.email) {
-    try {
-      await statsStore.loadUserStatsByEmail(userStore.user.email)
-      await statsStore.loadLeaderboard(10)
-    } catch (err) {
-      console.log('Erreur lors du rechargement des statistiques:', err)
-    }
-  }
+interface Props {
+  isOpen: boolean
+  title?: string
+  message?: string
+  reward?: number
+  showNewGame?: boolean
 }
 
-/**
- * Message de félicitations personnalisé
- */
-const message = computed(() => {
-  const time = gameStore.elapsedTime;
-  if (time < 60) {
-    return 'Évasion éclair ! Tu es un véritable maître de l\'évasion !';
-  } else if (time < 180) {
-    return 'Excellente performance ! Tu as réussi à t\'échapper avec brio.';
-  } else {
-    return 'Bien joué ! Tu as réussi à déverrouiller tous les verrous.';
-  }
-});
+const props = withDefaults(defineProps<Props>(), {
+  title: '🎉 Victoire !',
+  message: 'Félicitations, vous avez gagné !',
+  reward: 0,
+  showNewGame: false
+})
 
-/**
- * Passe au niveau suivant (difficulté supérieure)
- */
-async function handleNextLevel() {
-  try {
-    // Recharger les statistiques avant de continuer
-    await reloadStats()
-    
-    uiStore.closeVictoryModal();
-    
-    // Récupérer la difficulté actuelle
-    const currentDifficulty = gameStore.currentPuzzle?.difficulty;
-    if (!currentDifficulty) {
-      uiStore.goToLevels();
-      return;
-    }
+const emit = defineEmits<{
+  close: []
+  newGame: []
+}>()
 
-    // Calculer la difficulté supérieure
-    let nextDifficulty: DifficultyLevel;
-    switch (currentDifficulty) {
-      case DifficultyLevel.Easy:
-        nextDifficulty = DifficultyLevel.Medium;
-        break;
-      case DifficultyLevel.Medium:
-        nextDifficulty = DifficultyLevel.Hard;
-        break;
-      case DifficultyLevel.Hard:
-        nextDifficulty = DifficultyLevel.Expert;
-        break;
-      case DifficultyLevel.Expert:
-        // Si on est déjà à Expert, on reste à Expert
-        nextDifficulty = DifficultyLevel.Expert;
-        break;
-      default:
-        nextDifficulty = DifficultyLevel.Medium;
-    }
-
-    // Réinitialiser le jeu actuel
-    gameStore.resetGame();
-
-    // Charger les puzzles de la difficulté supérieure
-    const puzzles = await puzzleApi.getByDifficulty(nextDifficulty);
-    
-    if (puzzles.length === 0) {
-      alert('Aucun puzzle disponible pour le niveau supérieur. Retour à la sélection de niveaux.');
-      uiStore.goToLevels();
-      return;
-    }
-
-    // Prendre le premier puzzle disponible
-    const nextPuzzle = puzzles[0];
-    
-    if (!nextPuzzle) {
-      throw new Error('Aucun puzzle disponible pour le niveau suivant');
-    }
-
-    // S'assurer qu'une session active existe
-    const sessionId = await userStore.ensureActiveSession();
-
-    // Démarrer le nouveau jeu
-    await gameStore.startGame(nextPuzzle, sessionId);
-    uiStore.goToGame();
-  } catch (error) {
-    console.error('Erreur lors du passage au niveau suivant:', error);
-    alert('Erreur lors du chargement du niveau suivant. Retour à la sélection de niveaux.');
-    uiStore.goToLevels();
-  }
+function close() {
+  emit('close')
 }
 
-/**
- * Change de niveau
- */
-async function handleChangeLevel() {
-  await reloadStats()
-  uiStore.closeVictoryModal();
-  uiStore.goToLevels();
-}
-
-/**
- * Retourne à l'accueil
- */
-async function handleGoHome() {
-  await reloadStats()
-  uiStore.closeVictoryModal();
-  gameStore.resetGame();
-  uiStore.goToHome();
+function handleNewGame() {
+  emit('newGame')
+  close()
 }
 </script>
 
@@ -245,11 +118,22 @@ async function handleGoHome() {
 @keyframes scale-in {
   from {
     opacity: 0;
-    transform: scale(0.9);
+    transform: scale(0.8);
   }
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
   }
 }
 
@@ -258,7 +142,15 @@ async function handleGoHome() {
 }
 
 .animate-scale-in {
-  animation: scale-in 0.3s ease-out;
+  animation: scale-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.confetti {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: linear-gradient(45deg, #ffd700, #ff6b6b, #4ecdc4, #ffe66d);
+  border-radius: 2px;
+  animation: confetti-fall linear infinite;
 }
 </style>
-

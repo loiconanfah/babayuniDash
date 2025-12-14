@@ -4,6 +4,7 @@ using prisonbreak.Server.Repositories;
 using prisonbreak.Server.Services;
 using prisonbreak.Server.Models;
 using prisonbreak.Server.Hubs;
+using System.Collections.Generic;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -67,22 +68,68 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // Configuration CORS pour permettre au frontend Vue.js de communiquer avec l'API
-// En développement, on autorise les ports de Vite (5173 et 5174 pour le multijoueur) et le proxy SPA
+// En développement, on autorise les ports de Vite (5173 et 5174 pour le multijoueur), le proxy SPA, et ngrok
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowVueFrontend", policy =>
     {
-        policy.WithOrigins(
-                "http://localhost:5173",
-                "https://localhost:5173",
-                "http://localhost:5174",
-                "https://localhost:5174",
-                "http://localhost:5000",
-                "https://localhost:5001"
-              )
+        var allowedOrigins = new List<string>
+        {
+            "http://localhost:5173",
+            "https://localhost:5173",
+            "http://localhost:5174",
+            "https://localhost:5174",
+            "http://localhost:5000",
+            "https://localhost:5001"
+        };
+
+        // Ajouter les URLs ngrok si configurées via variable d'environnement
+        var ngrokUrls = Environment.GetEnvironmentVariable("NGROK_URLS");
+        if (!string.IsNullOrEmpty(ngrokUrls))
+        {
+            var urls = ngrokUrls.Split(';', StringSplitOptions.RemoveEmptyEntries);
+            foreach (var url in urls)
+            {
+                if (!string.IsNullOrWhiteSpace(url))
+                {
+                    allowedOrigins.Add(url.Trim());
+                    // Ajouter aussi la version HTTPS si c'est HTTP
+                    if (url.Trim().StartsWith("http://"))
+                    {
+                        allowedOrigins.Add(url.Trim().Replace("http://", "https://"));
+                    }
+                }
+            }
+        }
+
+        policy.WithOrigins(allowedOrigins.ToArray())
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
+        
+        // En développement, autoriser aussi toutes les URLs ngrok (format *.ngrok.io, *.ngrok-free.app, etc.)
+        if (builder.Environment.IsDevelopment())
+        {
+            policy.SetIsOriginAllowed(origin =>
+            {
+                if (string.IsNullOrEmpty(origin)) return false;
+                
+                // Autoriser localhost
+                if (origin.Contains("localhost") || origin.Contains("127.0.0.1"))
+                    return true;
+                
+                // Autoriser les domaines ngrok
+                if (origin.Contains(".ngrok.io") || 
+                    origin.Contains(".ngrok-free.app") ||
+                    origin.Contains(".ngrok.app") ||
+                    origin.Contains("ngrok.io") ||
+                    origin.Contains("ngrok-free.app") ||
+                    origin.Contains("ngrok.app"))
+                    return true;
+                
+                return false;
+            });
+        }
     });
 });
 

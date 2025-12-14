@@ -115,6 +115,20 @@
           </div>
         </div>
 
+        <!-- Animation vidéo du résultat -->
+        <div v-if="(rpsStore.isRoundCompleted || rpsStore.isGameOver) && shouldShowAnimation && getAnimationVideo()" class="mb-6 flex justify-center">
+          <video
+            :key="animationKey"
+            :src="getAnimationVideo()"
+            autoplay
+            muted
+            class="max-w-full h-auto rounded-2xl shadow-2xl border-2 border-purple-500/50"
+            style="max-height: 400px;"
+            @ended="onAnimationEnd"
+            @loadeddata="onVideoLoaded"
+          ></video>
+        </div>
+
         <!-- Choix des joueurs (affichage) -->
         <div v-if="rpsStore.isRoundCompleted || rpsStore.isGameOver" class="grid grid-cols-2 gap-6">
           <!-- Choix du joueur 1 -->
@@ -423,6 +437,8 @@ import { RPSGameMode, RPSGameStatus, RPSChoice, SessionDto } from '@/types';
 import { useUserStore } from '@/stores/user';
 import { useNotificationsStore } from '@/stores/notifications';
 import { sessionsApi, rpsApi } from '@/services/api';
+import rockBeatsScissorsVideo from '@/assets/animation/Animation_Pierre_bat_Ciseaux.mp4';
+import scissorsWinVideo from '@/assets/animation/Vidéo_de_ciseaux_gagnants_générée.mp4';
 
 const rpsStore = useRockPaperScissorsStore();
 const uiStore = useUiStore();
@@ -588,6 +604,8 @@ const showWagerModal = ref(false)
 const wagerAmount = ref(0)
 const requiredWager = ref(0)
 const pendingAction = ref<{ type: 'create' | 'join', gameId?: number, player2SessionId?: number } | null>(null)
+const showAnimation = ref(false)
+const animationKey = ref(0)
 
 function openWagerModal(action: { type: 'create' | 'join', gameId?: number, player2SessionId?: number }, requiredWagerAmount: number = 0) {
   pendingAction.value = action
@@ -764,6 +782,88 @@ function getGameOverMessage(): string {
 
 function clearError() {
   rpsStore.clearError();
+}
+
+// Fonction pour déterminer si on doit afficher une animation
+const shouldShowAnimation = computed(() => {
+  if (!currentGame.value || !rpsStore.isRoundCompleted) return false;
+  if (!currentGame.value.player1Choice || !currentGame.value.player2Choice) return false;
+  return showAnimation.value;
+});
+
+// Fonction pour déterminer quelle animation afficher
+function getAnimationVideo(): string {
+  if (!currentGame.value || !currentGame.value.player1Choice || !currentGame.value.player2Choice) {
+    return '';
+  }
+
+  const p1Choice = currentGame.value.player1Choice;
+  const p2Choice = currentGame.value.player2Choice;
+  const winner = currentGame.value.roundWinner;
+
+  // Si égalité, pas d'animation
+  if (winner === null) {
+    return '';
+  }
+
+  // Déterminer qui a gagné et avec quoi
+  const winnerChoice = winner === 1 ? p1Choice : p2Choice;
+  const loserChoice = winner === 1 ? p2Choice : p1Choice;
+
+  // Pierre bat Ciseaux - utiliser l'animation spécifique
+  if (winnerChoice === RPSChoice.Rock && loserChoice === RPSChoice.Scissors) {
+    return rockBeatsScissorsVideo;
+  }
+
+  // Ciseaux bat Papier - utiliser l'animation des ciseaux gagnants
+  if (winnerChoice === RPSChoice.Scissors && loserChoice === RPSChoice.Paper) {
+    return scissorsWinVideo;
+  }
+
+  // Pour les autres combinaisons où les ciseaux gagnent (Ciseaux bat Papier)
+  // On utilise la vidéo des ciseaux gagnants
+  if (winnerChoice === RPSChoice.Scissors) {
+    return scissorsWinVideo;
+  }
+
+  // Pour Pierre bat Ciseaux, on utilise toujours la vidéo spécifique
+  if (winnerChoice === RPSChoice.Rock && loserChoice === RPSChoice.Scissors) {
+    return rockBeatsScissorsVideo;
+  }
+
+  // Par défaut, si aucune animation spécifique n'est disponible, on n'affiche rien
+  return '';
+}
+
+// Observer les changements de round pour déclencher l'animation
+watch(
+  () => [rpsStore.isRoundCompleted, currentGame.value?.roundWinner],
+  ([isCompleted, roundWinner]) => {
+    if (isCompleted && currentGame.value?.player1Choice && currentGame.value?.player2Choice && roundWinner !== null) {
+      const videoUrl = getAnimationVideo();
+      if (videoUrl) {
+        showAnimation.value = true;
+        animationKey.value++; // Force la relecture de la vidéo
+        
+        // Masquer l'animation après 5 secondes (pour laisser le temps à la vidéo de se jouer)
+        setTimeout(() => {
+          showAnimation.value = false;
+        }, 5000);
+      }
+    } else {
+      showAnimation.value = false;
+    }
+  },
+  { immediate: true }
+);
+
+function onAnimationEnd() {
+  // Masquer l'animation après qu'elle soit terminée
+  showAnimation.value = false;
+}
+
+function onVideoLoaded() {
+  // La vidéo est chargée et prête à être lue
 }
 </script>
 

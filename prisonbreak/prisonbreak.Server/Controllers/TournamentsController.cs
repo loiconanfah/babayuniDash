@@ -247,3 +247,4 @@ public class RecordMatchResultRequest
     public int WinnerId { get; set; }
 }
 
+

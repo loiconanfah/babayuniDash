@@ -776,6 +776,8 @@ namespace prisonbreak.Server.Migrations
 
                     b.HasIndex("UserId");
 
+                    b.HasIndex("UserId", "IsActive", "ExpiresAt");
+
                     b.ToTable("Sessions", (string)null);
                 });
 
@@ -877,6 +879,9 @@ namespace prisonbreak.Server.Migrations
 
                     b.Property<int>("GameType")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("MaxParticipants")
                         .HasColumnType("INTEGER");

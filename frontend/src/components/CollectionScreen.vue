@@ -152,22 +152,35 @@ async function loadUserItems() {
 }
 
 async function handleEquip(userItem: UserItem) {
+  if (isEquipping.value) return // Éviter les clics multiples
+  
   isEquipping.value = true
+  error.value = null
+  
   try {
+    // Si on équipe un item, le backend devrait automatiquement déséquiper les autres du même type
+    const newEquippedState = !userItem.isEquipped
+    
     await equipItem(userItem.id, {
       userItemId: userItem.id,
-      isEquipped: !userItem.isEquipped
+      isEquipped: newEquippedState
     })
     
-    // Recharger la collection
+    // Recharger la collection pour avoir l'état à jour
     await loadUserItems()
     
     // Si c'est un avatar, recharger l'avatar équipé dans le store
     if (userItem.item.itemType === 'Avatar') {
       await userStore.loadEquippedAvatar()
     }
+    
+    // Recharger aussi les coins au cas où
+    await userStore.loadCoins()
   } catch (err) {
+    console.error('Erreur lors de l\'équipement:', err)
     error.value = err instanceof Error ? err.message : 'Erreur lors de l\'équipement'
+    // Recharger quand même pour avoir l'état actuel
+    await loadUserItems()
   } finally {
     isEquipping.value = false
   }

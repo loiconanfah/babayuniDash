@@ -97,3 +97,4 @@ export async function deleteNotification(notificationId: number, userId: number)
   await handleResponse(response)
 }
 
+

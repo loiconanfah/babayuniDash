@@ -54,3 +54,4 @@ public interface ITournamentService
     Task<List<TournamentMatchDto>> GetUserMatchesAsync(int tournamentId, int userId);
 }
 
+

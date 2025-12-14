@@ -30,7 +30,7 @@
 
       <!-- Stats de la communauté -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <div class="p-6 rounded-2xl bg-gradient-to-br from-zinc-900/90 to-zinc-800/90 border border-zinc-700/50 backdrop-blur-sm">
+        <div class="p-6 rounded-2xl bg-gradient-to-br from-slate-800/95 via-slate-700/95 to-slate-800/95 border border-slate-600/50 backdrop-blur-sm shadow-lg">
           <div class="flex items-center gap-3 mb-2">
             <div class="h-10 w-10 rounded-xl bg-cyan-500/20 flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -43,7 +43,7 @@
             </div>
           </div>
         </div>
-        <div class="p-6 rounded-2xl bg-gradient-to-br from-zinc-900/90 to-zinc-800/90 border border-zinc-700/50 backdrop-blur-sm">
+        <div class="p-6 rounded-2xl bg-gradient-to-br from-slate-800/95 via-slate-700/95 to-slate-800/95 border border-slate-600/50 backdrop-blur-sm shadow-lg">
           <div class="flex items-center gap-3 mb-2">
             <div class="h-10 w-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -117,21 +117,38 @@
         >
           <!-- Header du post -->
           <div class="flex items-center gap-3 mb-4">
-            <div class="h-12 w-12 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg">
-              {{ post.authorName.charAt(0).toUpperCase() }}
+            <div class="h-12 w-12 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+              {{ post.authorName?.charAt(0)?.toUpperCase() || '?' }}
             </div>
-            <div class="flex-1">
-              <p class="text-sm font-bold text-zinc-50">{{ post.authorName }}</p>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-bold text-zinc-50 truncate">{{ post.authorName || 'Utilisateur' }}</p>
               <p class="text-xs text-zinc-400">{{ formatTime(post.createdAt) }}</p>
             </div>
-            <span
-              :class="[
-                'px-3 py-1 rounded-lg text-xs font-semibold',
-                getPostTypeClass(post.postType)
-              ]"
-            >
-              {{ getPostTypeLabel(post.postType) }}
-            </span>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <span
+                :class="[
+                  'px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap',
+                  getPostTypeClass(post.postType)
+                ]"
+              >
+                {{ getPostTypeLabel(post.postType) }}
+              </span>
+              <!-- Bouton de suppression (visible uniquement par l'auteur) -->
+              <button
+                v-if="userStore.isLoggedIn && post.authorId === userStore.userId"
+                @click.stop="handleDeletePost(post.id)"
+                :disabled="isDeletingPost === post.id"
+                class="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                title="Supprimer le post"
+              >
+                <svg v-if="isDeletingPost !== post.id" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           <!-- Contenu du post -->
@@ -343,6 +360,7 @@ const userStore = useUserStore();
 const showCreatePostModal = ref(false);
 const selectedPostType = ref<string | null>(null);
 const expandedComments = ref<number | null>(null);
+const isDeletingPost = ref<number | null>(null);
 const postComments = ref<Record<number, any[]>>({});
 const newComments = ref<Record<number, string>>({});
 
@@ -442,6 +460,26 @@ function getPostTypeClass(type: string) {
   return classMap[type] || 'bg-zinc-800 text-zinc-400';
 }
 
+async function handleDeletePost(postId: number) {
+  if (!userStore.userId) return;
+  
+  // Demander confirmation
+  if (!confirm('Êtes-vous sûr de vouloir supprimer ce post ? Cette action est irréversible.')) {
+    return;
+  }
+  
+  isDeletingPost.value = postId;
+  try {
+    await communityStore.deletePost(postId, userStore.userId);
+    // Le post sera automatiquement retiré de la liste par le store
+  } catch (error) {
+    console.error('Erreur lors de la suppression:', error);
+    alert(error instanceof Error ? error.message : 'Erreur lors de la suppression du post');
+  } finally {
+    isDeletingPost.value = null;
+  }
+}
+
 function getImageUrl(imageUrl: string | null): string {
   if (!imageUrl) return '';
   
@@ -533,9 +571,13 @@ async function uploadImage() {
     const formData = new FormData();
     formData.append('file', selectedFile.value);
     
-    const response = await fetch('/api/community/upload', {
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 
+      (import.meta.env.DEV ? '/api' : 'https://localhost:5001/api')
+    
+    const response = await fetch(`${API_BASE_URL}/community/upload`, {
       method: 'POST',
       body: formData,
+      credentials: 'include'
     });
     
     if (!response.ok) {

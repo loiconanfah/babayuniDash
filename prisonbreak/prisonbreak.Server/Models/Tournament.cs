@@ -81,6 +81,11 @@ public class Tournament
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>
+    /// URL de l'image du tournoi (optionnel)
+    /// </summary>
+    public string? ImageUrl { get; set; }
+
+    /// <summary>
     /// Participants du tournoi
     /// </summary>
     public ICollection<TournamentParticipant> Participants { get; set; } = new List<TournamentParticipant>();

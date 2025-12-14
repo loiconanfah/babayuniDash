@@ -41,9 +41,12 @@ export interface TournamentDto {
   startDate: string
   endDate?: string | null
   createdAt: string
+  imageUrl?: string | null
   participants: TournamentParticipantDto[]
   matches: TournamentMatchDto[]
   isUserRegistered: boolean
+  userPosition?: number | null
+  userParticipant?: TournamentParticipantDto | null
 }
 
 export interface TournamentParticipantDto {
@@ -80,17 +83,26 @@ export interface CreateTournamentRequest {
   maxParticipants: number
   entryFee: number
   startDate: string
+  imageUrl?: string | null
 }
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    const error = await response.text()
+    let errorMessage = `HTTP error! status: ${response.status}`
     try {
-      const errorData = JSON.parse(error)
-      throw new Error(errorData.message || error)
+      const errorText = await response.text()
+      if (errorText) {
+        try {
+          const errorData = JSON.parse(errorText)
+          errorMessage = errorData.message || errorData.title || errorText
+        } catch {
+          errorMessage = errorText
+        }
+      }
     } catch {
-      throw new Error(error || `HTTP error! status: ${response.status}`)
+      // Si on ne peut pas lire l'erreur, utiliser le message par défaut
     }
+    throw new Error(errorMessage)
   }
   return response.json()
 }

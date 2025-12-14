@@ -175,6 +175,7 @@ export const useCommunityStore = defineStore('community', () => {
     fetchPosts,
     fetchPost,
     createPost,
+    deletePost,
     likePost,
     unlikePost,
     fetchComments,

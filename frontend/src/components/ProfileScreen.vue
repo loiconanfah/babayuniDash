@@ -148,8 +148,158 @@
               >
                 📦 Ma collection
               </button>
+              <button
+                @click="uiStore.goToTournaments()"
+                class="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold hover:from-cyan-400 hover:to-purple-400 transition-all text-sm"
+              >
+                🏆 Voir les tournois
+              </button>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Section Tournois -->
+      <div v-if="userStore.isLoggedIn" class="mt-8">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h3 class="text-2xl font-bold text-slate-50 mb-2">🏆 Mes Tournois</h3>
+            <p class="text-sm text-slate-400">Tournois auxquels vous êtes inscrit</p>
+          </div>
+        </div>
+
+        <!-- Chargement -->
+        <div v-if="isLoadingTournaments" class="flex items-center justify-center py-12">
+          <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-cyan-500"></div>
+        </div>
+
+        <!-- Liste des tournois -->
+        <div v-else-if="userTournaments.length > 0" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div
+            v-for="tournament in userTournaments"
+            :key="tournament.id"
+            class="rounded-2xl bg-gradient-to-br from-slate-900/90 to-slate-800/90 border border-slate-700/50 overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300"
+          >
+            <!-- Image du tournoi -->
+            <div v-if="tournament.imageUrl" class="relative h-40 overflow-hidden">
+              <img 
+                :src="tournament.imageUrl" 
+                :alt="tournament.name"
+                class="w-full h-full object-cover"
+              />
+              <div class="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-transparent to-transparent"></div>
+            </div>
+            <div v-else class="relative h-40 bg-gradient-to-br from-cyan-600/20 via-purple-600/20 to-pink-600/20 overflow-hidden flex items-center justify-center">
+              <div class="text-5xl opacity-30">🏆</div>
+              <div class="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-transparent to-transparent"></div>
+            </div>
+
+            <!-- Contenu -->
+            <div class="p-6">
+              <div class="flex items-start justify-between mb-4">
+                <div class="flex-1">
+                  <h4 class="text-xl font-bold text-slate-50 mb-2">{{ tournament.name }}</h4>
+                  <p class="text-sm text-slate-400 line-clamp-2">{{ tournament.description }}</p>
+                </div>
+                <span
+                  :class="[
+                    'px-3 py-1 rounded-full text-xs font-bold',
+                    tournament.status === 1 ? 'bg-green-500/20 text-green-400' :
+                    tournament.status === 2 ? 'bg-blue-500/20 text-blue-400' :
+                    tournament.status === 3 ? 'bg-purple-500/20 text-purple-400' :
+                    'bg-red-500/20 text-red-400'
+                  ]"
+                >
+                  {{ getStatusText(tournament.status) }}
+                </span>
+              </div>
+
+              <!-- Classement de l'utilisateur -->
+              <div v-if="tournament.userParticipant" class="mb-4 p-4 rounded-xl bg-gradient-to-br from-cyan-500/10 via-purple-500/10 to-pink-500/10 border border-cyan-500/20">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-xs text-slate-400 mb-1">Votre classement</p>
+                    <div class="flex items-center gap-2">
+                      <span v-if="tournament.userPosition" class="text-2xl font-bold text-cyan-400">
+                        {{ getPositionEmoji(tournament.userPosition) }} {{ tournament.userPosition }}<span class="text-sm">ème</span>
+                      </span>
+                      <span v-else class="text-lg font-semibold text-slate-300">
+                        En attente
+                      </span>
+                    </div>
+                  </div>
+                  <div v-if="tournament.userParticipant.prizeWon > 0" class="text-right">
+                    <p class="text-xs text-slate-400 mb-1">Récompense</p>
+                    <p class="text-lg font-bold text-yellow-400">
+                      {{ tournament.userParticipant.prizeWon }} 💰
+                    </p>
+                  </div>
+                </div>
+                <div v-if="tournament.userParticipant.isEliminated" class="mt-2 text-xs text-red-400">
+                  ❌ Éliminé
+                </div>
+              </div>
+
+              <!-- Informations du tournoi -->
+              <div class="grid grid-cols-2 gap-3 text-sm mb-4">
+                <div>
+                  <p class="text-slate-500 mb-1">Participants</p>
+                  <p class="text-slate-200 font-semibold">{{ tournament.currentParticipants }} / {{ tournament.maxParticipants }}</p>
+                </div>
+                <div>
+                  <p class="text-slate-500 mb-1">Récompense totale</p>
+                  <p class="text-yellow-400 font-bold">{{ tournament.totalPrize }} 💰</p>
+                </div>
+                <div>
+                  <p class="text-slate-500 mb-1">Début</p>
+                  <p class="text-slate-200 font-semibold text-xs">{{ formatDate(tournament.startDate) }}</p>
+                </div>
+                <div v-if="tournament.endDate">
+                  <p class="text-slate-500 mb-1">Fin</p>
+                  <p class="text-slate-200 font-semibold text-xs">{{ formatDate(tournament.endDate) }}</p>
+                </div>
+              </div>
+
+              <!-- Récompenses -->
+              <div class="mb-4 p-3 rounded-xl bg-slate-800/50 border border-slate-700/30">
+                <p class="text-xs text-slate-400 mb-2">Récompenses</p>
+                <div class="space-y-1 text-xs">
+                  <div class="flex justify-between">
+                    <span class="text-slate-300">🥇 1er</span>
+                    <span class="text-yellow-400 font-bold">{{ tournament.firstPlacePrize }} 💰</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-slate-300">🥈 2ème</span>
+                    <span class="text-slate-400 font-bold">{{ tournament.secondPlacePrize }} 💰</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-slate-300">🥉 3ème</span>
+                    <span class="text-slate-400 font-bold">{{ tournament.thirdPlacePrize }} 💰</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Actions -->
+              <button
+                @click="uiStore.goToTournaments()"
+                class="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-semibold hover:from-cyan-400 hover:to-purple-400 transition-all duration-300 text-sm"
+              >
+                Voir le tournoi
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Aucun tournoi -->
+        <div v-else class="text-center py-12 rounded-2xl bg-slate-900/50 border border-slate-700/30">
+          <div class="text-5xl mb-4 opacity-50">🏆</div>
+          <p class="text-slate-400 mb-2">Vous n'êtes inscrit à aucun tournoi</p>
+          <button
+            @click="uiStore.goToTournaments()"
+            class="mt-4 px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold hover:from-cyan-400 hover:to-purple-400 transition-all"
+          >
+            Voir les tournois disponibles
+          </button>
         </div>
       </div>
     </div>
@@ -161,13 +311,17 @@ import { ref, computed, onMounted } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { useUiStore } from '@/stores/ui'
 import { getUserItems } from '@/services/shopApi'
+import * as tournamentsApi from '@/services/tournamentsApi'
 import type { UserItem } from '@/types'
+import type { TournamentDto } from '@/services/tournamentsApi'
 
 const userStore = useUserStore()
 const uiStore = useUiStore()
 
 const userItems = ref<UserItem[]>([])
 const isLoading = ref(false)
+const userTournaments = ref<TournamentDto[]>([])
+const isLoadingTournaments = ref(false)
 
 const equippedAvatar = computed(() => {
   return userItems.value.find(ui => ui.isEquipped && ui.item.itemType === 'Avatar')?.item
@@ -202,9 +356,57 @@ async function loadUserItems() {
   }
 }
 
+async function loadUserTournaments() {
+  if (!userStore.userId) return
+  
+  isLoadingTournaments.value = true
+  try {
+    const allTournaments = await tournamentsApi.getAllTournaments(userStore.userId)
+    // Filtrer seulement les tournois auxquels l'utilisateur est inscrit
+    userTournaments.value = allTournaments.filter(t => t.isUserRegistered)
+  } catch (err) {
+    console.error('Erreur lors du chargement des tournois:', err)
+  } finally {
+    isLoadingTournaments.value = false
+  }
+}
+
+function getStatusText(status: number): string {
+  switch (status) {
+    case tournamentsApi.TournamentStatus.Registration:
+      return 'Inscriptions ouvertes'
+    case tournamentsApi.TournamentStatus.InProgress:
+      return 'En cours'
+    case tournamentsApi.TournamentStatus.Completed:
+      return 'Terminé'
+    case tournamentsApi.TournamentStatus.Cancelled:
+      return 'Annulé'
+    default:
+      return 'Inconnu'
+  }
+}
+
+function getPositionEmoji(position: number): string {
+  if (position === 1) return '🥇'
+  if (position === 2) return '🥈'
+  if (position === 3) return '🥉'
+  return '📍'
+}
+
+function formatDate(dateString: string): string {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
 onMounted(() => {
   if (userStore.isLoggedIn) {
     loadUserItems()
+    loadUserTournaments()
   }
 })
 </script>

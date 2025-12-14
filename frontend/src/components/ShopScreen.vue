@@ -36,6 +36,82 @@
         </div>
       </header>
 
+      <!-- Section Achat de Babayuni -->
+      <div v-if="userStore.isLoggedIn" class="mb-8 rounded-3xl bg-gradient-to-br from-yellow-500/20 via-orange-500/20 to-red-500/20 border border-yellow-500/30 p-6 backdrop-blur-sm">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h3 class="text-2xl font-bold text-zinc-50 mb-2">💰 Acheter des Babayuni</h3>
+            <p class="text-sm text-zinc-400">Rechargez votre compte pour continuer à jouer</p>
+          </div>
+          <div class="text-right">
+            <p class="text-xs text-zinc-400 mb-1">Solde actuel</p>
+            <p class="text-3xl font-bold text-yellow-400">{{ userStore.coins }}</p>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Pack 1 : 500 Babayuni -->
+          <button
+            @click="purchaseCoins(500)"
+            :disabled="isPurchasingCoins"
+            class="group relative rounded-2xl bg-gradient-to-br from-yellow-500/90 to-orange-500/90 border-2 border-yellow-400/50 p-6 hover:from-yellow-400 hover:to-orange-400 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-yellow-500/50 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
+          >
+            <div class="absolute top-2 right-2 px-2 py-1 rounded-lg bg-yellow-600/80 text-white text-xs font-bold">
+              POPULAIRE
+            </div>
+            <div class="text-center">
+              <div class="text-5xl mb-3">💰</div>
+              <h4 class="text-2xl font-bold text-white mb-2">500</h4>
+              <p class="text-sm text-yellow-100 mb-4">Babayuni</p>
+              <div class="px-4 py-2 rounded-xl bg-white/20 backdrop-blur-sm">
+                <p class="text-xs text-white/80 line-through mb-1">10€</p>
+                <p class="text-lg font-bold text-white">Gratuit</p>
+              </div>
+            </div>
+          </button>
+
+          <!-- Pack 2 : 1000 Babayuni -->
+          <button
+            @click="purchaseCoins(1000)"
+            :disabled="isPurchasingCoins || userStore.coins < 100"
+            class="group relative rounded-2xl bg-gradient-to-br from-orange-500/90 to-red-500/90 border-2 border-orange-400/50 p-6 hover:from-orange-400 hover:to-red-400 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-orange-500/50 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
+          >
+            <div class="absolute top-2 right-2 px-2 py-1 rounded-lg bg-orange-600/80 text-white text-xs font-bold">
+              MEILLEUR
+            </div>
+            <div class="text-center">
+              <div class="text-5xl mb-3">💎</div>
+              <h4 class="text-2xl font-bold text-white mb-2">1000</h4>
+              <p class="text-sm text-orange-100 mb-4">Babayuni</p>
+              <div class="px-4 py-2 rounded-xl bg-white/20 backdrop-blur-sm">
+                <p class="text-xs text-white/80 mb-1">Prix</p>
+                <p class="text-lg font-bold text-white">100 💰</p>
+              </div>
+            </div>
+          </button>
+
+          <!-- Pack 3 : 2500 Babayuni -->
+          <button
+            @click="purchaseCoins(2500)"
+            :disabled="isPurchasingCoins || userStore.coins < 200"
+            class="group relative rounded-2xl bg-gradient-to-br from-red-500/90 to-pink-500/90 border-2 border-red-400/50 p-6 hover:from-red-400 hover:to-pink-400 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-red-500/50 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
+          >
+            <div class="absolute top-2 right-2 px-2 py-1 rounded-lg bg-red-600/80 text-white text-xs font-bold">
+              MAXIMUM
+            </div>
+            <div class="text-center">
+              <div class="text-5xl mb-3">👑</div>
+              <h4 class="text-2xl font-bold text-white mb-2">2500</h4>
+              <p class="text-sm text-red-100 mb-4">Babayuni</p>
+              <div class="px-4 py-2 rounded-xl bg-white/20 backdrop-blur-sm">
+                <p class="text-xs text-white/80 mb-1">Prix</p>
+                <p class="text-lg font-bold text-white">200 💰</p>
+              </div>
+            </div>
+          </button>
+        </div>
+      </div>
+
       <!-- Filtres par type -->
       <div class="mb-8 flex flex-wrap gap-3">
         <button
@@ -302,7 +378,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { useUiStore } from '@/stores/ui'
-import { getAllItems, purchaseItem, getUserCoins } from '@/services/shopApi'
+import { getAllItems, purchaseItem, getUserCoins, addCoins } from '@/services/shopApi'
 import type { Item } from '@/types'
 import IconShop from '@/components/icons/IconShop.vue'
 
@@ -313,6 +389,7 @@ const items = ref<Item[]>([])
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 const isPurchasing = ref(false)
+const isPurchasingCoins = ref(false)
 const selectedType = ref<string>('Tous')
 const selectedItem = ref<Item | null>(null)
 
@@ -380,6 +457,60 @@ async function handlePurchase(item: Item) {
     error.value = err instanceof Error ? err.message : 'Erreur lors de l\'achat'
   } finally {
     isPurchasing.value = false
+  }
+}
+
+async function purchaseCoins(amount: number) {
+  if (!userStore.userId) {
+    error.value = 'Connecte-toi pour acheter des Babayuni'
+    return
+  }
+
+  // Déterminer le prix selon le pack
+  let price = 0
+  if (amount === 500) {
+    price = 0 // Gratuit
+  } else if (amount === 1000) {
+    price = 100
+  } else if (amount === 2500) {
+    price = 200
+  }
+
+  // Vérifier si l'utilisateur a assez de coins (sauf pour le pack gratuit)
+  if (price > 0 && userStore.coins < price) {
+    error.value = `Vous n'avez pas assez de Babayuni. Il vous faut ${price} Babayuni.`
+    setTimeout(() => { error.value = null }, 5000)
+    return
+  }
+
+  isPurchasingCoins.value = true
+  error.value = null
+  
+  try {
+    // Si c'est payant, déduire le prix d'abord
+    if (price > 0) {
+      // Déduire le prix des coins de l'utilisateur
+      const deductResult = await addCoins(userStore.userId, -price)
+      userStore.coins = deductResult.coins
+    }
+    
+    // Ajouter les coins achetés
+    const result = await addCoins(userStore.userId, amount)
+    userStore.coins = result.coins
+    
+    // Message de succès temporaire
+    const successMessage = `✅ ${amount} Babayuni ${price === 0 ? 'ajoutés' : 'achetés'} avec succès !`
+    error.value = successMessage
+    setTimeout(() => {
+      if (error.value === successMessage) {
+        error.value = null
+      }
+    }, 3000)
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Erreur lors de l\'achat de Babayuni'
+    setTimeout(() => { error.value = null }, 5000)
+  } finally {
+    isPurchasingCoins.value = false
   }
 }
 

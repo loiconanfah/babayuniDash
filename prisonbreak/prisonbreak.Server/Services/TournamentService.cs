@@ -82,7 +82,8 @@ public class TournamentService : ITournamentService
             ThirdPlacePrize = thirdPlacePrize,
             StartDate = request.StartDate,
             Status = TournamentStatus.Registration,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            ImageUrl = request.ImageUrl
         };
 
         _context.Tournaments.Add(tournament);
@@ -469,6 +470,10 @@ public class TournamentService : ITournamentService
         await _context.Entry(tournament).Collection(t => t.Participants).LoadAsync();
         await _context.Entry(tournament).Collection(t => t.Matches).LoadAsync();
 
+        var userParticipant = userId.HasValue 
+            ? tournament.Participants.FirstOrDefault(p => p.UserId == userId.Value)
+            : null;
+
         var dto = new TournamentDto
         {
             Id = tournament.Id,
@@ -486,7 +491,10 @@ public class TournamentService : ITournamentService
             StartDate = tournament.StartDate,
             EndDate = tournament.EndDate,
             CreatedAt = tournament.CreatedAt,
-            IsUserRegistered = userId.HasValue && tournament.Participants.Any(p => p.UserId == userId.Value)
+            ImageUrl = tournament.ImageUrl,
+            IsUserRegistered = userParticipant != null,
+            UserPosition = userParticipant?.FinalPosition,
+            UserParticipant = userParticipant != null ? await ConvertParticipantToDtoAsync(userParticipant) : null
         };
 
         foreach (var participant in tournament.Participants)

@@ -48,7 +48,7 @@ namespace prisonbreak.Server.Models
         /// Nombre de coins (monnaie virtuelle) possédés par l'utilisateur
         /// Utilisé pour acheter des items dans la boutique et parier sur les parties
         /// </summary>
-        public int Coins { get; set; } = 500; // Coins de départ
+        public int Coins { get; set; } = 1000; // Coins de départ (bonus de bienvenue)
 
         /// <summary>
         /// Collection des items possédés par l'utilisateur

@@ -80,9 +80,14 @@
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500"></div>
       </div>
 
-      <!-- Erreur -->
-      <div v-else-if="error" class="text-red-400 text-center py-20">
-        {{ error }}
+      <!-- Erreur globale -->
+      <div v-if="error" class="mb-6 p-4 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 text-center">
+        <div class="flex items-center justify-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="font-semibold">{{ error }}</span>
+        </div>
       </div>
 
       <!-- Liste des tournois -->
@@ -92,6 +97,20 @@
           :key="tournament.id"
           class="rounded-2xl bg-zinc-900 border border-zinc-800 overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300"
         >
+          <!-- Image du tournoi -->
+          <div v-if="tournament.imageUrl" class="relative h-48 overflow-hidden">
+            <img 
+              :src="tournament.imageUrl" 
+              :alt="tournament.name"
+              class="w-full h-full object-cover"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-zinc-900/80 via-transparent to-transparent"></div>
+          </div>
+          <div v-else class="relative h-48 bg-gradient-to-br from-cyan-600/20 via-purple-600/20 to-pink-600/20 overflow-hidden flex items-center justify-center">
+            <div class="text-6xl opacity-30">🏆</div>
+            <div class="absolute inset-0 bg-gradient-to-t from-zinc-900/80 via-transparent to-transparent"></div>
+          </div>
+          
           <!-- En-tête du tournoi -->
           <div class="p-6 bg-gradient-to-br from-zinc-800/50 to-zinc-900 border-b border-zinc-800">
             <div class="flex items-start justify-between mb-4">
@@ -158,11 +177,19 @@
               <button
                 v-if="tournament.status === 1 && !tournament.isUserRegistered"
                 @click="handleRegister(tournament.id)"
-                :disabled="isRegistering || userStore.coins < tournament.entryFee"
-                class="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-semibold hover:from-cyan-400 hover:to-purple-400 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                :disabled="isRegistering || (tournament.entryFee > 0 && userStore.coins < tournament.entryFee)"
+                class="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-semibold hover:from-cyan-400 hover:to-purple-400 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed relative"
+                :title="tournament.entryFee > 0 && userStore.coins < tournament.entryFee ? `Il vous faut ${tournament.entryFee} Babayuni, vous avez ${userStore.coins}` : ''"
               >
-                S'inscrire
+                <span v-if="isRegistering">Inscription...</span>
+                <span v-else>S'inscrire</span>
               </button>
+              <div 
+                v-if="tournament.status === 1 && !tournament.isUserRegistered && tournament.entryFee > 0 && userStore.coins < tournament.entryFee"
+                class="mt-2 text-xs text-red-400 text-center"
+              >
+                💰 Il vous faut {{ tournament.entryFee }} Babayuni, vous avez {{ userStore.coins }}
+              </div>
               <button
                 v-else-if="tournament.status === 1 && tournament.isUserRegistered"
                 @click="handleUnregister(tournament.id)"
@@ -273,6 +300,30 @@
             />
           </div>
 
+          <div>
+            <label class="block text-sm font-semibold text-zinc-300 mb-2">URL de l'image (optionnel)</label>
+            <input
+              v-model="createForm.imageUrl"
+              type="url"
+              placeholder="https://exemple.com/image.jpg"
+              class="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+            />
+            <p class="text-xs text-zinc-500 mt-1">L'image sera affichée sur la carte du tournoi</p>
+          </div>
+
+          <!-- Aperçu de l'image -->
+          <div v-if="createForm.imageUrl" class="mt-2">
+            <p class="text-xs text-zinc-400 mb-2">Aperçu :</p>
+            <div class="relative h-32 rounded-xl overflow-hidden border border-zinc-700">
+              <img 
+                :src="createForm.imageUrl" 
+                alt="Aperçu"
+                class="w-full h-full object-cover"
+                @error="handleImageError"
+              />
+            </div>
+          </div>
+
           <div v-if="error" class="text-red-400 text-sm">{{ error }}</div>
 
           <div class="flex gap-3 pt-4">
@@ -318,7 +369,8 @@ const createForm = ref({
   description: '',
   maxParticipants: 8,
   entryFee: 0,
-  startDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16) // Demain par défaut
+  startDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16), // Demain par défaut
+  imageUrl: ''
 })
 
 const filteredTournaments = computed(() => {
@@ -350,16 +402,32 @@ async function loadTournaments() {
 async function handleRegister(tournamentId: number) {
   if (!userStore.userId) {
     error.value = 'Vous devez être connecté pour vous inscrire'
+    setTimeout(() => { error.value = null }, 5000)
+    return
+  }
+
+  // Vérifier si l'utilisateur a assez de coins
+  const tournament = tournaments.value.find(t => t.id === tournamentId)
+  if (tournament && tournament.entryFee > 0 && userStore.coins < tournament.entryFee) {
+    error.value = `Vous n'avez pas assez de Babayuni. Il vous faut ${tournament.entryFee} Babayuni, vous avez ${userStore.coins}.`
+    setTimeout(() => { error.value = null }, 5000)
     return
   }
 
   isRegistering.value = true
+  error.value = null // Réinitialiser l'erreur avant la tentative
+  
   try {
     await tournamentsApi.registerForTournament(tournamentId, userStore.userId)
     await loadTournaments()
     await userStore.loadCoins() // Recharger les Babayuni
+    // Succès - pas besoin d'afficher d'erreur
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Erreur lors de l\'inscription'
+    console.error('Erreur lors de l\'inscription:', err)
+    const errorMessage = err instanceof Error ? err.message : 'Erreur lors de l\'inscription'
+    error.value = errorMessage
+    // Afficher l'erreur pendant 5 secondes
+    setTimeout(() => { error.value = null }, 5000)
   } finally {
     isRegistering.value = false
   }
@@ -395,8 +463,14 @@ function openCreateTournamentModal() {
     description: '',
     maxParticipants: 8,
     entryFee: 0,
-    startDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16)
+    startDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
+    imageUrl: ''
   }
+}
+
+function handleImageError(event: Event) {
+  const img = event.target as HTMLImageElement
+  img.style.display = 'none'
 }
 
 function closeCreateTournamentModal() {
@@ -429,7 +503,8 @@ async function createTournament() {
       gameType: tournamentsApi.TournamentGameType.RockPaperScissors,
       maxParticipants: createForm.value.maxParticipants,
       entryFee: createForm.value.entryFee,
-      startDate: new Date(createForm.value.startDate).toISOString()
+      startDate: new Date(createForm.value.startDate).toISOString(),
+      imageUrl: createForm.value.imageUrl?.trim() || null
     })
     
     await loadTournaments()

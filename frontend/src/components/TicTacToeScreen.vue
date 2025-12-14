@@ -112,6 +112,17 @@
           </div>
         </div>
 
+        <!-- Popup de victoire -->
+        <VictoryModal
+          :is-open="showVictoryModal"
+          :title="victoryTitle"
+          :message="victoryMessage"
+          :reward="victoryReward"
+          :show-new-game="currentGame?.gameMode === GameMode.AI"
+          @close="showVictoryModal = false"
+          @new-game="handleNewGame"
+        />
+
         <!-- Grille de jeu -->
         <TicTacToeBoard :game="currentGame" @cell-click="handleCellClick" />
 
@@ -355,6 +366,7 @@ import TicTacToeBoard from '@/components/tic-tac-toe/TicTacToeBoard.vue';
 import { useUserStore } from '@/stores/user';
 import { useNotificationsStore } from '@/stores/notifications';
 import { sessionsApi, ticTacToeApi } from '@/services/api';
+import VictoryModal from '@/components/VictoryModal.vue';
 
 const ticTacToeStore = useTicTacToeStore();
 const uiStore = useUiStore();
@@ -672,6 +684,15 @@ async function handleCellClick(position: number) {
   
   if (ticTacToeStore.isGameOver) {
     stopRefreshInterval();
+    // Afficher le popup de victoire si le joueur a gagné
+    if (currentGame.value && 
+        currentGame.value.status === TicTacToeGameStatus.Completed && 
+        currentGame.value.winnerPlayerId === playerNumber.value) {
+      victoryTitle.value = '🎉 Victoire !';
+      victoryMessage.value = 'Félicitations, vous avez gagné !';
+      victoryReward.value = currentGame.value.totalWager || 0;
+      showVictoryModal.value = true;
+    }
   }
 }
 
