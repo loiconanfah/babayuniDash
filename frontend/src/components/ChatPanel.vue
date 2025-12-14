@@ -14,12 +14,12 @@
             {{ currentOtherUser.equippedItems.avatar.icon }}
           </span>
           <span v-else>
-            {{ currentOtherUser?.otherUsername?.charAt(0).toUpperCase() || '?' }}
+            {{ currentOtherUser?.otherUserName?.charAt(0).toUpperCase() || '?' }}
           </span>
         </div>
         <div>
           <h3 class="text-sm font-bold text-zinc-50">
-            {{ currentOtherUser?.otherUsername || 'Chat' }}
+            {{ currentOtherUser?.otherUserName || 'Chat' }}
           </h3>
           <div class="flex items-center gap-2">
             <div 

@@ -67,7 +67,9 @@ function initGame() {
   // Mélanger
   for (let i = allCards.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [allCards[i], allCards[j]] = [allCards[j], allCards[i]];
+    const temp = allCards[i];
+    allCards[i] = allCards[j]!;
+    allCards[j] = temp!;
   }
 
   cards.value = allCards.map(value => ({
@@ -81,7 +83,9 @@ function initGame() {
   const indices = Array.from({ length: 8 }, (_, i) => i);
   for (let i = indices.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [indices[i], indices[j]] = [indices[j], indices[i]];
+    const temp = indices[i];
+    indices[i] = indices[j]!;
+    indices[j] = temp!;
   }
   sequence.value = indices.slice(0, 4);
 

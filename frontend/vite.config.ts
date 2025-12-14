@@ -37,7 +37,7 @@ export default defineConfig({
         rewrite: (path) => path,
         // Gérer les erreurs de connexion silencieusement
         configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
+          proxy.on('error', (err: any, _req, _res) => {
             // Ignorer les erreurs ECONNREFUSED si le serveur backend n'est pas encore démarré
             // Ces erreurs sont normales au démarrage et disparaîtront une fois le serveur prêt
             if (err.code !== 'ECONNREFUSED' && err.code !== 'ETIMEDOUT') {

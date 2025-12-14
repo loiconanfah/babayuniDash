@@ -426,7 +426,8 @@ export const useGameStore = defineStore('game', () => {
     clearError,
     pauseGame,
     resumeGame,
-    togglePause
+    togglePause,
+    stopTimer
   }
 })
 

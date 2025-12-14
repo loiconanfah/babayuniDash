@@ -116,7 +116,7 @@
                       </div>
                       <div class="text-slate-200 mb-3">{{ puzzle?.question }}</div>
                       <!-- Indices -->
-                      <div v-if="puzzle && puzzleHints[puzzle.id] && puzzleHints[puzzle.id].length > 0" class="mb-3">
+                      <div v-if="puzzle && puzzleHints[puzzle.id] && puzzleHints[puzzle.id]?.length > 0" class="mb-3">
                         <button
                           @click="showHints = showHints === puzzle.id ? null : puzzle.id"
                           class="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1"
