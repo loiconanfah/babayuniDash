@@ -257,37 +257,21 @@ app.UseRouting();
 // Activer CORS pour le frontend (après UseRouting, avant les endpoints)
 app.UseCors("AllowVueFrontend");
 
+// Configuration des endpoints (après UseRouting et UseCors)
+// IMPORTANT: Tous les Map* doivent être appelés après UseRouting()
+
 // Configuration SignalR
 app.MapHub<prisonbreak.Server.Hubs.ChatHub>("/hubs/chat");
 
-// Utiliser les contrôleurs API (AVANT UseStaticFiles pour éviter les conflits)
-// IMPORTANT: Les routes API doivent être mappées avant les fichiers statiques
-// pour éviter que les requêtes /api/* soient interceptées et retournent du HTML
+// Utiliser les contrôleurs API
 app.MapControllers();
 
-// Servir les fichiers statiques (nécessaire pour les uploads d'images même en développement)
-// IMPORTANT: Utiliser MapWhen pour mapper les fichiers statiques SEULEMENT pour les routes non-API
-// Cela garantit que les requêtes /api/* ne seront jamais interceptées par UseStaticFiles
+// Servir les fichiers statiques (nécessaire pour les uploads d'images)
+// IMPORTANT: Utiliser MapWhen pour exclure les routes /api/* et /hubs/*
+// Sur Render, le frontend est un service séparé, donc on ne sert que les fichiers statiques
 app.MapWhen(context => !(context.Request.Path.Value ?? "").StartsWith("/api/", StringComparison.OrdinalIgnoreCase) &&
                        !(context.Request.Path.Value ?? "").StartsWith("/hubs/", StringComparison.OrdinalIgnoreCase),
     appBuilder => appBuilder.UseStaticFiles());
-
-// En production, servir aussi les fichiers par défaut (index.html)
-if (!app.Environment.IsDevelopment())
-{
-    app.UseDefaultFiles();
-}
-
-// En développement, le SPA Proxy (configuré dans .csproj) redirige automatiquement
-// les requêtes non-API vers le serveur Vite qui tourne sur http://localhost:5173
-// Visual Studio lance automatiquement "npm run dev" au démarrage
-
-// Fallback vers index.html pour le routing côté client (SPA)
-// IMPORTANT: Ne s'applique qu'en production ou si le SPA Proxy n'est pas actif
-if (!app.Environment.IsDevelopment())
-{
-    app.MapFallbackToFile("/index.html");
-}
 
 // Log pour indiquer que le serveur est prêt
 var startupLogger = app.Services.GetRequiredService<ILogger<Program>>();
