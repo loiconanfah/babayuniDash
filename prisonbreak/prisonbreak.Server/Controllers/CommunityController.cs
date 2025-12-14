@@ -189,9 +189,9 @@ namespace prisonbreak.Server.Controllers
                 if (!allowedExtensions.Contains(fileExtension))
                     return BadRequest(new { message = "Type de fichier non autorisé. Utilisez JPG, PNG, GIF ou WEBP." });
 
-                // Vérifier la taille (max 5MB)
-                if (file.Length > 5 * 1024 * 1024)
-                    return BadRequest(new { message = "Le fichier est trop volumineux. Taille maximale: 5MB" });
+                // Vérifier la taille (max 20MB pour permettre les images de plus de 10MB)
+                if (file.Length > 20 * 1024 * 1024)
+                    return BadRequest(new { message = "Le fichier est trop volumineux. Taille maximale: 20MB" });
 
                 // Créer le dossier uploads s'il n'existe pas
                 var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "community");

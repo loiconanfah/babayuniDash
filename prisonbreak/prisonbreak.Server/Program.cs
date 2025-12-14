@@ -17,6 +17,12 @@ if (!string.IsNullOrEmpty(port))
     builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 }
 
+// Configuration de Kestrel pour accepter des requêtes plus grandes (images de plus de 10MB)
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 20 * 1024 * 1024; // 20MB
+});
+
 // ====================================================
 // CONFIGURATION DES SERVICES
 // ====================================================
@@ -60,8 +66,12 @@ builder.Services.AddScoped<ITournamentService, TournamentService>();
 // Configuration SignalR pour le chat en temps réel
 builder.Services.AddSignalR();
 
-// Configuration des contrôleurs API
-builder.Services.AddControllers();
+// Configuration des contrôleurs API avec limite de taille augmentée pour les uploads
+builder.Services.AddControllers(options =>
+{
+    // Augmenter la limite de taille des requêtes pour permettre les images de plus de 10MB
+    options.RequestFormLimits.MaxRequestBodySize = 20 * 1024 * 1024; // 20MB
+});
 
 // Configuration de Swagger pour la documentation API
 // Accessible via /swagger quand l'application tourne

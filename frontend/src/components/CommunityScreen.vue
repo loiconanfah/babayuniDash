@@ -616,9 +616,9 @@ async function handleFileSelect(event: Event) {
     const file = input.files[0];
     
     // Vérifier la taille du fichier (max 5MB)
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 20 * 1024 * 1024; // 20MB pour permettre les images de plus de 10MB
     if (file.size > maxSize) {
-      uploadError.value = `Le fichier est trop volumineux (${(file.size / 1024 / 1024).toFixed(2)}MB). Taille maximale: 5MB`;
+      uploadError.value = `Le fichier est trop volumineux (${(file.size / 1024 / 1024).toFixed(2)}MB). Taille maximale: 20MB`;
       selectedFile.value = null;
       imagePreview.value = null;
       return;
