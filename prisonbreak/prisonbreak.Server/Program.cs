@@ -8,6 +8,15 @@ using System.Collections.Generic;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configuration du port pour Render (obligatoire)
+// Render injecte la variable PORT, on doit l'utiliser
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(port))
+{
+    // Sur Render, écouter sur 0.0.0.0 (toutes les interfaces) et le port fourni
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+}
+
 // ====================================================
 // CONFIGURATION DES SERVICES
 // ====================================================
@@ -282,11 +291,19 @@ if (!app.Environment.IsDevelopment())
 
 // Log pour indiquer que le serveur est prêt
 var startupLogger = app.Services.GetRequiredService<ILogger<Program>>();
+var portEnv = Environment.GetEnvironmentVariable("PORT");
 startupLogger.LogInformation("========================================");
 startupLogger.LogInformation("Serveur backend demarre sur:");
-startupLogger.LogInformation("  HTTP:  http://localhost:5000");
-startupLogger.LogInformation("  HTTPS: https://localhost:5001");
-startupLogger.LogInformation("  Swagger: https://localhost:5001/swagger");
+if (!string.IsNullOrEmpty(portEnv))
+{
+    startupLogger.LogInformation($"  HTTP:  http://0.0.0.0:{portEnv} (Render)");
+}
+else
+{
+    startupLogger.LogInformation("  HTTP:  http://localhost:5000");
+    startupLogger.LogInformation("  HTTPS: https://localhost:5001");
+    startupLogger.LogInformation("  Swagger: https://localhost:5001/swagger");
+}
 startupLogger.LogInformation("========================================");
 
 app.Run();
