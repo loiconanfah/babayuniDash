@@ -38,3 +38,5 @@ Write-Host "⚠️  IMPORTANT: Redémarrez le serveur frontend pour appliquer le
 Write-Host "   Arrêtez (Ctrl+C) et relancez: npm run dev" -ForegroundColor Gray
 Write-Host ""
 
+
+

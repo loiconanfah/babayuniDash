@@ -17,17 +17,17 @@
       ]"
     >
       <!-- Logo / icône prisonnier -->
-      <div class="flex items-center gap-3 mb-8 group cursor-pointer" @click="ui.goToHome()">
+      <div class="flex items-center gap-2 sm:gap-3 mb-8 group cursor-pointer flex-shrink-0" @click="ui.goToHome()">
         <div
-          class="h-14 w-14 sm:h-12 sm:w-12 rounded-2xl bg-gradient-to-br from-cyan-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-cyan-500/40 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-xl group-hover:shadow-cyan-500/60 ring-2 ring-cyan-500/30"
+          class="h-12 w-12 sm:h-14 sm:w-14 flex-shrink-0 rounded-2xl bg-gradient-to-br from-cyan-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-cyan-500/40 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-xl group-hover:shadow-cyan-500/60 ring-2 ring-cyan-500/30 overflow-hidden"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 sm:h-7 sm:w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
           </svg>
         </div>
-        <div class="flex flex-col min-w-0">
-          <span class="text-base sm:text-sm font-semibold text-zinc-50 group-hover:text-cyan-400 transition-colors duration-300 truncate">Prison Break</span>
-          <span class="text-xs sm:text-[11px] text-zinc-400 group-hover:text-zinc-300 transition-colors duration-300 truncate">Évasion de cellule</span>
+        <div class="flex flex-col min-w-0 flex-1 overflow-hidden">
+          <span class="text-sm sm:text-base font-semibold text-zinc-50 group-hover:text-cyan-400 transition-colors duration-300 truncate">Prison Break</span>
+          <span class="text-[10px] sm:text-xs text-zinc-400 group-hover:text-zinc-300 transition-colors duration-300 truncate">Évasion de cellule</span>
         </div>
       </div>
 
@@ -557,6 +557,9 @@ onMounted(async () => {
       console.log('Aucune statistique disponible pour cet utilisateur');
     }
     
+    // Charger les coins dès le début (pas besoin d'entrer dans le magasin)
+    await userStore.loadCoins();
+    
     // Charger l'avatar équipé
     await userStore.loadEquippedAvatar();
     
@@ -565,6 +568,24 @@ onMounted(async () => {
     
     // Initialiser SignalR pour le chat en temps réel
     await chatStore.initializeSignalR(userStore.user.id);
+    
+    // Actualiser automatiquement les données toutes les 30 secondes
+    const refreshInterval = setInterval(async () => {
+      try {
+        await userStore.loadCoins();
+        await notificationsStore.loadNotifications();
+        if (userStore.user?.id) {
+          await statsStore.loadUserStatsByEmail(userStore.user.email || '');
+        }
+      } catch (err) {
+        console.warn('Erreur lors de l\'actualisation automatique:', err);
+      }
+    }, 30000);
+    
+    // Nettoyer l'intervalle au démontage
+    onUnmounted(() => {
+      clearInterval(refreshInterval);
+    });
   }
 });
 

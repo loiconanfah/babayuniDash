@@ -1,5 +1,5 @@
 <template>
-  <section class="w-full h-full px-4 sm:px-6 lg:px-12 py-8 overflow-y-auto">
+  <section class="w-full h-full px-4 sm:px-6 lg:px-12 py-4 sm:py-8 overflow-y-auto safe-area-inset">
     <div class="max-w-4xl mx-auto">
       <!-- En-tête -->
       <header class="mb-6">
@@ -122,10 +122,12 @@
             :src="getAnimationVideo()"
             autoplay
             muted
+            playsinline
             class="max-w-full h-auto rounded-2xl shadow-2xl border-2 border-purple-500/50"
             style="max-height: 400px;"
             @ended="onAnimationEnd"
             @loadeddata="onVideoLoaded"
+            @error="onAnimationEnd"
           ></video>
         </div>
 
@@ -188,23 +190,76 @@
           </button>
         </div>
 
-        <!-- Bouton pour passer au round suivant -->
-        <div v-if="rpsStore.isRoundCompleted && !rpsStore.isGameOver" class="text-center">
-          <button
-            @click="handleNextRound"
-            class="px-8 py-4 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 text-white font-bold hover:from-purple-400 hover:to-purple-500 transition-all shadow-lg shadow-purple-500/30 text-lg"
-          >
-            Round suivant →
-          </button>
+        <!-- Modal de victoire joyeux et fun -->
+        <div
+          v-if="rpsStore.isGameOver && showVictoryModal"
+          @click.self="closeVictoryModal"
+          class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+        >
+          <div class="relative w-full max-w-md rounded-3xl bg-gradient-to-br from-yellow-500/20 via-orange-500/20 to-pink-500/20 border-2 border-yellow-400/50 shadow-2xl overflow-hidden animate-bounce-in">
+            <!-- Confettis animés -->
+            <div class="absolute inset-0 overflow-hidden pointer-events-none">
+              <div v-for="i in 20" :key="i" class="confetti" :style="getConfettiStyle(i)"></div>
+            </div>
+            
+            <div class="relative z-10 p-8 text-center">
+              <!-- Emoji de victoire -->
+              <div class="text-8xl mb-4 animate-bounce">🎉</div>
+              
+              <!-- Titre -->
+              <h2 class="text-4xl font-extrabold text-white mb-2 drop-shadow-lg">
+                {{ getVictoryTitle() }}
+              </h2>
+              
+              <!-- Message -->
+              <p class="text-xl text-yellow-200 mb-6">
+                {{ getVictoryMessage() }}
+              </p>
+              
+              <!-- Récompense -->
+              <div v-if="getVictoryReward() > 0" class="mb-6 p-4 rounded-2xl bg-gradient-to-r from-yellow-500/30 to-orange-500/30 border border-yellow-400/50">
+                <p class="text-sm text-yellow-200 mb-2">Récompense</p>
+                <div class="flex items-center justify-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd" />
+                  </svg>
+                  <span class="text-3xl font-bold text-yellow-400">+{{ getVictoryReward() }}</span>
+                </div>
+              </div>
+              
+              <!-- Boutons -->
+              <div class="flex flex-col sm:flex-row gap-3">
+                <button
+                  @click="handleNewGame"
+                  class="flex-1 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 text-white font-bold hover:from-purple-400 hover:to-purple-500 transition-all shadow-lg shadow-purple-500/30"
+                >
+                  Nouvelle partie
+                </button>
+                <button
+                  @click="goBack"
+                  class="flex-1 px-6 py-3 rounded-xl bg-gradient-to-r from-slate-600 to-slate-700 text-white font-bold hover:from-slate-500 hover:to-slate-600 transition-all"
+                >
+                  Retour aux jeux
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- Options de jeu -->
-        <div v-if="rpsStore.isGameOver" class="text-center">
+        <!-- Options de jeu (quand la partie est terminée mais le modal est fermé) -->
+        <div v-if="rpsStore.isGameOver && !showVictoryModal" class="text-center space-y-3">
           <button
             @click="handleNewGame"
             class="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 text-white font-bold hover:from-purple-400 hover:to-purple-500 transition-all shadow-lg shadow-purple-500/30"
           >
             Nouvelle partie
+          </button>
+          <button
+            @click="goBack"
+            class="block w-full sm:w-auto mx-auto px-6 py-3 rounded-xl bg-gradient-to-r from-slate-600 to-slate-700 text-white font-bold hover:from-slate-500 hover:to-slate-600 transition-all"
+          >
+            Retour aux jeux
           </button>
         </div>
       </div>
@@ -836,20 +891,21 @@ function getAnimationVideo(): string {
   return '';
 }
 
-// Observer les changements de round pour déclencher l'animation
+// Observer les changements de round pour déclencher l'animation (une seule fois par round)
+let lastRoundNumber = ref<number | null>(null);
 watch(
-  () => [rpsStore.isRoundCompleted, currentGame.value?.roundWinner],
-  ([isCompleted, roundWinner]) => {
+  () => [rpsStore.isRoundCompleted, currentGame.value?.roundWinner, currentGame.value?.roundNumber],
+  ([isCompleted, roundWinner, roundNumber]) => {
+    // Ne déclencher l'animation qu'une seule fois par round
     if (isCompleted && currentGame.value?.player1Choice && currentGame.value?.player2Choice && roundWinner !== null) {
-      const videoUrl = getAnimationVideo();
-      if (videoUrl) {
-        showAnimation.value = true;
-        animationKey.value++; // Force la relecture de la vidéo
-        
-        // Masquer l'animation après 5 secondes (pour laisser le temps à la vidéo de se jouer)
-        setTimeout(() => {
-          showAnimation.value = false;
-        }, 5000);
+      // Vérifier si c'est un nouveau round
+      if (roundNumber !== lastRoundNumber.value) {
+        lastRoundNumber.value = roundNumber as number;
+        const videoUrl = getAnimationVideo();
+        if (videoUrl) {
+          showAnimation.value = true;
+          animationKey.value++; // Force la relecture de la vidéo
+        }
       }
     } else {
       showAnimation.value = false;
@@ -858,13 +914,147 @@ watch(
   { immediate: true }
 );
 
+// Observer la fin de partie pour afficher le modal de victoire
+watch(
+  () => rpsStore.isGameOver,
+  (isOver) => {
+    if (isOver && currentGame.value) {
+      showVictoryModal.value = true;
+    } else {
+      showVictoryModal.value = false;
+    }
+  },
+  { immediate: true }
+);
+
+// Observer la fin de round pour passer automatiquement au suivant après 5s
+watch(
+  () => [rpsStore.isRoundCompleted, rpsStore.isGameOver],
+  ([isCompleted, isOver]) => {
+    // Annuler le timer précédent s'il existe
+    if (autoNextRoundTimer.value) {
+      clearTimeout(autoNextRoundTimer.value);
+      autoNextRoundTimer.value = null;
+    }
+    
+    // Si le round est terminé et la partie n'est pas finie, attendre 5s puis passer au suivant
+    if (isCompleted && !isOver) {
+      autoNextRoundTimer.value = window.setTimeout(async () => {
+        await handleNextRound();
+        autoNextRoundTimer.value = null;
+      }, 5000);
+    }
+  },
+  { immediate: true }
+);
+
 function onAnimationEnd() {
   // Masquer l'animation après qu'elle soit terminée
   showAnimation.value = false;
+  // Ne pas réinitialiser animationKey pour éviter la relecture en boucle
 }
 
 function onVideoLoaded() {
   // La vidéo est chargée et prête à être lue
+  // Empêcher la relecture en boucle en ne réinitialisant pas animationKey
+}
+
+function closeVictoryModal() {
+  showVictoryModal.value = false;
+}
+
+function getVictoryTitle(): string {
+  if (!currentGame.value || !playerNumber.value) return 'Partie terminée';
+  
+  if (currentGame.value.winnerPlayerId === playerNumber.value) {
+    return '🏆 VICTOIRE !';
+  }
+  return '😔 Défaite';
+}
+
+function getVictoryMessage(): string {
+  if (!currentGame.value || !playerNumber.value) return 'La partie est terminée.';
+  
+  if (currentGame.value.winnerPlayerId === playerNumber.value) {
+    return 'Félicitations ! Tu as gagné la partie !';
+  }
+  return 'Dommage, tu as perdu cette fois.';
+}
+
+function getVictoryReward(): number {
+  if (!currentGame.value || !playerNumber.value) return 0;
+  
+  // Si le joueur a gagné et qu'il y avait une mise, il gagne le pot total
+  if (currentGame.value.winnerPlayerId === playerNumber.value && currentGame.value.totalWager > 0) {
+    return currentGame.value.totalWager;
+  }
+  return 0;
+}
+
+function getConfettiStyle(index: number): string {
+  const colors = ['#fbbf24', '#f59e0b', '#ef4444', '#ec4899', '#a855f7', '#3b82f6'];
+  const color = colors[index % colors.length];
+  const left = (index * 5) % 100;
+  const delay = index * 0.1;
+  const duration = 2 + (index % 3);
+  
+  return `
+    position: absolute;
+    left: ${left}%;
+    top: -10px;
+    width: 10px;
+    height: 10px;
+    background: ${color};
+    animation: confetti-fall ${duration}s linear ${delay}s infinite;
+    transform: rotate(${index * 36}deg);
+  `;
 }
 </script>
+
+<style scoped>
+@keyframes bounce-in {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.5s ease-out;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.confetti {
+  position: absolute;
+  pointer-events: none;
+}
+
+/* Safe area pour mobile */
+.safe-area-inset {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+</style>
 
