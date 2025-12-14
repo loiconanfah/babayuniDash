@@ -4,8 +4,8 @@
 
 import type { Item, UserItem, UserCoins, PurchaseItemRequest, EquipItemRequest } from '@/types'
 
-// IMPORTANT: Utiliser toujours des URLs relatives pour que le proxy Vite fonctionne correctement
-const API_BASE_URL = '/api'
+// Utiliser VITE_API_URL si disponible (pour Render), sinon utiliser /api (pour le proxy Vite en développement)
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
 function getDefaultHeaders(): HeadersInit {
   return {
