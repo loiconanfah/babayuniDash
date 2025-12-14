@@ -30,6 +30,14 @@ export enum NotificationType {
   AchievementUnlocked = 10
 }
 
+function getDefaultHeaders(): HeadersInit {
+  return {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true'
+  }
+}
+
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const error = await response.text()
@@ -42,7 +50,9 @@ async function handleResponse<T>(response: Response): Promise<T> {
  * Récupère toutes les notifications d'un utilisateur
  */
 export async function getUserNotifications(userId: number, unreadOnly: boolean = false): Promise<NotificationDto[]> {
-  const response = await fetch(`${API_BASE_URL}/Notifications/users/${userId}?unreadOnly=${unreadOnly}`)
+  const response = await fetch(`${API_BASE_URL}/Notifications/users/${userId}?unreadOnly=${unreadOnly}`, {
+    headers: getDefaultHeaders()
+  })
   return handleResponse<NotificationDto[]>(response)
 }
 
@@ -50,7 +60,9 @@ export async function getUserNotifications(userId: number, unreadOnly: boolean =
  * Récupère une notification par son ID
  */
 export async function getNotificationById(notificationId: number, userId: number): Promise<NotificationDto> {
-  const response = await fetch(`${API_BASE_URL}/Notifications/${notificationId}?userId=${userId}`)
+  const response = await fetch(`${API_BASE_URL}/Notifications/${notificationId}?userId=${userId}`, {
+    headers: getDefaultHeaders()
+  })
   return handleResponse<NotificationDto>(response)
 }
 
@@ -58,7 +70,9 @@ export async function getNotificationById(notificationId: number, userId: number
  * Récupère le nombre de notifications non lues
  */
 export async function getUnreadCount(userId: number): Promise<number> {
-  const response = await fetch(`${API_BASE_URL}/Notifications/users/${userId}/unread-count`)
+  const response = await fetch(`${API_BASE_URL}/Notifications/users/${userId}/unread-count`, {
+    headers: getDefaultHeaders()
+  })
   const data = await handleResponse<{ count: number }>(response)
   return data.count
 }
@@ -69,9 +83,7 @@ export async function getUnreadCount(userId: number): Promise<number> {
 export async function markNotificationAsRead(notificationId: number, userId: number): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/Notifications/${notificationId}/read`, {
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json'
-    },
+    headers: getDefaultHeaders(),
     body: JSON.stringify({ userId })
   })
   await handleResponse(response)
@@ -82,7 +94,8 @@ export async function markNotificationAsRead(notificationId: number, userId: num
  */
 export async function markAllNotificationsAsRead(userId: number): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/Notifications/users/${userId}/read-all`, {
-    method: 'PUT'
+    method: 'PUT',
+    headers: getDefaultHeaders()
   })
   await handleResponse(response)
 }
@@ -92,7 +105,8 @@ export async function markAllNotificationsAsRead(userId: number): Promise<void> 
  */
 export async function deleteNotification(notificationId: number, userId: number): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/Notifications/${notificationId}?userId=${userId}`, {
-    method: 'DELETE'
+    method: 'DELETE',
+    headers: getDefaultHeaders()
   })
   await handleResponse(response)
 }

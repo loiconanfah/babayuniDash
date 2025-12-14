@@ -7,6 +7,14 @@ import type { Item, UserItem, UserCoins, PurchaseItemRequest, EquipItemRequest }
 // IMPORTANT: Utiliser toujours des URLs relatives pour que le proxy Vite fonctionne correctement
 const API_BASE_URL = '/api'
 
+function getDefaultHeaders(): HeadersInit {
+  return {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true'
+  }
+}
+
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const error = await response.text()
@@ -41,7 +49,9 @@ export async function getItemById(itemId: number, userId?: number): Promise<Item
  * Récupère les items possédés par un utilisateur
  */
 export async function getUserItems(userId: number): Promise<UserItem[]> {
-  const response = await fetch(`${API_BASE_URL}/Shop/users/${userId}/items`)
+  const response = await fetch(`${API_BASE_URL}/Shop/users/${userId}/items`, {
+    headers: getDefaultHeaders()
+  })
   return handleResponse<UserItem[]>(response)
 }
 
@@ -51,9 +61,7 @@ export async function getUserItems(userId: number): Promise<UserItem[]> {
 export async function purchaseItem(request: PurchaseItemRequest): Promise<UserItem> {
   const response = await fetch(`${API_BASE_URL}/Shop/purchase`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
+      headers: getDefaultHeaders(),
     body: JSON.stringify(request)
   })
   return handleResponse<UserItem>(response)
@@ -65,9 +73,7 @@ export async function purchaseItem(request: PurchaseItemRequest): Promise<UserIt
 export async function equipItem(userItemId: number, request: EquipItemRequest): Promise<UserItem> {
   const response = await fetch(`${API_BASE_URL}/Shop/items/${userItemId}/equip`, {
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json'
-    },
+      headers: getDefaultHeaders(),
     body: JSON.stringify(request)
   })
   return handleResponse<UserItem>(response)
@@ -77,7 +83,9 @@ export async function equipItem(userItemId: number, request: EquipItemRequest): 
  * Récupère le nombre de coins d'un utilisateur
  */
 export async function getUserCoins(userId: number): Promise<UserCoins> {
-  const response = await fetch(`${API_BASE_URL}/Shop/users/${userId}/coins`)
+  const response = await fetch(`${API_BASE_URL}/Shop/users/${userId}/coins`, {
+    headers: getDefaultHeaders()
+  })
   return handleResponse<UserCoins>(response)
 }
 
@@ -87,9 +95,7 @@ export async function getUserCoins(userId: number): Promise<UserCoins> {
 export async function addCoins(userId: number, amount: number): Promise<UserCoins> {
   const response = await fetch(`${API_BASE_URL}/Shop/users/${userId}/coins`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
+      headers: getDefaultHeaders(),
     body: JSON.stringify(amount)
   })
   return handleResponse<UserCoins>(response)

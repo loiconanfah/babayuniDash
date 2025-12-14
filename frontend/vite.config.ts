@@ -19,6 +19,14 @@ export default defineConfig({
   },
   server: {
     strictPort: false, // Permet d'utiliser un autre port si celui spécifié est occupé
+    host: true, // Écouter sur toutes les interfaces réseau (nécessaire pour ngrok)
+    allowedHosts: [
+      '.ngrok.io',
+      '.ngrok-free.app',
+      '.ngrok.app',
+      'localhost',
+      '127.0.0.1'
+    ],
     proxy: {
       // Proxy toutes les requêtes /api/* vers le backend ASP.NET Core
       '/api': {

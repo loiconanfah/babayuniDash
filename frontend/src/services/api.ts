@@ -35,9 +35,9 @@ import type {
 } from '@/types'
 
 // URL de base de l'API
-// IMPORTANT: Utiliser toujours des URLs relatives pour que le proxy Vite fonctionne correctement
-// Le proxy Vite redirige automatiquement /api/* vers http://localhost:5000/api/*
-const API_BASE_URL = '/api'
+// Si VITE_API_URL est défini (ngrok backend), l'utiliser
+// Sinon, utiliser /api (proxy Vite vers localhost:5000)
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
 /**
  * Classe de gestion des erreurs API
@@ -50,6 +50,18 @@ export class ApiError extends Error {
   ) {
     super(message)
     this.name = 'ApiError'
+  }
+}
+
+/**
+ * Fonction helper pour obtenir les headers par défaut
+ * Inclut le header pour contourner la page d'interception ngrok
+ */
+function getDefaultHeaders(): HeadersInit {
+  return {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true'
   }
 }
 
@@ -85,10 +97,7 @@ export const puzzleApi = {
     try {
       const response = await fetch(`${API_BASE_URL}/Puzzles`, {
         method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
+        headers: getDefaultHeaders()
       })
       return handleResponse<Puzzle[]>(response)
     } catch (error) {
@@ -105,7 +114,9 @@ export const puzzleApi = {
    * Récupère un puzzle par son ID
    */
   async getById(id: number): Promise<Puzzle> {
-    const response = await fetch(`${API_BASE_URL}/Puzzles/${id}`)
+    const response = await fetch(`${API_BASE_URL}/Puzzles/${id}`, {
+      headers: getDefaultHeaders()
+    })
     return handleResponse<Puzzle>(response)
   },
 
@@ -113,7 +124,9 @@ export const puzzleApi = {
    * Récupère les puzzles d'un niveau de difficulté
    */
   async getByDifficulty(difficulty: DifficultyLevel): Promise<Puzzle[]> {
-    const response = await fetch(`${API_BASE_URL}/Puzzles/difficulty/${difficulty}`)
+    const response = await fetch(`${API_BASE_URL}/Puzzles/difficulty/${difficulty}`, {
+      headers: getDefaultHeaders()
+    })
     return handleResponse<Puzzle[]>(response)
   },
 
@@ -123,9 +136,7 @@ export const puzzleApi = {
   async generate(request: GeneratePuzzleRequest): Promise<Puzzle> {
     const response = await fetch(`${API_BASE_URL}/Puzzles/generate`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: getDefaultHeaders(),
       body: JSON.stringify(request)
     })
     return handleResponse<Puzzle>(response)
@@ -135,7 +146,9 @@ export const puzzleApi = {
    * Récupère la solution d'un puzzle (les ponts de la solution)
    */
   async getSolution(puzzleId: number): Promise<Bridge[]> {
-    const response = await fetch(`${API_BASE_URL}/Puzzles/${puzzleId}/solution`)
+    const response = await fetch(`${API_BASE_URL}/Puzzles/${puzzleId}/solution`, {
+      headers: getDefaultHeaders()
+    })
     return handleResponse<Bridge[]>(response)
   }
 }
@@ -150,9 +163,7 @@ export const gameApi = {
   async create(request: CreateGameRequest): Promise<Game> {
     const response = await fetch(`${API_BASE_URL}/Games`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: getDefaultHeaders(),
       body: JSON.stringify({
         puzzleId: request.puzzleId,
         sessionId: request.sessionId
@@ -165,7 +176,9 @@ export const gameApi = {
    * Récupère une partie par son ID
    */
   async getById(id: number): Promise<Game> {
-    const response = await fetch(`${API_BASE_URL}/Games/${id}`)
+    const response = await fetch(`${API_BASE_URL}/Games/${id}`, {
+      headers: getDefaultHeaders()
+    })
     return handleResponse<Game>(response)
   },
 
@@ -175,9 +188,7 @@ export const gameApi = {
   async updateBridges(gameId: number, bridges: Bridge[]): Promise<Game> {
     const response = await fetch(`${API_BASE_URL}/Games/${gameId}/bridges`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: getDefaultHeaders(),
       body: JSON.stringify(bridges)
     })
     return handleResponse<Game>(response)
@@ -212,7 +223,9 @@ export const statsApi = {
    * Récupère les statistiques d'un utilisateur par son ID
    */
   async getUserStats(userId: number): Promise<UserStats> {
-    const response = await fetch(`${API_BASE_URL}/Stats/user/${userId}`)
+    const response = await fetch(`${API_BASE_URL}/Stats/user/${userId}`, {
+      headers: getDefaultHeaders()
+    })
     return handleResponse<UserStats>(response)
   },
 
@@ -220,7 +233,9 @@ export const statsApi = {
    * Récupère les statistiques d'un utilisateur par son email
    */
   async getUserStatsByEmail(email: string): Promise<UserStats> {
-    const response = await fetch(`${API_BASE_URL}/Stats/user/email/${encodeURIComponent(email)}`)
+    const response = await fetch(`${API_BASE_URL}/Stats/user/email/${encodeURIComponent(email)}`, {
+      headers: getDefaultHeaders()
+    })
     return handleResponse<UserStats>(response)
   },
 
@@ -228,7 +243,9 @@ export const statsApi = {
    * Récupère le classement des meilleurs joueurs
    */
   async getLeaderboard(limit: number = 10): Promise<LeaderboardEntry[]> {
-    const response = await fetch(`${API_BASE_URL}/Stats/leaderboard?limit=${limit}`)
+    const response = await fetch(`${API_BASE_URL}/Stats/leaderboard?limit=${limit}`, {
+      headers: getDefaultHeaders()
+    })
     return handleResponse<LeaderboardEntry[]>(response)
   }
 }
@@ -259,9 +276,7 @@ export const ticTacToeApi = {
   async create(request: CreateTicTacToeGameRequest): Promise<TicTacToeGame> {
     const response = await fetch(`${API_BASE_URL}/TicTacToe`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: getDefaultHeaders(),
       body: JSON.stringify(request)
     })
     return handleResponse<TicTacToeGame>(response)
@@ -271,7 +286,9 @@ export const ticTacToeApi = {
    * Récupère une partie par son ID
    */
   async getById(id: number): Promise<TicTacToeGame> {
-    const response = await fetch(`${API_BASE_URL}/TicTacToe/${id}`)
+    const response = await fetch(`${API_BASE_URL}/TicTacToe/${id}`, {
+      headers: getDefaultHeaders()
+    })
     return handleResponse<TicTacToeGame>(response)
   },
 
@@ -279,7 +296,9 @@ export const ticTacToeApi = {
    * Récupère les parties en attente d'un deuxième joueur
    */
   async getAvailableGames(): Promise<TicTacToeGame[]> {
-    const response = await fetch(`${API_BASE_URL}/TicTacToe/available`)
+    const response = await fetch(`${API_BASE_URL}/TicTacToe/available`, {
+      headers: getDefaultHeaders()
+    })
     return handleResponse<TicTacToeGame[]>(response)
   },
 
@@ -287,7 +306,9 @@ export const ticTacToeApi = {
    * Récupère les parties où le joueur est invité
    */
   async getInvitations(sessionId: number): Promise<TicTacToeGame[]> {
-    const response = await fetch(`${API_BASE_URL}/TicTacToe/invitations/${sessionId}`)
+    const response = await fetch(`${API_BASE_URL}/TicTacToe/invitations/${sessionId}`, {
+      headers: getDefaultHeaders()
+    })
     return handleResponse<TicTacToeGame[]>(response)
   },
 
@@ -297,9 +318,7 @@ export const ticTacToeApi = {
   async joinGame(gameId: number, sessionId: number, wager: number = 0): Promise<TicTacToeGame> {
     const response = await fetch(`${API_BASE_URL}/TicTacToe/${gameId}/join`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: getDefaultHeaders(),
       body: JSON.stringify({ gameId, sessionId, wager })
     })
     return handleResponse<TicTacToeGame>(response)
@@ -311,9 +330,7 @@ export const ticTacToeApi = {
   async playMove(gameId: number, request: PlayMoveRequest): Promise<TicTacToeGame> {
     const response = await fetch(`${API_BASE_URL}/TicTacToe/${gameId}/move`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: getDefaultHeaders(),
       body: JSON.stringify(request)
     })
     return handleResponse<TicTacToeGame>(response)
@@ -325,9 +342,7 @@ export const ticTacToeApi = {
   async abandon(gameId: number, sessionId: number): Promise<TicTacToeGame> {
     const response = await fetch(`${API_BASE_URL}/TicTacToe/${gameId}/abandon`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: getDefaultHeaders(),
       body: JSON.stringify({ gameId, sessionId })
     })
     return handleResponse<TicTacToeGame>(response)
@@ -344,9 +359,7 @@ export const connectFourApi = {
   async create(request: CreateConnectFourGameRequest): Promise<ConnectFourGame> {
     const response = await fetch(`${API_BASE_URL}/ConnectFour`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: getDefaultHeaders(),
       body: JSON.stringify(request)
     })
     return handleResponse<ConnectFourGame>(response)
@@ -356,7 +369,9 @@ export const connectFourApi = {
    * Récupère une partie par son ID
    */
   async getById(id: number): Promise<ConnectFourGame> {
-    const response = await fetch(`${API_BASE_URL}/ConnectFour/${id}`)
+    const response = await fetch(`${API_BASE_URL}/ConnectFour/${id}`, {
+      headers: getDefaultHeaders()
+    })
     return handleResponse<ConnectFourGame>(response)
   },
 
@@ -364,7 +379,9 @@ export const connectFourApi = {
    * Récupère les parties en attente d'un deuxième joueur
    */
   async getAvailableGames(): Promise<ConnectFourGame[]> {
-    const response = await fetch(`${API_BASE_URL}/ConnectFour/available`)
+    const response = await fetch(`${API_BASE_URL}/ConnectFour/available`, {
+      headers: getDefaultHeaders()
+    })
     return handleResponse<ConnectFourGame[]>(response)
   },
 
@@ -372,7 +389,9 @@ export const connectFourApi = {
    * Récupère les parties où le joueur est invité
    */
   async getInvitations(sessionId: number): Promise<ConnectFourGame[]> {
-    const response = await fetch(`${API_BASE_URL}/ConnectFour/invitations/${sessionId}`)
+    const response = await fetch(`${API_BASE_URL}/ConnectFour/invitations/${sessionId}`, {
+      headers: getDefaultHeaders()
+    })
     return handleResponse<ConnectFourGame[]>(response)
   },
 
@@ -382,9 +401,7 @@ export const connectFourApi = {
   async joinGame(gameId: number, sessionId: number, wager: number = 0): Promise<ConnectFourGame> {
     const response = await fetch(`${API_BASE_URL}/ConnectFour/${gameId}/join`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: getDefaultHeaders(),
       body: JSON.stringify({ gameId, sessionId, wager })
     })
     return handleResponse<ConnectFourGame>(response)
@@ -396,9 +413,7 @@ export const connectFourApi = {
   async playMove(gameId: number, request: PlayConnectFourMoveRequest): Promise<ConnectFourGame> {
     const response = await fetch(`${API_BASE_URL}/ConnectFour/${gameId}/move`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: getDefaultHeaders(),
       body: JSON.stringify(request)
     })
     return handleResponse<ConnectFourGame>(response)
@@ -410,9 +425,7 @@ export const connectFourApi = {
   async abandon(gameId: number, sessionId: number): Promise<ConnectFourGame> {
     const response = await fetch(`${API_BASE_URL}/ConnectFour/${gameId}/abandon`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: getDefaultHeaders(),
       body: JSON.stringify({ gameId, sessionId })
     })
     return handleResponse<ConnectFourGame>(response)
@@ -429,9 +442,7 @@ export const rpsApi = {
   async create(request: CreateRPSGameRequest): Promise<RockPaperScissorsGame> {
     const response = await fetch(`${API_BASE_URL}/RockPaperScissors`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: getDefaultHeaders(),
       body: JSON.stringify(request)
     })
     return handleResponse<RockPaperScissorsGame>(response)
@@ -452,7 +463,9 @@ export const rpsApi = {
    * Récupère les parties en attente d'un deuxième joueur
    */
   async getAvailableGames(): Promise<RockPaperScissorsGame[]> {
-    const response = await fetch(`${API_BASE_URL}/RockPaperScissors/available`)
+    const response = await fetch(`${API_BASE_URL}/RockPaperScissors/available`, {
+      headers: getDefaultHeaders()
+    })
     return handleResponse<RockPaperScissorsGame[]>(response)
   },
 
@@ -460,7 +473,9 @@ export const rpsApi = {
    * Récupère les parties où le joueur est invité
    */
   async getInvitations(sessionId: number): Promise<RockPaperScissorsGame[]> {
-    const response = await fetch(`${API_BASE_URL}/RockPaperScissors/invitations/${sessionId}`)
+    const response = await fetch(`${API_BASE_URL}/RockPaperScissors/invitations/${sessionId}`, {
+      headers: getDefaultHeaders()
+    })
     return handleResponse<RockPaperScissorsGame[]>(response)
   },
 
@@ -470,9 +485,7 @@ export const rpsApi = {
   async joinGame(gameId: number, sessionId: number, wager: number = 0): Promise<RockPaperScissorsGame> {
     const response = await fetch(`${API_BASE_URL}/RockPaperScissors/${gameId}/join`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: getDefaultHeaders(),
       body: JSON.stringify({ gameId, sessionId, wager })
     })
     return handleResponse<RockPaperScissorsGame>(response)
@@ -484,9 +497,7 @@ export const rpsApi = {
   async playChoice(gameId: number, request: PlayRPSChoiceRequest): Promise<RockPaperScissorsGame> {
     const response = await fetch(`${API_BASE_URL}/RockPaperScissors/${gameId}/choice`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: getDefaultHeaders(),
       body: JSON.stringify(request)
     })
     return handleResponse<RockPaperScissorsGame>(response)
@@ -498,9 +509,7 @@ export const rpsApi = {
   async nextRound(gameId: number, sessionId: number): Promise<RockPaperScissorsGame> {
     const response = await fetch(`${API_BASE_URL}/RockPaperScissors/${gameId}/next-round`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: getDefaultHeaders(),
       body: JSON.stringify({ gameId, sessionId })
     })
     return handleResponse<RockPaperScissorsGame>(response)
@@ -512,9 +521,7 @@ export const rpsApi = {
   async abandon(gameId: number, sessionId: number): Promise<RockPaperScissorsGame> {
     const response = await fetch(`${API_BASE_URL}/RockPaperScissors/${gameId}/abandon`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: getDefaultHeaders(),
       body: JSON.stringify({ gameId, sessionId })
     })
     return handleResponse<RockPaperScissorsGame>(response)
@@ -531,9 +538,7 @@ export const adventureApi = {
   async create(request: CreateAdventureGameRequest): Promise<AdventureGame> {
     const response = await fetch(`${API_BASE_URL}/Adventure`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: getDefaultHeaders(),
       body: JSON.stringify(request)
     })
     return handleResponse<AdventureGame>(response)
@@ -543,7 +548,9 @@ export const adventureApi = {
    * Récupère une partie par son ID
    */
   async getById(id: number): Promise<AdventureGame> {
-    const response = await fetch(`${API_BASE_URL}/Adventure/${id}`)
+    const response = await fetch(`${API_BASE_URL}/Adventure/${id}`, {
+      headers: getDefaultHeaders()
+    })
     return handleResponse<AdventureGame>(response)
   },
 
@@ -551,7 +558,9 @@ export const adventureApi = {
    * Récupère les parties d'un joueur
    */
   async getGamesBySession(sessionId: number): Promise<AdventureGame[]> {
-    const response = await fetch(`${API_BASE_URL}/Adventure/session/${sessionId}`)
+    const response = await fetch(`${API_BASE_URL}/Adventure/session/${sessionId}`, {
+      headers: getDefaultHeaders()
+    })
     return handleResponse<AdventureGame[]>(response)
   },
 
@@ -561,9 +570,7 @@ export const adventureApi = {
   async moveToRoom(gameId: number, request: MoveToRoomRequest): Promise<AdventureGame> {
     const response = await fetch(`${API_BASE_URL}/Adventure/${gameId}/move`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: getDefaultHeaders(),
       body: JSON.stringify(request)
     })
     return handleResponse<AdventureGame>(response)
@@ -575,9 +582,7 @@ export const adventureApi = {
   async collectItem(gameId: number, request: CollectItemRequest): Promise<AdventureGame> {
     const response = await fetch(`${API_BASE_URL}/Adventure/${gameId}/collect`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: getDefaultHeaders(),
       body: JSON.stringify(request)
     })
     return handleResponse<AdventureGame>(response)
@@ -589,9 +594,7 @@ export const adventureApi = {
   async solvePuzzle(gameId: number, request: SolvePuzzleRequest): Promise<AdventureGame> {
     const response = await fetch(`${API_BASE_URL}/Adventure/${gameId}/solve`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: getDefaultHeaders(),
       body: JSON.stringify(request)
     })
     return handleResponse<AdventureGame>(response)
@@ -601,7 +604,9 @@ export const adventureApi = {
    * Récupère les informations d'une énigme
    */
   async getPuzzleInfo(puzzleId: number): Promise<PuzzleInfoDto> {
-    const response = await fetch(`${API_BASE_URL}/Adventure/puzzle/${puzzleId}`)
+    const response = await fetch(`${API_BASE_URL}/Adventure/puzzle/${puzzleId}`, {
+      headers: getDefaultHeaders()
+    })
     return handleResponse<PuzzleInfoDto>(response)
   },
 
@@ -611,9 +616,7 @@ export const adventureApi = {
   async abandon(gameId: number, sessionId: number): Promise<AdventureGame> {
     const response = await fetch(`${API_BASE_URL}/Adventure/${gameId}/abandon`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: getDefaultHeaders(),
       body: JSON.stringify({ sessionId })
     })
     return handleResponse<AdventureGame>(response)
