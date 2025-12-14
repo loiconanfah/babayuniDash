@@ -97,27 +97,31 @@ function revealSequence() {
   isRevealing.value = true;
   sequence.value.forEach((index, i) => {
     setTimeout(() => {
-      cards.value[index].flipped = true;
-      setTimeout(() => {
-        cards.value[index].flipped = false;
-        if (i === sequence.value.length - 1) {
-          isRevealing.value = false;
-        }
-      }, 800);
+      const card = cards.value[index];
+      if (card) {
+        card.flipped = true;
+        setTimeout(() => {
+          if (card) card.flipped = false;
+          if (i === sequence.value.length - 1) {
+            isRevealing.value = false;
+          }
+        }, 800);
+      }
     }, i * 1000);
   });
 }
 
 function flipCard(index: number) {
-  if (isRevealing.value || cards.value[index].flipped || cards.value[index].matched) return;
+  const card = cards.value[index];
+  if (isRevealing.value || !card || card.flipped || card.matched) return;
 
-  cards.value[index].flipped = true;
+  card.flipped = true;
   clicks.value++;
 
   // Vérifier si c'est le bon ordre
   const expectedIndex = sequence.value[clicks.value - 1];
   if (index === expectedIndex) {
-    cards.value[index].matched = true;
+    card.matched = true;
     if (clicks.value === sequence.value.length) {
       // Gagné !
       setTimeout(() => {
@@ -127,7 +131,7 @@ function flipCard(index: number) {
   } else {
     // Perdu
     setTimeout(() => {
-      cards.value[index].flipped = false;
+      if (card) card.flipped = false;
       gameLost.value = true;
     }, 1000);
   }

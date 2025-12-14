@@ -114,14 +114,14 @@
                           🎮 Mini-jeu
                         </span>
                       </div>
-                      <div class="text-slate-200 mb-3">{{ puzzle.question }}</div>
+                      <div class="text-slate-200 mb-3">{{ puzzle?.question }}</div>
                       <!-- Indices -->
-                      <div v-if="puzzleHints[puzzle.id] && puzzleHints[puzzle.id].length > 0" class="mb-3">
+                      <div v-if="puzzle && puzzleHints[puzzle.id] && puzzleHints[puzzle.id].length > 0" class="mb-3">
                         <button
                           @click="showHints = showHints === puzzle.id ? null : puzzle.id"
                           class="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1"
                         >
-                          💡 {{ showHints === puzzle.id ? 'Masquer' : 'Voir' }} les indices ({{ puzzleHints[puzzle.id].length }})
+                          💡 {{ showHints === puzzle.id ? 'Masquer' : 'Voir' }} les indices ({{ puzzleHints[puzzle.id]?.length || 0 }})
                         </button>
                         <div v-if="showHints === puzzle.id" class="mt-2 space-y-1">
                           <div
@@ -302,7 +302,8 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useAdventureStore } from '@/stores/adventure';
 import { useUiStore } from '@/stores/ui';
-import { AdventureGameStatus, PuzzleInfoDto } from '@/types';
+import { AdventureGameStatus } from '@/types';
+import type { PuzzleInfoDto } from '@/types';
 import { useUserStore } from '@/stores/user';
 import { adventureApi } from '@/services/api';
 import MemoryGame from './adventure/MemoryGame.vue';

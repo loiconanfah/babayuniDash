@@ -167,8 +167,8 @@ export const useRockPaperScissorsStore = defineStore('rockPaperScissors', () => 
       // Si une invitation existe et qu'aucune partie n'est en cours, charger automatiquement la première invitation
       if (games.length > 0 && !currentGame.value) {
         const invitation = games[0]
-        if (invitation.status === RPSGameStatus.WaitingForChoices || 
-            invitation.status === RPSGameStatus.RoundCompleted) {
+        if (invitation && (invitation.status === RPSGameStatus.WaitingForChoices || 
+            invitation.status === RPSGameStatus.RoundCompleted)) {
           await loadGame(invitation.id)
         }
       }

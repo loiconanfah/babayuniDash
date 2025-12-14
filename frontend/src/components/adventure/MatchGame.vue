@@ -73,17 +73,19 @@ function initGame() {
 
 function flipCard(index: number) {
   const card = cards.value[index];
-  if (card.flipped || card.matched || flippedCards.value.length >= 2) return;
+  if (!card || card.flipped || card.matched || flippedCards.value.length >= 2) return;
 
   card.flipped = true;
   flippedCards.value.push(index);
 
   if (flippedCards.value.length === 2) {
     const [first, second] = flippedCards.value;
-    if (cards.value[first].value === cards.value[second].value) {
+    const firstCard = cards.value[first];
+    const secondCard = cards.value[second];
+    if (firstCard && secondCard && firstCard.value === secondCard.value) {
       // Paire trouvée !
-      cards.value[first].matched = true;
-      cards.value[second].matched = true;
+      firstCard.matched = true;
+      secondCard.matched = true;
       matchedPairs.value++;
       flippedCards.value = [];
 
@@ -95,8 +97,8 @@ function flipCard(index: number) {
     } else {
       // Pas une paire, retourner les cartes
       setTimeout(() => {
-        cards.value[first].flipped = false;
-        cards.value[second].flipped = false;
+        if (firstCard) firstCard.flipped = false;
+        if (secondCard) secondCard.flipped = false;
         flippedCards.value = [];
       }, 1000);
     }

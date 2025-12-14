@@ -161,7 +161,14 @@
     </button>
 
     <!-- Modale de victoire -->
-    <VictoryModal v-if="uiStore.isVictoryModalOpen" />
+    <VictoryModal
+      :is-open="uiStore.isVictoryModalOpen"
+      title="🎉 Félicitations !"
+      message="Vous avez résolu le puzzle avec succès !"
+      :reward="0"
+      :show-new-game="false"
+      @close="uiStore.closeVictoryModal"
+    />
   </section>
 </template>
 

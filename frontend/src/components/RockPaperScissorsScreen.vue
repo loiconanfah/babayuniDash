@@ -433,7 +433,8 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRockPaperScissorsStore } from '@/stores/rockPaperScissors';
 import { useUiStore } from '@/stores/ui';
-import { RPSGameMode, RPSGameStatus, RPSChoice, SessionDto } from '@/types';
+import { RPSGameMode, RPSGameStatus, RPSChoice } from '@/types';
+import type { SessionDto } from '@/types';
 import { useUserStore } from '@/stores/user';
 import { useNotificationsStore } from '@/stores/notifications';
 import { sessionsApi, rpsApi } from '@/services/api';

@@ -93,7 +93,9 @@ function initGame() {
   secretCode.value = [];
   for (let i = 0; i < 4; i++) {
     const color = availableColors[Math.floor(Math.random() * availableColors.length)];
-    secretCode.value.push(color);
+    if (color) {
+      secretCode.value.push(color);
+    }
   }
 
   currentGuess.value = [];

@@ -361,7 +361,8 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useTicTacToeStore } from '@/stores/ticTacToe';
 import { useUiStore } from '@/stores/ui';
-import { TicTacToeGameMode, TicTacToeGameStatus, SessionDto } from '@/types';
+import { TicTacToeGameMode, TicTacToeGameStatus } from '@/types';
+import type { SessionDto } from '@/types';
 import TicTacToeBoard from '@/components/tic-tac-toe/TicTacToeBoard.vue';
 import { useUserStore } from '@/stores/user';
 import { useNotificationsStore } from '@/stores/notifications';
@@ -388,6 +389,12 @@ const isLoading = computed(() => ticTacToeStore.isLoading);
 const error = computed(() => ticTacToeStore.error);
 const isMyTurn = computed(() => ticTacToeStore.isMyTurn);
 const playerNumber = computed(() => ticTacToeStore.playerNumber);
+
+// Variables pour le modal de victoire
+const showVictoryModal = ref(false);
+const victoryTitle = ref('');
+const victoryMessage = ref('');
+const victoryReward = ref<number | undefined>(undefined);
 
 // Obtenir l'ID de session
 const sessionId = computed(() => {

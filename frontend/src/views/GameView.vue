@@ -8,6 +8,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useGameStore } from '@/stores/game'
 import { usePuzzleStore } from '@/stores/puzzle'
+import { useUserStore } from '@/stores/user'
 import GameGrid from '@/components/game/GameGrid.vue'
 import GameControls from '@/components/game/GameControls.vue'
 
@@ -34,8 +35,18 @@ onMounted(async () => {
     // Charger le puzzle
     const puzzle = await puzzleStore.fetchPuzzleById(puzzleId)
     
+    if (!puzzle) {
+      error.value = 'Puzzle introuvable'
+      isLoading.value = false
+      return
+    }
+    
+    // Obtenir l'ID de session
+    const userStore = useUserStore()
+    const sessionId = userStore.user?.id || 0
+    
     // Démarrer une nouvelle partie
-    await gameStore.startGame(puzzle)
+    await gameStore.startGame(puzzle, sessionId)
     
     isLoading.value = false
   } catch (err) {

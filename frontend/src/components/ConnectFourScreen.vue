@@ -350,7 +350,8 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useConnectFourStore } from '@/stores/connectFour';
 import { useUiStore } from '@/stores/ui';
-import { ConnectFourGameMode, ConnectFourGameStatus, SessionDto } from '@/types';
+import { ConnectFourGameMode, ConnectFourGameStatus } from '@/types';
+import type { SessionDto } from '@/types';
 import ConnectFourBoard from '@/components/connect-four/ConnectFourBoard.vue';
 import { useUserStore } from '@/stores/user';
 import { useNotificationsStore } from '@/stores/notifications';

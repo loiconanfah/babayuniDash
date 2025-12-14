@@ -141,7 +141,7 @@ export const useTicTacToeStore = defineStore('ticTacToe', () => {
       if (games.length > 0 && !currentGame.value) {
         const invitation = games[0]
         // Charger la partie si elle est en cours (InProgress = 2)
-        if (invitation.status === 2) {
+        if (invitation && invitation.status === 2) {
           await loadGame(invitation.id)
         }
       }
