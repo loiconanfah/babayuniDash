@@ -681,14 +681,29 @@ async function uploadImage() {
       console.error('Error response:', errorText);
       let errorData;
       try {
+        // Vérifier si c'est du HTML au lieu de JSON
+        if (errorText.trim().startsWith('<!DOCTYPE') || errorText.includes('<html')) {
+          throw new Error(`Erreur serveur (${response.status}). Vérifiez que le backend est accessible.`);
+        }
         errorData = JSON.parse(errorText);
-      } catch {
+      } catch (parseError) {
         errorData = { message: errorText || `Erreur HTTP ${response.status}` };
       }
       throw new Error(errorData.message || `Erreur HTTP ${response.status}`);
     }
     
+    // Vérifier que la réponse est bien du JSON avant de parser
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      console.error('Réponse non-JSON reçue:', text.substring(0, 200));
+      throw new Error('Réponse invalide du serveur. Vérifiez que le backend est accessible.');
+    }
+    
     const result = await response.json();
+    if (!result || !result.url) {
+      throw new Error('Réponse invalide du serveur: URL manquante');
+    }
     newPost.value.imageUrl = result.url;
     console.log('Upload réussi, URL:', result.url);
   } catch (error) {
