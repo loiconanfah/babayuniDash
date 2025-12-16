@@ -68,6 +68,13 @@ public interface ISessionService
     Task<bool> IsValidSessionAsync(string sessionToken);
 
     /// <summary>
+    /// Récupère toutes les sessions actives (utilisateurs en ligne)
+    /// </summary>
+    /// <param name="excludeSessionId">ID de session à exclure (pour ne pas s'inclure soi-même)</param>
+    /// <returns>Liste des DTOs des sessions actives</returns>
+    Task<IEnumerable<SessionDto>> GetActiveSessionsAsync(int? excludeSessionId = null);
+
+    /// <summary>
     /// Convertit un modèle Session en SessionDto
     /// </summary>
     /// <param name="session">Le modèle Session à convertir</param>

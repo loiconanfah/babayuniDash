@@ -5,8 +5,8 @@
 
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { Game, Puzzle, Bridge, Island } from '@/types'
-import { gameApi } from '@/services/api'
+import type { Game, Puzzle, Bridge, Island, ValidationResult } from '@/types'
+import { gameApi, puzzleApi } from '@/services/api'
 
 export const useGameStore = defineStore('game', () => {
   // ====================================================
@@ -35,6 +35,9 @@ export const useGameStore = defineStore('game', () => {
   const elapsedTime = ref(0)
   let timerInterval: number | null = null
 
+  /** Indique si le jeu est en pause */
+  const isPaused = ref(false)
+
   // ====================================================
   // GETTERS - Propriétés calculées
   // ====================================================
@@ -47,11 +50,9 @@ export const useGameStore = defineStore('game', () => {
   /**
    * Récupère une île par son ID
    */
-  const getIslandById = computed(() => {
-    return (id: number): Island | undefined => {
-      return currentPuzzle.value?.islands.find((island) => island.id === id)
-    }
-  })
+  function getIslandById(id: number): Island | undefined {
+    return currentPuzzle.value?.islands.find((island) => island.id === id)
+  }
 
   /**
    * Compte le nombre de ponts connectés à une île
@@ -106,20 +107,21 @@ export const useGameStore = defineStore('game', () => {
 
   /**
    * Démarre une nouvelle partie avec un puzzle
+   * Nécessite qu'un utilisateur soit connecté avec une session active
    */
-  async function startGame(puzzle: Puzzle): Promise<void> {
+  async function startGame(puzzle: Puzzle, sessionId: number): Promise<void> {
     try {
       isLoading.value = true
       error.value = null
 
       // Créer une nouvelle partie via l'API
-      const game = await gameApi.create({ puzzleId: puzzle.id })
+      const game = await gameApi.create({ puzzleId: puzzle.id, sessionId })
 
       currentGame.value = game
       currentPuzzle.value = puzzle
-      playerBridges.value = []
+      playerBridges.value = game.playerBridges || []
       selectedIsland.value = null
-      elapsedTime.value = 0
+      elapsedTime.value = game.elapsedSeconds || 0
 
       // Démarrer le timer
       startTimer()
@@ -159,6 +161,11 @@ export const useGameStore = defineStore('game', () => {
    * Sélectionne une île (pour commencer à placer un pont)
    */
   function selectIsland(island: Island): void {
+    // Ne rien faire si le jeu est en pause
+    if (isPaused.value) {
+      return
+    }
+
     // Si aucune île n'est sélectionnée, sélectionner celle-ci
     if (!selectedIsland.value) {
       selectedIsland.value = island
@@ -238,8 +245,10 @@ export const useGameStore = defineStore('game', () => {
   /**
    * Valide la solution actuelle
    */
-  async function validateSolution(): Promise<void> {
-    if (!currentGame.value) return
+  async function validateSolution(): Promise<ValidationResult> {
+    if (!currentGame.value) {
+      throw new Error('Aucune partie en cours')
+    }
 
     try {
       isLoading.value = true
@@ -285,7 +294,38 @@ export const useGameStore = defineStore('game', () => {
     selectedIsland.value = null
     elapsedTime.value = 0
     error.value = null
+    isPaused.value = false
     stopTimer()
+  }
+
+  /**
+   * Met le jeu en pause
+   */
+  function pauseGame(): void {
+    if (!hasActiveGame.value) return
+    isPaused.value = true
+    selectedIsland.value = null // Désélectionner l'île en cours
+    stopTimer() // Arrêter le timer
+  }
+
+  /**
+   * Reprend le jeu
+   */
+  function resumeGame(): void {
+    if (!hasActiveGame.value) return
+    isPaused.value = false
+    startTimer() // Redémarrer le timer
+  }
+
+  /**
+   * Alterne entre pause et reprise
+   */
+  function togglePause(): void {
+    if (isPaused.value) {
+      resumeGame()
+    } else {
+      pauseGame()
+    }
   }
 
   /**
@@ -293,9 +333,11 @@ export const useGameStore = defineStore('game', () => {
    */
   function startTimer(): void {
     stopTimer() // Arrêter le timer existant s'il y en a un
-    timerInterval = window.setInterval(() => {
-      elapsedTime.value++
-    }, 1000)
+    if (!isPaused.value) {
+      timerInterval = window.setInterval(() => {
+        elapsedTime.value++
+      }, 1000)
+    }
   }
 
   /**
@@ -315,6 +357,38 @@ export const useGameStore = defineStore('game', () => {
     error.value = null
   }
 
+  /**
+   * Résout automatiquement le puzzle en utilisant la solution stockée
+   */
+  async function solvePuzzle(): Promise<void> {
+    if (!currentPuzzle.value) {
+      error.value = 'Aucun puzzle en cours'
+      return
+    }
+
+    try {
+      isLoading.value = true
+      error.value = null
+
+      // Récupérer la solution depuis l'API
+      const solutionBridges = await puzzleApi.getSolution(currentPuzzle.value.id)
+
+      // Appliquer la solution
+      playerBridges.value = solutionBridges
+
+      // Sauvegarder les ponts sur le serveur
+      await saveBridges()
+
+      // Valider automatiquement la solution
+      await validateSolution()
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Erreur lors de la résolution du puzzle'
+      console.error('Erreur lors de la résolution:', err)
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   // ====================================================
   // RETOUR DES PROPRIÉTÉS ET MÉTHODES PUBLIQUES
   // ====================================================
@@ -328,6 +402,7 @@ export const useGameStore = defineStore('game', () => {
     isLoading,
     error,
     elapsedTime,
+    isPaused,
 
     // Getters
     hasActiveGame,
@@ -347,7 +422,12 @@ export const useGameStore = defineStore('game', () => {
     validateSolution,
     abandonGame,
     resetGame,
-    clearError
+    solvePuzzle,
+    clearError,
+    pauseGame,
+    resumeGame,
+    togglePause,
+    stopTimer
   }
 })
 

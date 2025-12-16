@@ -1,0 +1,152 @@
+/* frontend/src/assets/main.css */
+
+/* 1. On active Tailwind v4 */
+@import "tailwindcss";
+
+/* 2. Couche "base" : reset léger + fond global prison */
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  body {
+    /* Fond sombre moderne avec gradients cyan/purple/pink */
+    @apply bg-zinc-950 text-zinc-50 antialiased;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(6, 182, 212, 0.15) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.12) 0px, transparent 50%),
+      radial-gradient(at 50% 50%, rgba(236, 72, 153, 0.1) 0px, transparent 50%),
+      radial-gradient(at 25% 75%, rgba(59, 130, 246, 0.08) 0px, transparent 50%);
+  }
+
+  #app {
+    /* L'app occupe toute la hauteur de l'écran */
+    @apply min-h-screen;
+  }
+
+  /* Scrollbar personnalisée */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-zinc-900;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-zinc-700 rounded-full;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-cyan-600;
+  }
+}
+
+/* 3. Petites classes utilitaires pour Prison Break (optionnel) */
+@layer components {
+  /* Conteneur principal type "mur de briques" */
+  .pb-brick-wall {
+    @apply min-h-screen flex items-center justify-center px-4 py-6 md:px-8;
+    background-image:
+      linear-gradient(#b94b3a 1px, transparent 1px),
+      linear-gradient(90deg, #b94b3a 1px, #8d3326 1px);
+    background-size: 32px 32px;
+    background-color: #8d3326; /* fond brique */
+  }
+
+  /* Carte centrale bleu nuit */
+  .pb-dashboard-card {
+    @apply w-full max-w-5xl rounded-3xl bg-slate-900/95 shadow-2xl border border-slate-800/80;
+  }
+
+  /* Effet de glow pour les éléments interactifs */
+  .glow-orange {
+    box-shadow: 0 0 20px rgba(251, 146, 60, 0.3);
+  }
+
+  .glow-blue {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  }
+
+  /* Animation de pulse subtile */
+  @keyframes subtle-pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+
+  .animate-subtle-pulse {
+    animation: subtle-pulse 3s ease-in-out infinite;
+  }
+
+  /* Effet de glassmorphism */
+  .glass {
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+  }
+
+  /* Gradient text moderne - Cyan/Purple/Pink */
+  .gradient-text {
+    @apply bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent;
+  }
+
+  /* Nouvelle palette de couleurs moderne */
+  .color-primary {
+    @apply from-cyan-500 to-blue-600;
+  }
+
+  .color-accent {
+    @apply from-purple-500 to-pink-600;
+  }
+
+  .color-success {
+    @apply from-emerald-400 to-teal-500;
+  }
+
+  .color-warning {
+    @apply from-amber-400 to-orange-500;
+  }
+
+  /* Effets de glow néon modernes */
+  .glow-primary {
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.5), 0 0 40px rgba(59, 130, 246, 0.3);
+  }
+
+  .glow-accent {
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.5), 0 0 40px rgba(236, 72, 153, 0.3);
+  }
+
+  .glow-cyan {
+    box-shadow: 0 0 25px rgba(6, 182, 212, 0.6), 0 0 50px rgba(6, 182, 212, 0.3);
+  }
+
+  /* Effet glassmorphism moderne */
+  .glass-modern {
+    background: rgba(24, 24, 27, 0.8);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+  }
+
+  /* Animation de brillance pour les cartes d'items */
+  @keyframes shine {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .animate-shine {
+    animation: shine 1.5s ease-in-out infinite;
+  }
+}

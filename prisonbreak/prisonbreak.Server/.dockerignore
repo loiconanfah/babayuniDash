@@ -1,0 +1,26 @@
+# Base de données locale (ne pas copier dans l'image Docker)
+*.db
+*.db-shm
+*.db-wal
+
+# Fichiers de build
+bin/
+obj/
+
+# Fichiers de développement
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Fichiers temporaires
+*.tmp
+*.log
+
+# Node modules (si présents)
+node_modules/
+
+# Fichiers de configuration locaux
+appsettings.Development.json
+
+

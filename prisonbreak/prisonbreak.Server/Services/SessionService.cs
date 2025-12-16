@@ -139,6 +139,13 @@ public class SessionService : ISessionService
     }
 
     /// <inheritdoc/>
+    public async Task<IEnumerable<SessionDto>> GetActiveSessionsAsync(int? excludeSessionId = null)
+    {
+        var sessions = await _sessionRepository.GetActiveSessionsAsync(excludeSessionId);
+        return sessions.Select(ConvertToDto);
+    }
+
+    /// <inheritdoc/>
     public SessionDto ConvertToDto(Session session)
     {
         if (session == null)

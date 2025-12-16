@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace prisonbreak.Server.Models;
 
 /// <summary>

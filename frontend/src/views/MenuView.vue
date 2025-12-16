@@ -21,6 +21,20 @@ function goToSelectPuzzle() {
 function goToGeneratePuzzle() {
   router.push('/generate')
 }
+
+/**
+ * Navigation vers les statistiques
+ */
+function goToStats() {
+  router.push('/stats')
+}
+
+/**
+ * Navigation vers la page des jeux
+ */
+function goToGames() {
+  router.push('/games')
+}
 </script>
 
 <template>
@@ -34,14 +48,19 @@ function goToGeneratePuzzle() {
 
       <!-- Boutons du menu -->
       <div class="menu-actions">
-        <button class="menu-btn menu-btn--primary" @click="goToSelectPuzzle">
+        <button class="menu-btn menu-btn--primary" @click="goToGames">
           <span class="menu-btn__icon">🎮</span>
-          <span class="menu-btn__text">Jouer à un puzzle</span>
+          <span class="menu-btn__text">Jeux</span>
         </button>
 
         <button class="menu-btn menu-btn--secondary" @click="goToGeneratePuzzle">
           <span class="menu-btn__icon">✨</span>
           <span class="menu-btn__text">Générer un nouveau puzzle</span>
+        </button>
+
+        <button class="menu-btn menu-btn--secondary" @click="goToStats">
+          <span class="menu-btn__icon">📊</span>
+          <span class="menu-btn__text">Statistiques & Classement</span>
         </button>
       </div>
 

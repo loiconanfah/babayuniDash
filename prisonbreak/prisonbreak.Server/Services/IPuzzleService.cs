@@ -15,8 +15,9 @@ public interface IPuzzleService
     /// <param name="width">Largeur de la grille</param>
     /// <param name="height">Hauteur de la grille</param>
     /// <param name="difficulty">Niveau de difficulté</param>
+    /// <param name="theme">Thème visuel du puzzle (par défaut: Classic)</param>
     /// <returns>Le puzzle généré</returns>
-    Task<Puzzle> GeneratePuzzleAsync(int width, int height, DifficultyLevel difficulty);
+    Task<Puzzle> GeneratePuzzleAsync(int width, int height, DifficultyLevel difficulty, PuzzleTheme theme = PuzzleTheme.Classic);
 
     /// <summary>
     /// Récupère un puzzle par son ID

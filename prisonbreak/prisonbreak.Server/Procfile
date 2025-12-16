@@ -1,0 +1,2 @@
+web: dotnet prisonbreak.Server.dll --urls http://0.0.0.0:$PORT
+

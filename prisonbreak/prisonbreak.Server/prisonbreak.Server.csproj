@@ -10,6 +10,9 @@
     <SpaProxyWorkingDirectory>$(MSBuildProjectDirectory)..\..\frontend</SpaProxyWorkingDirectory>
   </PropertyGroup>
 
+  <!-- Le SPA Proxy standard de Visual Studio lancera automatiquement le frontend -->
+  <!-- Pour lancer deux instances, utilisez le script start-dev.ps1 manuellement -->
+
   <ItemGroup>
     <!-- Entity Framework Core pour la gestion de la base de données -->
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
@@ -32,6 +35,8 @@
     
     <!-- Support pour SPA (Single Page Application) -->
     <PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="8.0.0" />
+    
+    <!-- Note: SignalR est intégré dans ASP.NET Core 8.0, pas besoin de package séparé -->
   </ItemGroup>
 
 
