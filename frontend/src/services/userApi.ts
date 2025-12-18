@@ -35,6 +35,14 @@ export async function createOrLoginUser(
 
   if (!response.ok) {
     const text = await response.text();
+    
+    // Si c'est une erreur 404, déclencher un événement pour ouvrir le modal de création de compte
+    if (response.status === 404) {
+      window.dispatchEvent(new CustomEvent('api-404-error', { 
+        detail: { url: `${API_BASE_URL}/Users`, message: text || 'Ressource non trouvée' }
+      }))
+    }
+    
     throw new Error(
       `Échec de la création/connexion du joueur (code ${response.status}) : ${text}`
     );

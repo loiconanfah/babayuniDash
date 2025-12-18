@@ -66,9 +66,24 @@ function getDefaultHeaders(): HeadersInit {
 }
 
 /**
- * Fonction helper pour gérer les réponses HTTP
+ * Fonction utilitaire pour vérifier si une erreur 404 doit déclencher l'ouverture du modal de création de compte
  */
-async function handleResponse<T>(response: Response): Promise<T> {
+function shouldTrigger404Modal(url: string): boolean {
+  // Ne pas déclencher pour les routes qui peuvent légitimement retourner 404
+  // (par exemple, les puzzles qui n'existent pas, les jeux spécifiques)
+  return !url.includes('/Puzzles/') && 
+         !url.includes('/Games/') &&
+         !url.includes('/TicTacToe/') &&
+         !url.includes('/ConnectFour/') &&
+         !url.includes('/RockPaperScissors/') &&
+         !url.includes('/Adventure/')
+}
+
+/**
+ * Fonction helper pour gérer les réponses HTTP
+ * Détecte les erreurs 404 et déclenche un événement pour ouvrir le modal de création de compte
+ */
+async function handleResponse<T>(response: Response, requestUrl?: string): Promise<T> {
   if (!response.ok) {
     let errorData = null
     try {
@@ -77,6 +92,18 @@ async function handleResponse<T>(response: Response): Promise<T> {
     } catch {
       // Si la réponse n'est pas du JSON, on ignore
     }
+    
+    // Si c'est une erreur 404, déclencher un événement pour ouvrir le modal de création de compte
+    if (response.status === 404) {
+      const url = requestUrl || response.url || ''
+      if (shouldTrigger404Modal(url)) {
+        // Émettre un événement personnalisé pour ouvrir le modal
+        window.dispatchEvent(new CustomEvent('api-404-error', { 
+          detail: { url, message: errorData?.message || 'Ressource non trouvée' }
+        }))
+      }
+    }
+    
     throw new ApiError(
       errorData?.message || `Erreur HTTP ${response.status}`,
       response.status,

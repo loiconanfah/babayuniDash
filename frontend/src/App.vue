@@ -548,6 +548,11 @@ onMounted(async () => {
   
   userStore.loadFromLocalStorage();
   
+  // Si l'utilisateur n'est pas connecté, ouvrir automatiquement le modal de création de compte
+  if (!userStore.isLoggedIn) {
+    ui.openUserModal();
+  }
+  
   // Si un utilisateur est déjà connecté, charger ses statistiques automatiquement
   if (userStore.user?.email) {
     try {
@@ -587,6 +592,21 @@ onMounted(async () => {
       clearInterval(refreshInterval);
     });
   }
+  
+  // Écouter les erreurs 404 de l'API pour ouvrir automatiquement le modal de création de compte
+  const handle404Error = () => {
+    // Si l'utilisateur n'est pas connecté, ouvrir le modal de création de compte
+    if (!userStore.isLoggedIn && !ui.isUserModalOpen) {
+      ui.openUserModal();
+    }
+  };
+  
+  window.addEventListener('api-404-error', handle404Error);
+  
+  // Nettoyer l'écouteur d'événement au démontage
+  onUnmounted(() => {
+    window.removeEventListener('api-404-error', handle404Error);
+  });
 });
 
 // Déconnecter SignalR quand l'utilisateur se déconnecte

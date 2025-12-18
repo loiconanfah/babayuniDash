@@ -15,9 +15,21 @@ function getDefaultHeaders(): HeadersInit {
   }
 }
 
-async function handleResponse<T>(response: Response): Promise<T> {
+async function handleResponse<T>(response: Response, requestUrl?: string): Promise<T> {
   if (!response.ok) {
     const error = await response.text()
+    
+    // Si c'est une erreur 404, déclencher un événement pour ouvrir le modal de création de compte
+    if (response.status === 404) {
+      const url = requestUrl || response.url || ''
+      // Ne pas déclencher pour les items spécifiques qui peuvent légitimement retourner 404
+      if (!url.includes('/Shop/items/')) {
+        window.dispatchEvent(new CustomEvent('api-404-error', { 
+          detail: { url, message: error || 'Ressource non trouvée' }
+        }))
+      }
+    }
+    
     throw new Error(error || `HTTP error! status: ${response.status}`)
   }
   return response.json()
