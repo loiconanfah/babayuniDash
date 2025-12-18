@@ -1,6 +1,6 @@
 <template>
-  <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md animate-fade-in">
+  <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100]" @click.self="onCancel">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md animate-fade-in mx-4">
       <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">
         Jouer / S’inscrire
       </h2>
@@ -125,6 +125,11 @@ async function onSubmit() {
 
 /** Bouton Annuler */
 function onCancel() {
+  // Ne pas permettre de fermer le modal si l'utilisateur n'est pas connecté
+  // L'utilisateur doit créer un compte pour continuer
+  if (!userStore.isLoggedIn) {
+    return;
+  }
   uiStore.closeUserModal()
 }
 </script>
