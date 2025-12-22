@@ -408,7 +408,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, onUnmounted, watch, nextTick } from 'vue';
+import { computed, onMounted, ref, onUnmounted, watch } from 'vue';
 import { useUiStore } from '@/stores/ui';
 import { useUserStore } from '@/stores/user';
 import { useStatsStore } from '@/stores/stats';
@@ -548,21 +548,6 @@ onMounted(async () => {
   
   userStore.loadFromLocalStorage();
   
-  // Attendre que le DOM soit prêt avant d'ouvrir le modal
-  await nextTick();
-  
-  // Si l'utilisateur n'est pas connecté, ouvrir automatiquement le modal de création de compte
-  // Utiliser un petit délai pour s'assurer que tout est bien initialisé
-  if (!userStore.isLoggedIn) {
-    // Utiliser setTimeout pour s'assurer que le DOM est complètement rendu
-    setTimeout(() => {
-      if (!userStore.isLoggedIn && !ui.isUserModalOpen) {
-        console.log('Ouverture automatique du modal de création de compte');
-        ui.openUserModal();
-      }
-    }, 300);
-  }
-  
   // Si un utilisateur est déjà connecté, charger ses statistiques automatiquement
   if (userStore.user?.email) {
     try {
@@ -602,21 +587,6 @@ onMounted(async () => {
       clearInterval(refreshInterval);
     });
   }
-  
-  // Écouter les erreurs 404 de l'API pour ouvrir automatiquement le modal de création de compte
-  const handle404Error = () => {
-    // Si l'utilisateur n'est pas connecté, ouvrir le modal de création de compte
-    if (!userStore.isLoggedIn && !ui.isUserModalOpen) {
-      ui.openUserModal();
-    }
-  };
-  
-  window.addEventListener('api-404-error', handle404Error);
-  
-  // Nettoyer l'écouteur d'événement au démontage
-  onUnmounted(() => {
-    window.removeEventListener('api-404-error', handle404Error);
-  });
 });
 
 // Déconnecter SignalR quand l'utilisateur se déconnecte
